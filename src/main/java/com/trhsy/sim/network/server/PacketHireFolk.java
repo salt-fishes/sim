@@ -11,6 +11,7 @@ import com.trhsy.sim.npcCode.job.JobFarmer;
 import com.trhsy.sim.npcCode.job.JobMiner;
 import com.trhsy.sim.npcCode.job.JobTerrainFormer;
 import io.netty.buffer.ByteBuf;
+import net.minecraft.block.Block;
 import net.minecraft.client.Minecraft;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.util.text.TextComponentString;
@@ -100,6 +101,14 @@ public class PacketHireFolk implements IMessage {
             NpcData fd = ModSimLoader.getFolkDataByUID(message.uuid);
             V3 v3=new V3(message.pos.x+0.5,message.pos.y-1,message.pos.z+0.5);
 //            World world= Minecraft.getMinecraft().world;
+            // P12(S1): 服务端校验：NPC 必须存在/未就业/在玩家附近。
+            if (fd == null || message.job == null || fd.entity == null) {
+                return;
+            }
+            if (player.getDistance(fd.entity) > 16.0F) {
+                ModSimLoader.log.warn("玩家 {} 距离 NPC 过远，拒绝雇佣", player.getName());
+                return;
+            }
             if (fd.job != null) {
                 //被其他地方雇佣，尝试雇佣其他人
                 ctx.getServerHandler().player.sendMessage(new TextComponentString(fd.getName() + new TextComponentTranslation("container.sim.hire_elsewhere",new Object[0]).getUnformattedText()));
@@ -107,12 +116,23 @@ public class PacketHireFolk implements IMessage {
                 //建筑工、规划师、农民、矿工在hireAt中处理
                 if (message.job.contentEquals(new TextComponentTranslation("container.sim.Vocation1",new Object[0]).getUnformattedText())) {
                     //建筑工在hireAt中创建Job
-                    BlockConstructorBox cons = (BlockConstructorBox) world.getBlockState(v3.toBlockPos()).getBlock();
+                    Block block = world.getBlockState(v3.toBlockPos()).getBlock();
+                    if (!(block instanceof BlockConstructorBox)) {
+                        ModSimLoader.log.warn("雇佣建筑工失败：目标不是建筑箱");
+                        return;
+                    }
+                    BlockConstructorBox cons = (BlockConstructorBox) block;
                     cons.employee = fd;
                     //规划师
                 }else if(message.job.contentEquals(new TextComponentTranslation("container.sim.Vocation16",new Object[0]).getUnformattedText())){
                     fd.job = new JobTerrainFormer(fd,message.pos,world);
-                    BlockConstructorBox cons = (BlockConstructorBox) fd.job.jobWorld.getBlockState(v3.toBlockPos()).getBlock();
+                    Block block = fd.job.jobWorld.getBlockState(v3.toBlockPos()).getBlock();
+                    if (!(block instanceof BlockConstructorBox)) {
+                        ModSimLoader.log.warn("雇佣规划师失败：目标不是建筑箱");
+                        fd.job = null;
+                        return;
+                    }
+                    BlockConstructorBox cons = (BlockConstructorBox) block;
                     cons.employee = fd;
                     //农民
                 } else if (message.job.contentEquals(new TextComponentTranslation("container.sim.Hire_farmer",new Object[0]).getUnformattedText())) {

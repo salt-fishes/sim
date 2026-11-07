@@ -3,6 +3,7 @@ package com.trhsy.sim.network.server;
 import com.trhsy.sim.loader.ModSimLoader;
 import com.trhsy.sim.npcCode.NpcData;
 import io.netty.buffer.ByteBuf;
+import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraftforge.fml.common.FMLCommonHandler;
 import net.minecraftforge.fml.common.network.ByteBufUtils;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
@@ -54,6 +55,11 @@ public class PacketFireFolk implements IMessage {
 
         private void handle(PacketFireFolk message, MessageContext ctx) {
             NpcData fd = ModSimLoader.getFolkDataByUID(message.uuid);
+            // P12(S1): 服务端校验距离，客户端不能远程解雇。
+            EntityPlayerMP player = ctx.getServerHandler().player;
+            if (fd == null || fd.entity == null || player == null || player.getDistance(fd.entity) > 16.0F) {
+                return;
+            }
             fd.fire();
         }
     }

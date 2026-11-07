@@ -2792,6 +2792,50 @@ public class NpcData {
      * @Date 10:41 2022/10/21
      * @Param []
      **/
+    /**
+     * P12(S1): 每个游戏日触发一次。年龄、怀孕、交配欲望都按“游戏日”结算，
+     * 不再用墙钟分钟（旧实现 10 分钟就怀孕满 1.0）。
+     */
+    public void onNewDay() {
+        try {
+            if (this.isDead || this.race == null) {
+                return;
+            }
+            this.matingStage = -1.0F;
+            if (this.pregnancyStage > 0.0F) {
+                this.pregnancyStage = Math.min(1.0F, this.pregnancyStage + 0.25F);
+            }
+
+            int currentAge = this.age;
+            if (this.age >= this.race.maturity) {
+                if (ModSimLoader.dayOfWeek == 6) {
+                    ++this.age;
+                }
+            } else if (ModSimLoader.dayOfWeek == 3 || ModSimLoader.dayOfWeek == 6) {
+                ++this.age;
+            }
+
+            if (currentAge < this.race.maturity && this.age >= this.race.maturity) {
+                this.evict();
+                String s = new TextComponentTranslation("container.sim.main_is_now", new Object[0]).getUnformattedText();
+                ModSimLoader.sendChat(this.getName() + s);
+            }
+
+            if (this.age >= this.race.lifespan && new Random().nextInt(10) == 5) {
+                String s = new TextComponentTranslation("container.sim.main_is_old", new Object[0]).getUnformattedText();
+                ModSimLoader.sendChat(this.getName() + s);
+                if (this.entity != null) {
+                    this.entity.attackEntityFrom(DamageSource.STARVE, 999.0F);
+                } else {
+                    this.onDeath(DamageSource.STARVE);
+                }
+            }
+        } catch (Exception e) {
+            StackTraceElement element = e.getStackTrace()[0];
+            ModSimLoader.log.error("NpcData.onNewDay出错了：" + e.getMessage() + "行数：" + element.getLineNumber());
+        }
+    }
+
     public void onMinute() {
         try {
             if (this.entity != null && !this.isDead) {

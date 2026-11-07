@@ -439,7 +439,7 @@ public class JobBuilder extends Job {
      * @Param []
      **/
     public void placeBlock() {
-        ModSimLoader.log.info("放置方块:{}",System.currentTimeMillis()/1000);
+        ModSimLoader.log.debug("放置方块:{}", System.currentTimeMillis() / 1000);
         try {
             // 先尝试放置方块，成功后再播放音效和动画
             //正常的块

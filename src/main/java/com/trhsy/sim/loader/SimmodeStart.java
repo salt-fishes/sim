@@ -55,6 +55,8 @@ public class SimmodeStart {
      * 分钟计时器
      **/
     public static long minuteTimer = System.currentTimeMillis();
+    // P12(S1): 用世界绝对天数检测跨天，兼容 /time set；不再只依赖 newDay 布尔边沿。
+    private static long lastWorldDay = -1L;
     //收租计时
     public static long rentalsTimer = System.currentTimeMillis();
 
@@ -484,6 +486,22 @@ public class SimmodeStart {
                         NetWorkLoader.net.sendToAll(new PacketUpdateMoney());
 
                         if (ModSimLoader.gamemode != 999) {
+                            // P12(S1): 绝对天数跨天检测。既处理正常日出，也处理 /time set。
+                            long worldDay = world.getWorldTime() / 24000L;
+                            if (lastWorldDay < 0L) {
+                                lastWorldDay = worldDay;
+                            }
+                            if (worldDay > lastWorldDay) {
+                                long delta = Math.min(7L, worldDay - lastWorldDay);
+                                for (long d = 0; d < delta; d++) {
+                                    handleNewDay(world);
+                                }
+                                lastWorldDay = worldDay;
+                                newDay = true;
+                            } else if (worldDay < lastWorldDay) {
+                                // /time set 回退：只重新同步，不补算年龄/租金。
+                                lastWorldDay = worldDay;
+                            }
                             //是白天
                             if (ModSimLoader.isDayTime(world)) {
                                 //60秒循环
@@ -516,47 +534,6 @@ public class SimmodeStart {
                                         ModSimLoader.log.info("已达到人口上限 {}，不生成新NPC", ConfigLoader.configPopulationLimit);
                                     }
                                     minuteTimer = System.currentTimeMillis();
-                                }
-                                if (!newDay) {
-                                    ModSimLoader.log.info("天亮了");
-                                    //播放 天亮了鸡叫
-//                                    SoundEvent soundEvent = new SoundEvent(new ResourceLocation(ModSim.MODID + ":rooster"));
-//                                    for (EntityPlayer entityPlayer : world.playerEntities) {
-//                                        BlockPos pos=entityPlayer.getPosition();
-//                                        ModSimLoader.log.info("播放 天亮了鸡叫:[x:" + pos.getX() + "],y:[" + pos.getY() + "],z:[" + pos.getZ() + "]");
-////                                        world.playSound(null, pos, soundEvent, SoundCategory.BLOCKS, 1.0F, 1.0F);
-//                                        world.playSound( pos.getX(), pos.getY(), pos.getZ(), soundEvent, SoundCategory.PLAYERS, 1.0F, 1.0F,true);
-//                                    }
-                                    SoundEvent rooster = SoundRegistry.ROOSTER;
-                                    if (rooster == null || rooster.getRegistryName() == null) {
-                                        ModSimLoader.log.error("播放失败：sim:rooster 声音事件未注册");
-                                    } else {
-                                    for (EntityPlayer entityPlayer : world.playerEntities) {
-                                        // 使用玩家的精确坐标（而非方块坐标）
-                                        double x = entityPlayer.posX;
-                                        double y = entityPlayer.posY;
-                                        double z = entityPlayer.posZ;
-                                        // 调整声音类别为BLOCKS（方块音效，更符合场景）
-                                        world.playSound(null,
-                                                x, y, z,
-                                                rooster,
-                                                SoundCategory.BLOCKS,  // 更适合短音效
-                                                1.0F,  // 音量（0.0-1.0）
-                                                1.0F  // 音调（0.5-2.0）
-                                        );
-                                    }}
-
-
-                                    newDay = true;
-                                    if (ModSimLoader.dayOfWeek >= 6) {
-                                        ModSimLoader.dayOfWeek = 0;
-                                    } else {
-                                        ++ModSimLoader.dayOfWeek;
-                                    }
-                                    ++ModSimLoader.gameDay;
-                                    rentalsTimer = System.currentTimeMillis();
-                                    newDayRentals = true;
-
                                 }
                                 if (System.currentTimeMillis() - rentalsTimer > 3000L && newDayRentals) {
                                     newDayRentals = false;
@@ -615,38 +592,6 @@ public class SimmodeStart {
                                                 hungerName += f.getName() + ",";
                                             }
 
-                                        }
-
-                                        //交配欲望重置
-                                        f.matingStage = -1.0F;
-                                        //妊娠期
-                                        if (f.pregnancyStage > 0.0F) {
-                                            f.pregnancyStage += 0.1F;
-                                        }
-                                        //当前年龄
-                                        int currentAge = f.age;
-                                        //年龄增长
-                                        if (f.age >= f.race.maturity) {
-                                            if (ModSimLoader.dayOfWeek == 6) {
-                                                ++f.age;
-                                            }
-                                        } else if (ModSimLoader.dayOfWeek == 3 || ModSimLoader.dayOfWeek == 6) {
-                                            ++f.age;
-                                        }
-
-                                        if (currentAge < f.race.maturity && f.age >= f.race.maturity) {
-                                            f.evict();
-                                            //现在18岁了,他们会开始找房子,你现在也可以雇佣他们了。
-                                            String s = new TextComponentTranslation("container.sim.main_is_now", new Object[0]).getUnformattedText();
-                                            ModSimLoader.sendChat(f.getName() + s);
-                                        }
-                                        //超越寿命
-                                        if (f.age >= f.race.lifespan && new Random().nextInt(10) == 5) {
-                                            //年纪大了,感觉不太好。。。哦不！
-                                            String s = new TextComponentTranslation("container.sim.main_is_old", new Object[0]).getUnformattedText();
-                                            ModSimLoader.sendChat(f.getName() + s);
-                                            //来自伤害999，死亡
-                                            f.entity.attackEntityFrom(DamageSource.STARVE, 999.0F);
                                         }
                                     }
 
@@ -918,6 +863,13 @@ public class SimmodeStart {
             ++ModSimLoader.dayOfWeek;
         }
         ++ModSimLoader.gameDay;
+
+        // P12(S1): 每个游戏日推进一次 NPC 年龄/怀孕/交配欲望。
+        for (NpcData f : new ArrayList<>(ModSimLoader.folks)) {
+            if (f != null) {
+                f.onNewDay();
+            }
+        }
 
         // 重置收租标记
         newDayRentals = true;

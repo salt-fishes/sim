@@ -313,7 +313,7 @@ public class JobTaskCollectItems extends JobTask {
             }
 
             if (System.currentTimeMillis() - this.timeSinceArrival > COLLECT_WAIT_MS) {
-                ModSimLoader.log.info("开始收集");
+                ModSimLoader.log.debug("开始收集");
                 // P9: 按清单额度取货——每种物品最多取清单数量，多个槽位也不会超拿；
                 // 放进背包的是副本，不会把任务清单里的 ItemStack 共享出去。
                 List<ItemStack> quota = new ArrayList();

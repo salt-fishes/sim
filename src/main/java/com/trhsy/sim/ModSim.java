@@ -37,7 +37,7 @@ public class ModSim {
     /**
      * 模组版本 在Mod间的依赖关系时可能会用作识别
      **/
-    public static final String VERSION = "1.12.2-1.0.9 Beta4";
+    public static final String VERSION = "1.12.2-1.0.9 Beta5";
     /**
      * 将生成该mod的实例注册到对应mod的id里面，也可以访问其他mod的，要注意这里的id和此mod的id相同
      */

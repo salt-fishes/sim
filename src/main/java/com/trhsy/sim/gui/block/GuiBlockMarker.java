@@ -261,7 +261,7 @@ public class GuiBlockMarker extends GuiScreen {
                         out.write(layerLines.get(zzz).toString() + "\r\n");
                     }
                     out.close();
-                    Thread.sleep(500L);
+                    // P12(S2): 删掉客户端 GUI 线程的 Thread.sleep(500)，避免保存蓝图时卡渲染半秒。
                     String fs_15=new TextComponentTranslation("container.sim.Markers15",new Object[0]).getUnformattedText();
                     String fs_16=new TextComponentTranslation("container.sim.Markers16",new Object[0]).getUnformattedText();
                     ModSimLoader.sendChat(fs_15 + f + fs_16);

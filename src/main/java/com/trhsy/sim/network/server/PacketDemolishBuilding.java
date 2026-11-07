@@ -3,6 +3,7 @@ package com.trhsy.sim.network.server;
 import com.trhsy.sim.loader.ModSimLoader;
 import com.trhsy.sim.npcCode.build.Building;
 import io.netty.buffer.ByteBuf;
+import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraftforge.fml.common.FMLCommonHandler;
 import net.minecraftforge.fml.common.network.ByteBufUtils;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
@@ -53,9 +54,15 @@ public class PacketDemolishBuilding implements IMessage {
 
         private void handle(PacketDemolishBuilding message, MessageContext ctx) {
             Building b = ModSimLoader.getBuildingByUUID(message.uuid);
-            if (b != null) {
+            EntityPlayerMP player = ctx.getServerHandler().player;
+            if (b != null && b.controlXYZ != null && player != null) {
+                // P12(S1): 服务端校验玩家与建筑控制箱的距离，防止远程拆楼。
+                if (player.getDistance(b.controlXYZ.x, b.controlXYZ.y, b.controlXYZ.z) > 16.0D) {
+                    ModSimLoader.log.warn("玩家 {} 距离建筑过远，拒绝拆除 {}", player.getName(), b.buildingName);
+                    return;
+                }
                 ModSimLoader.log.info("拆除建筑："+b.buildingName);
-                b.demolish(ctx.getServerHandler().player.world, true);
+                b.demolish(player.world, true);
             }
 
         }

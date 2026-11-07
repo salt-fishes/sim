@@ -633,7 +633,12 @@ public class EntityNpc extends EntityCreature implements INpc {
      * @Param []
      **/
     public boolean isMoving() {
-        return this.motionX > 0.0D || this.motionY > 0.0D || this.motionZ > 0.0D;
+        // P12(S2): 旧实现只看正方向 motion，向西/向北会被判“没动”。
+        // 优先看导航器是否有未完成路径；否则看水平速度绝对值。
+        if (this.getNavigator() != null && !this.getNavigator().noPath()) {
+            return true;
+        }
+        return Math.abs(this.motionX) + Math.abs(this.motionZ) > 1.0E-4D;
     }
 
     /**
@@ -646,12 +651,22 @@ public class EntityNpc extends EntityCreature implements INpc {
     @Override
     public boolean isChild() {
         try {
+            // P12(S2): 服务端以 NpcData 的年龄为准；客户端缓存只作兜底。
+            if (this.theData != null && this.theData.race != null) {
+                return this.theData.age < this.theData.race.maturity;
+            }
+            if (!this.world.isRemote) {
+                NpcData data = ModSimLoader.getFolkDataByUID(this.getUniqueID());
+                if (data != null && data.race != null) {
+                    return data.age < data.race.maturity;
+                }
+                return false;
+            }
             NpcIdentity cfi = ModSimClientLoader.getFolkByUUID(this.getUniqueID());
             if (cfi != null) {
                 return Integer.parseInt(cfi.age) < Integer.parseInt(cfi.maturityAge);
-            } else {
-                return false;
             }
+            return false;
         } catch (Exception e) {
             StackTraceElement element = e.getStackTrace()[0];
             ModSimLoader.log.error("isChild出错了：" + e.getMessage() + "行数：" + element.getLineNumber());

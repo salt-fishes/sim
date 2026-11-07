@@ -3,6 +3,7 @@ package com.trhsy.sim.network.server;
 import com.trhsy.sim.loader.ModSimLoader;
 import com.trhsy.sim.npcCode.NpcData;
 import io.netty.buffer.ByteBuf;
+import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraftforge.fml.common.FMLCommonHandler;
 import net.minecraftforge.fml.common.network.ByteBufUtils;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
@@ -56,6 +57,14 @@ public class PacketSellStuff implements IMessage{
         private void handle(PacketSellStuff message, MessageContext ctx) {
             NpcData fd = ModSimLoader.getFolkDataByUID(message.uuid);
             if (fd == null || fd.job == null) {
+                return;
+            }
+            // P12(S1): 服务端校验距离/NPC 是否在工作点。
+            EntityPlayerMP player = ctx.getServerHandler().player;
+            if (player == null || fd.entity == null || player.getDistance(fd.entity) > 16.0F) {
+                return;
+            }
+            if (fd.job.workPlace == null || !fd.isAtLocation(fd.job.workPlace, 8)) {
                 return;
             }
             fd.job.sellStuff();

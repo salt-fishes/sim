@@ -91,7 +91,9 @@ public class JobTaskBuilder extends JobTask {
                                 long now = System.currentTimeMillis();
                                 //游戏模式是正常模式
                                 if (ModSimLoader.gamemode != 1) {
-                                    if ((float) (now - this.jobBuilder.timeSinceLastBlockPlace) > 1000.0F - 100.0F * folk.skillBuilding) {
+                                    // P12(S2): 技能 10 时旧公式 1000 - 100*skill = 0，会每 tick 放一块。
+                                    long placeInterval = Math.max(200L, 1000L - (long) (80L * Math.min(10.0F, folk.skillBuilding)));
+                                    if ((float) (now - this.jobBuilder.timeSinceLastBlockPlace) > placeInterval) {
                                         ////上次时间为当前时间
                                         this.jobBuilder.timeSinceLastBlockPlace = now;
                                         //放置方块
@@ -100,7 +102,10 @@ public class JobTaskBuilder extends JobTask {
                                         if (this.jobBuilder.conBox == null) {
                                             this.jobBuilder.createConBox();
                                         }
-                                        NetWorkLoader.net.sendToAll(new PacketSendBuildingRequirements(this.jobBuilder.blueprint, this.jobBuilder.conBox.getUniqueID()));
+                                        // P12(S2): 每 20 块同步一次需求，避免每块都广播整个蓝图。
+                                        if (this.jobBuilder.conBox != null && this.jobBuilder.blockNumber % 20 == 0) {
+                                            NetWorkLoader.net.sendToAll(new PacketSendBuildingRequirements(this.jobBuilder.blueprint, this.jobBuilder.conBox.getUniqueID()));
+                                        }
 
                                     }
                                 } else {
