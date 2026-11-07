@@ -67,7 +67,7 @@ public class JobBrickMaker extends Job{
                 }else if(this.brickMakerStage == 2){
                     //使用熔炉
                     //黏土球
-                    this.addJobTask(new JobTaskUseFurnace(this, -1L, new ItemStack(Items.CLAY_BALL)));
+                    this.addJobTask(new JobTaskUseFurnace(this, 120000L, new ItemStack(Items.CLAY_BALL)));
                     this.brickMakerStage = 3;
                 }else{
                     if (this.jobTasks.size() > 0&&this.currentTask==null) {

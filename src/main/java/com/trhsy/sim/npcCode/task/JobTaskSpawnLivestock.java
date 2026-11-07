@@ -39,12 +39,13 @@ public class JobTaskSpawnLivestock extends JobTask {
         ModSimLoader.log.info("开始繁殖牲畜");
         //开始检测当前地方的实体动物
         int animalCount = this.getAnimalsInPen(this.job.workPlace, this.livestockClass).size();
-        ModSimLoader.log.info( "检测到 "+animalCount + " 只" + this.livestockName);
-        if (animalCount < 6) {
-
+        ModSimLoader.log.info("检测到 " + animalCount + " 只" + this.livestockName);
+        // P3: 保持 4-6 头：少于 5 才补栏到 6；配合屠宰下限（>4 才杀），数量稳定在 4-6。
+        if (animalCount < 5) {
+            int spawnCount = 6 - animalCount;
+            ModSimLoader.log.info("生成 " + spawnCount + " 只" + this.livestockName);
+            this.spawnAnimals(this.job.workPlace, this.livestockName, spawnCount);
         }
-        ModSimLoader.log.info("生成 " + (6 - animalCount) + " 只"+this.livestockName);
-        this.spawnAnimals(this.job.workPlace, this.livestockName, 6 - animalCount);
     }
 
     /**

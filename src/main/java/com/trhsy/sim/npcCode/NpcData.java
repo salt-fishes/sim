@@ -19,10 +19,11 @@ import com.trhsy.sim.npcCode.race.Races;
 import com.trhsy.sim.npcCode.task.*;
 import com.trhsy.sim.npcCode.traits.Trait;
 import com.trhsy.sim.npcCode.traits.Traits;
+import com.trhsy.sim.npcCode.store.SimStore;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockFire;
 import net.minecraft.block.BlockLiquid;
-import net.minecraft.client.Minecraft;
+import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.MoverType;
 import net.minecraft.entity.ai.RandomPositionGenerator;
@@ -31,7 +32,10 @@ import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.init.Blocks;
 import net.minecraft.inventory.EntityEquipmentSlot;
 import net.minecraft.item.Item;
+import net.minecraft.item.ItemFood;
 import net.minecraft.item.ItemStack;
+import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.nbt.NBTTagList;
 import net.minecraft.pathfinding.Path;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.util.DamageSource;
@@ -49,6 +53,7 @@ import net.minecraftforge.fml.common.FMLCommonHandler;
 
 import java.io.*;
 import java.nio.file.Files;
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Random;
@@ -91,6 +96,10 @@ public class NpcData {
      * NPC 的饱食度
      */
     public double hunger = 10;
+    /**
+     * NPC 的个人存款（工作收入 / 购买食物支出，P4 经济闭环）
+     */
+    public float money = 20.0F;
     /**
      * NPC 所属的种族
      */
@@ -217,6 +226,49 @@ public class NpcData {
     Long lastPathAttempt;
     private int fs_rand;
     public World world;
+    /** P1: 住宅建筑的稳定 UUID（存档只写它，读档后由 linkHome() 解析为 Building）。 */
+    public String homeId;
+    /** P2: 上次安全传送时间（毫秒），用于冷却。 */
+    private transient long lastTeleportTime = 0L;
+    /** P2: 传送冷却，避免每 tick 瞬移。 */
+    private static final long TELEPORT_COOLDOWN_MS = 3000L;
+    /** P3: 天黑后的自由活动时间（ticks）。先社交/闲逛，之后才强制回家睡觉。 */
+    private static final long EVENING_FREE_TICKS = 1200L;
+    /** P2+: 移动进度看门狗（有目标却连续 5 秒无进展 → 救援传送）。 */
+    private transient V3 pendingMoveTarget;
+    private transient double lastProgressX;
+    private transient double lastProgressZ;
+    private transient long lastProgressCheck;
+    private transient int noProgressCount;
+    /** P2+: 屋顶看门狗计时（高于目标/住宅 5 格以上持续 5 秒 → 救援）。 */
+    private transient int roofTicks = 0;
+    /** P3: 深夜未入睡计时（10 秒兜底强制睡觉）。 */
+    private transient int deepNightTicks = 0;
+
+    /**
+     * P10(S0): NPC 是否处于“可模拟”状态。
+     * 1.12.2 中实体只在已加载区块里 tick；实体没加载时，
+     * 数据层不能继续跑任务/写方块，否则会出现隔空取货、隔空建造和区块加载尖峰。
+     */
+    public boolean isActive() {
+        if (this.world == null || this.world.isRemote) {
+            return false;
+        }
+        if (this.entity == null || this.entity.isDead) {
+            return false;
+        }
+        if (this.entity.world == null) {
+            return false;
+        }
+        if (this.entity.world != this.world && !this.entity.world.isRemote) {
+            this.world = this.entity.world;
+        }
+        if (!this.entity.addedToChunk) {
+            return false;
+        }
+        BlockPos p = this.entity.getPosition();
+        return this.entity.world.isBlockLoaded(p);
+    }
 
     // ========================= 常量定义（消除硬编码）=========================
     private static final String NPC_FOLDER_NAME = "npc";
@@ -676,7 +728,289 @@ public class NpcData {
      * @param world 游戏世界
      * @param uuid  NPC 的唯一标识符
      **/
+    /**
+     * P1: 从 {@link SimStore} 的 NBT 记录加载 NPC（语言无关、原子存档）。
+     */
     public void loadFolk(World world, UUID uuid) {
+        try {
+            SimStore store = SimStore.get(world);
+            NBTTagCompound tag = store == null ? null : store.getNpc(uuid);
+            if (tag == null) {
+                this.isLoaded = false;
+                ModSimLoader.log.warn("NPC存档缺失，跳过: " + uuid);
+                return;
+            }
+            fromNBT(tag, world);
+            if (this.isDead) {
+                SimStore s = SimStore.get(world);
+                if (s != null) {
+                    s.removeNpc(this.ID);
+                }
+                this.isLoaded = false;
+                return;
+            }
+            MinecraftServer server = FMLCommonHandler.instance().getMinecraftServerInstance();
+            Entity existing = server == null ? null : server.getEntityFromUuid(this.ID);
+            EntityNpc e;
+            if (existing instanceof EntityNpc) {
+                e = (EntityNpc) existing;
+            } else {
+                // P10(S0): 区块未加载时先不生成实体，避免世界加载时
+                // 为了所有 NPC 强制加载区块。等玩家靠近、区块加载后再由
+                // trySpawnIfLoaded() 补生成。
+                if (this.pos == null || !world.isBlockLoaded(this.pos.toBlockPos())) {
+                    this.entity = null;
+                    this.isLoaded = true;
+                    ModSimLoader.log.info("NPC {} 所在区块未加载，延迟生成实体", this.ID);
+                    return;
+                }
+                e = new EntityNpc(world, this.ID);
+                e.setPosition(this.pos.x, this.pos.y, this.pos.z);
+                e.setPositionAndUpdate(this.pos.x, this.pos.y, this.pos.z);
+                e.noClip = false;
+                world.spawnEntity(e);
+            }
+            e.isBeingCreated = true;
+            e.theData = this;
+            this.entity = e;
+            this.isLoaded = true;
+        } catch (Exception e) {
+            this.isLoaded = false;
+            StackTraceElement element = e.getStackTrace()[0];
+            ModSimLoader.log.error("loadFolk(NBT)出错了：" + e.getMessage() + " 行数：" + element.getLineNumber());
+        }
+    }
+
+    /**
+     * P10(S0): 区块加载后补生成 NPC 实体。
+     * 数据层在未加载区块保持“无实体”状态，不跑任务、不写方块。
+     */
+    public void trySpawnIfLoaded(World world) {
+        if (this.entity != null || !this.isLoaded || this.isDead
+                || this.pos == null || world == null || world.isRemote) {
+            return;
+        }
+        if (this.pos.dimension != world.provider.getDimension()) {
+            return;
+        }
+        BlockPos bp = this.pos.toBlockPos();
+        if (!world.isBlockLoaded(bp)) {
+            return;
+        }
+        try {
+            MinecraftServer server = FMLCommonHandler.instance().getMinecraftServerInstance();
+            Entity existing = server == null ? null : server.getEntityFromUuid(this.ID);
+            EntityNpc e;
+            if (existing instanceof EntityNpc) {
+                e = (EntityNpc) existing;
+            } else {
+                e = new EntityNpc(world, this.ID);
+                e.noClip = false;
+                e.setPosition(this.pos.x, this.pos.y, this.pos.z);
+                e.setPositionAndUpdate(this.pos.x, this.pos.y, this.pos.z);
+                world.spawnEntity(e);
+            }
+            e.theData = this;
+            this.entity = e;
+            ModSimLoader.log.info("NPC {} 区块已加载，补生成实体 @ {}", this.ID, bp);
+        } catch (Exception e) {
+            StackTraceElement element = e.getStackTrace()[0];
+            ModSimLoader.log.error("trySpawnIfLoaded出错了：" + e.getMessage() + " 行数：" + element.getLineNumber());
+        }
+    }
+
+    /** P1: 解析住宅 UUID（在建筑全部加载后调用）。 */
+    public void linkHome() {
+        if (this.homeId == null || this.homeId.isEmpty()) {
+            return;
+        }
+        if (this.home != null && this.homeId.equals(String.valueOf(this.home.ID))) {
+            return;
+        }
+        for (Building b : ModSimLoader.buildings) {
+            if (b != null && b.ID != null && this.homeId.equals(b.ID.toString())) {
+                this.home = b;
+                if (!b.occupants.contains(this)) {
+                    b.occupants.add(this);
+                }
+                return;
+            }
+        }
+        this.home = null;
+    }
+
+    /** P1: 序列化为稳定 ID 的 NBT（存档只写这个）。 */
+    public NBTTagCompound toNBT() {
+        NBTTagCompound tag = new NBTTagCompound();
+        tag.setString("uuid", String.valueOf(this.ID));
+        tag.setString("fname", this.forename == null ? "" : this.forename);
+        tag.setString("sname", this.surname == null ? "" : this.surname);
+        tag.setInteger("gender", this.gender);
+        tag.setInteger("age", this.age);
+        tag.setDouble("hunger", this.hunger);
+        tag.setFloat("money", this.money);
+        tag.setFloat("skillBuilding", this.skillBuilding);
+        tag.setFloat("skillFarming", this.skillFarming);
+        tag.setFloat("skillMining", this.skillMining);
+        tag.setFloat("pregnancy", this.pregnancyStage);
+        tag.setFloat("mating", this.matingStage);
+        tag.setBoolean("isDead", this.isDead);
+        tag.setInteger("skinnumber", this.skinnumber);
+        tag.setString("skin", this.skinName == null ? "" : this.skinName);
+        tag.setString("race", SimIds.raceId(this.race));
+        tag.setString("trait1", SimIds.traitId(this.trait1));
+        tag.setString("trait2", SimIds.traitId(this.trait2));
+        tag.setString("trait3", SimIds.traitId(this.trait3));
+        tag.setString("holding", SimIds.itemId(this.holding));
+        // P10(S0): 手持物保存完整 ItemStack（数量/metadata/NBT）。
+        // 旧字段 "holding" 只存 registry name，读档会把附魔/耐久/数量全部丢掉。
+        if (this.holding != null && !this.holding.isEmpty()) {
+            NBTTagCompound holdingTag = new NBTTagCompound();
+            this.holding.writeToNBT(holdingTag);
+            tag.setTag("holdingItem", holdingTag);
+        }
+        // P10(S0): 背包完整存盘。
+        NBTTagList invTag = new NBTTagList();
+        if (this.inventory != null) {
+            for (ItemStack stack : this.inventory) {
+                if (stack == null || stack.isEmpty()) {
+                    continue;
+                }
+                NBTTagCompound itemTag = new NBTTagCompound();
+                stack.writeToNBT(itemTag);
+                invTag.appendTag(itemTag);
+            }
+        }
+        tag.setTag("inventory", invTag);
+        if (this.pos != null) {
+            tag.setString("pos", this.pos.toString());
+        }
+        if (this.tempEmployLoc != null) {
+            tag.setString("employedAt", this.tempEmployLoc.toString());
+        }
+        if (this.home != null) {
+            tag.setString("home", String.valueOf(this.home.ID));
+        } else if (this.homeId != null) {
+            tag.setString("home", this.homeId);
+        }
+        NBTTagList rels = new NBTTagList();
+        for (FolkRelationship rel : this.relationships) {
+            if (rel == null || rel.folk2 == null) {
+                continue;
+            }
+            NBTTagCompound r = new NBTTagCompound();
+            r.setString("uuid", rel.folk2.toString());
+            r.setString("family", rel.familyType == null ? "UNRELATED" : rel.familyType.name());
+            r.setString("level", rel.level == null ? "AQUAINTANCE" : rel.level.name());
+            r.setInteger("sub", rel.subLevel);
+            rels.appendTag(r);
+        }
+        tag.setTag("relationships", rels);
+        if (this.job != null) {
+            NBTTagCompound jobTag = new NBTTagCompound();
+            String jobId = SimIds.jobIdFromDisplay(this.job.jobName);
+            if (jobId.isEmpty()) {
+                jobId = SimIds.vocation(1);
+            }
+            jobTag.setString("id", jobId);
+            if (this.job.workPlace != null) {
+                jobTag.setString("site", this.job.workPlace.toString());
+            }
+            jobTag.setInteger("stage", this.job.stage);
+            if (this.job instanceof JobBuilder) {
+                JobBuilder jb = (JobBuilder) this.job;
+                if (jb.blueprint != null) {
+                    jobTag.setString("blueprint", jb.blueprint.name);
+                }
+                jobTag.setInteger("direction", jb.direction);
+            } else if (this.job instanceof JobTerrainFormer) {
+                JobTerrainFormer jt = (JobTerrainFormer) this.job;
+                if (jt.terrainType != null) {
+                    jobTag.setString("terrainName", jt.terrainType.terrainName);
+                    jobTag.setString("terrainType", jt.terrainType.terrainType);
+                }
+            }
+            tag.setTag("job", jobTag);
+        }
+        return tag;
+    }
+
+    /** P1: 从稳定 ID 的 NBT 恢复。 */
+    public void fromNBT(NBTTagCompound tag, World world) {
+        this.world = world;
+        try {
+            this.ID = UUID.fromString(tag.getString("uuid"));
+        } catch (Exception e) {
+            throw new IllegalStateException("非法 UUID: " + tag.getString("uuid"));
+        }
+        this.forename = tag.getString("fname");
+        this.surname = tag.getString("sname");
+        this.gender = tag.getInteger("gender");
+        this.age = tag.getInteger("age");
+        this.hunger = tag.hasKey("hunger") ? tag.getDouble("hunger") : 10.0D;
+        this.money = tag.hasKey("money") ? tag.getFloat("money") : 20.0F;
+        this.skillBuilding = tag.getFloat("skillBuilding");
+        this.skillFarming = tag.getFloat("skillFarming");
+        this.skillMining = tag.getFloat("skillMining");
+        this.pregnancyStage = tag.getFloat("pregnancy");
+        this.matingStage = tag.getFloat("mating");
+        this.isDead = tag.getBoolean("isDead");
+        this.skinnumber = tag.getInteger("skinnumber");
+        this.skinName = tag.getString("skin");
+        this.race = SimIds.raceFromId(tag.getString("race"));
+        if (this.race == null) {
+            this.assignRace();
+        }
+        this.trait1 = SimIds.traitFromId(tag.getString("trait1"));
+        this.trait2 = SimIds.traitFromId(tag.getString("trait2"));
+        this.trait3 = SimIds.traitFromId(tag.getString("trait3"));
+        // P10(S0): 优先读完整 ItemStack；旧档只有 registry name 时再走兼容路径。
+        if (tag.hasKey("holdingItem")) {
+            ItemStack savedHolding = new ItemStack(tag.getCompoundTag("holdingItem"));
+            this.holding = savedHolding.isEmpty() ? null : savedHolding;
+        } else {
+            this.holding = SimIds.itemFromId(tag.getString("holding"));
+        }
+        // P10(S0): 背包完整读档。
+        this.inventory.clear();
+        NBTTagList invTag = tag.getTagList("inventory", 10);
+        for (int i = 0; i < invTag.tagCount(); i++) {
+            ItemStack stack = new ItemStack(invTag.getCompoundTagAt(i));
+            if (!stack.isEmpty()) {
+                this.inventory.add(stack);
+            }
+        }
+        this.pos = tag.hasKey("pos") ? V3.fromString(tag.getString("pos")) : null;
+        this.tempEmployLoc = tag.hasKey("employedAt") ? V3.fromString(tag.getString("employedAt")) : null;
+        this.homeId = tag.hasKey("home") ? tag.getString("home") : null;
+        NBTTagList rels = tag.getTagList("relationships", 10);
+        for (int i = 0; i < rels.tagCount(); i++) {
+            NBTTagCompound r = rels.getCompoundTagAt(i);
+            try {
+                this.relationships.add(new FolkRelationship(this,
+                        r.getString("uuid") + "," + r.getString("family") + "," + r.getString("level") + "," + r.getInteger("sub")));
+            } catch (Exception ignored) {
+            }
+        }
+        if (tag.hasKey("job")) {
+            NBTTagCompound jt = tag.getCompoundTag("job");
+            String jobId = jt.getString("id");
+            V3 site = jt.hasKey("site") ? V3.fromString(jt.getString("site")) : this.tempEmployLoc;
+            BuildingBlueprint bp = jt.hasKey("blueprint") ? ModSimLoader.getBlueprintsByName(jt.getString("blueprint")) : null;
+            int direction = jt.getInteger("direction");
+            TerrainType terrain = jt.hasKey("terrainName")
+                    ? new TerrainType(jt.getString("terrainName"), jt.getString("terrainType")) : null;
+            this.job = JobFactory.createJobAt(this, jobId, site, bp, direction, terrain, world);
+            if (this.job != null) {
+                // P10(S0): 任务队列本身没有存盘，读档后 jobTasks 是空的。
+                // 不能把旧 stage 直接当下标（Job.onArrive 会 get(stage) 越界）。
+                // 统一从 -1 开始，让各职业在下一 tick 重建本轮任务。
+                this.job.stage = -1;
+            }
+        }
+    }
+
+    public void loadFolkLegacy(World world, UUID uuid) {
         try {
             File npcFolder = new File(ModSimLoader.getSavesDataFolder() + File.separator + "npc");
             if (!npcFolder.exists()) {
@@ -1331,10 +1665,21 @@ public class NpcData {
 //        } else {
             // 自然生成：随机位置（避免卡方块）
             Vec3d spawnPos = getSafeSpawnPosition(e, world);
+            if (spawnPos == null) {
+                BlockPos spawn = world.getSpawnPoint().up();
+                Vec3d fallback = new Vec3d(spawn.getX() + 0.5D, spawn.getY(), spawn.getZ() + 0.5D);
+                if (isPositionSafe(fallback, world, e)) {
+                    spawnPos = fallback;
+                }
+            }
             if (spawnPos != null) {
-                e.setPositionAndUpdate(spawnPos.x, spawnPos.y + 1.0D, spawnPos.z);
+                // P10(S0): getSafeSpawnPosition 返回的就是“脚部”位置，
+                // 原实现再 +1 会让实体悬空，随后掉下来，并且数据坐标和实体不一致。
+                e.setPositionAndUpdate(spawnPos.x, spawnPos.y, spawnPos.z);
                 e.noClip = false;
-                this.pos = V3.fromVec3d(spawnPos);
+                this.pos = new V3(spawnPos.x, spawnPos.y, spawnPos.z, world.provider.getDimension());
+            } else {
+                ModSimLoader.log.warn("找不到安全生成点，NPC 将延迟到区块加载后再定位: {}", this.ID);
             }
 //        }
     }
@@ -1368,15 +1713,20 @@ public class NpcData {
                 attempt++;
             }
 
-            // 第二步：玩家10格内多次尝试失败→直接生成在玩家身边（兜底，避免NPC无法生成）
-            ModSimLoader.log.debug("玩家10格内未找到安全位置，生成在玩家身边（尝试次数：{}）", MAX_PATH_ATTEMPT);
-            // 玩家位置上方1格生成（避免和玩家重叠）
-            return new Vec3d(player.posX, player.posY + 1, player.posZ);
+            // 第二步：玩家10格内多次尝试失败→退回到玩家脚下（仍有安全校验）
+            ModSimLoader.log.debug("玩家10格内未找到安全位置，尝试玩家脚下（尝试次数：{}）", MAX_PATH_ATTEMPT);
+            Vec3d playerFeet = new Vec3d(player.posX, player.posY, player.posZ);
+            if (isPositionSafe(playerFeet, world, e)) {
+                return playerFeet;
+            }
+            return null;
         }
 
-        // 第三步：无玩家在线→极端情况：世界出生点（复用原有逻辑）
-        ModSimLoader.log.debug("无在线玩家，生成在世界出生点");
-        return new Vec3d(0, 64, 0);
+        // 第三步：无玩家在线→世界出生点（同样做安全校验）
+        ModSimLoader.log.debug("无在线玩家，尝试世界出生点");
+        BlockPos spawn = world.getSpawnPoint().up();
+        Vec3d spawnPos = new Vec3d(spawn.getX() + 0.5D, spawn.getY(), spawn.getZ() + 0.5D);
+        return isPositionSafe(spawnPos, world, e) ? spawnPos : null;
     }
     /**
      * 校验位置是否安全：满足3个核心条件
@@ -1450,7 +1800,7 @@ public class NpcData {
                         jobTerrainFormer.conBox.folk = null;
                     }
                 }
-                Building building = ModSimLoader.getBuildingByV3(this.job.workPlace);
+                Building building = this.job.workPlace == null ? null : ModSimLoader.getBuildingByV3(this.job.workPlace);
                 if (building != null) {
                     building.occupants.remove(this);
                     building.saveBuilding();
@@ -1536,7 +1886,27 @@ public class NpcData {
     /**
      * 保存NPC
      */
+    /** P1: 保存到 SimStore（NBT，稳定 ID）。 */
     public void saveFolk() {
+        try {
+            if (this.ID == null) {
+                return;
+            }
+            if (this.home != null) {
+                this.homeId = String.valueOf(this.home.ID);
+            }
+            SimStore store = SimStore.get(this.world);
+            if (store == null) {
+                return;
+            }
+            store.putNpc(this.ID, this.toNBT());
+        } catch (Exception e) {
+            StackTraceElement element = e.getStackTrace()[0];
+            ModSimLoader.log.error("saveFolk(NBT)出错了：" + e.getMessage() + " 行数：" + element.getLineNumber());
+        }
+    }
+
+    public void saveFolkLegacy() {
         try {
             ModSimLoader.log.info("开始保存NPC数据，Uid："+this.ID);
             /*if (this.entity == null) {
@@ -1791,17 +2161,13 @@ public class NpcData {
                 ModSimLoader.log.info("loadFolk 开始重生实体:"+this.surname+this.forename);
                 //重生实体
                 EntityNpc ef = new EntityNpc(world, this.ID);
-                //设置手持物品
-//                if (this.holding != null) {
-//                    ef.setHeldItem(EnumHand.MAIN_HAND, this.holding);
-//                } else {
-//                    ef.setHeldItem(EnumHand.MAIN_HAND, new ItemStack(Blocks.AIR));
-//                }
+                // P10(S0): 原实现先 this.entity = ef 之前就访问 this.entity.noClip，
+                // 在 entity==null 时必然 NPE，重生实际上从未成功。
+                ef.noClip = false;
                 //坐标
-                this.pos = new V3(bp);
+                this.pos = new V3(bp, world.provider.getDimension());
                 //更新坐标
                 ef.setPositionAndUpdate((double) bp.getX() + 0.5D, (double) bp.getY() + 1.0D, (double) bp.getZ() + 0.5D);
-                this.entity.noClip = false;
                 this.entity = ef;
                 this.entity.theData = this;
                 ModSimLoader.log.info("********************Npc:" + this.ID + "重生于x:" + this.pos.x + ",y:" + this.pos.y + ",z:" + this.pos.z);
@@ -1934,17 +2300,22 @@ public class NpcData {
      */
     public void evict() {
         try {
-            if (this.home != null && this.home.occupants != null && this.home.occupants.size() > 0) {
-                this.home.occupants.remove(this);
-                this.home.saveBuilding();
+            Building oldHome = this.home;
+            if (oldHome != null) {
+                if (oldHome.occupants != null) {
+                    oldHome.occupants.remove(this);
+                }
+                oldHome.saveBuilding();
             }
-            this.entity.detachHome();
-
+            if (this.entity != null) {
+                this.entity.detachHome();
+            }
             this.home = null;
         } catch (Exception e) {
             StackTraceElement element = e.getStackTrace()[0];
+            // P10(S0): 原 catch 里再次访问 this.home.saveBuilding()，
+            // home 已经是 null 时二次 NPE。这里只记录，不再做危险操作。
             ModSimLoader.log.error("evict出错了：" + e.getMessage() + "行数：" + element.getLineNumber());
-            this.home.saveBuilding();
             this.home = null;
         }
     }
@@ -1965,6 +2336,13 @@ public class NpcData {
      **/
     public void onUpdate() {
         try {
+            // P10(S0): 区块未加载时实体不 tick，数据层也必须暂停。
+            // 只保留“已加载且实体已加入区块”的 NPC 推进任务。
+            if (!isActive()) {
+                this.pendingMoveTarget = null;
+                this.noProgressCount = 0;
+                return;
+            }
             Long now = System.currentTimeMillis();
             //每秒更新
             if (now - this.timeSinceLastStatusUpdate > 1000L) {
@@ -2037,43 +2415,69 @@ public class NpcData {
             } else if (this.job != null && !this.shouldWork() && this.entity != null && this.job.atWork) {
                 //等待
                 this.setStatus(new TextComponentTranslation("container.sim.folk_data.Wandering",new Object[0]).getUnformattedText());
-                //工作阶段0
-                this.job.stage = 0;
+                // P8: 收工必须"整队重置"：stage=-1 让第二天各职业重建全新任务，
+                // 并清空未执行完的任务队列/当前任务。原来只把 stage 置 0 且不清队列，
+                // 第二天会把昨天没跑完的任务（如取货中途的 JobTaskCollectItems）
+                // 重新 begin()，旧目的地被再次追加 → 重复坐标 → 收集死循环。
+                this.job.stage = -1;
+                this.job.jobTasks.clear();
+                this.job.currentTask = null;
                 //停止工作
                 this.job.atWork = false;
                 //停止工作
                 this.job.onWayToWork = false;
-                //清空最近工作任务
-                this.job.currentTask = null;
                 //自由活动
                 this.stayPut = false;
             }
             //工作为空 不应该工作 实体不为空
 
-            // 优化后的主逻辑
+            // 优化后的主逻辑（P3：白天/傍晚自由时间/深夜 三段）
             if ((this.job == null || !this.shouldWork()) && this.entity != null) {
-                // 任务队列处理
-                if (this.tasks.size() > 0) {
-                    if (this.currentTask == null) {
-                        this.currentTask = (Task) this.tasks.remove(0); // 从队列移除
-                        this.currentTask.begin();
+                boolean isDay = ModSimLoader.isDayTime(this.world);
+                if (!isDay) {
+                    long nightTicks = this.world.getWorldTime() % 24000L;
+                    boolean eveningFree = nightTicks < 12000L + EVENING_FREE_TICKS;
+                    if (eveningFree) {
+                        // 傍晚自由时间：工作被打断后先社交/闲逛一段时间，不急着回家
+                        if (this.currentTask != null) {
+                            this.currentTask.update();
+                        } else {
+                            discardNonEveningTasks();
+                            if (this.tasks.isEmpty()) {
+                                pickEveningTask();
+                            }
+                            if (!this.tasks.isEmpty()) {
+                                this.currentTask = (Task) this.tasks.remove(0);
+                                this.currentTask.begin();
+                            }
+                        }
                     } else {
-                        this.currentTask.update();
-
-                        // 夜晚特殊处理
-                        if (!ModSimLoader.isDayTime(this.world)) {
-                            interruptCurrentTasks(); // 强制中断所有非优先任务（核心！）
-                            handleNightLogic();
+                        // 深夜：清掉白天/傍晚遗留任务，强制回家睡觉
+                        interruptCurrentTasks();
+                        if (this.currentTask == null) {
+                            discardNonNightTasks();
+                            if (this.tasks.isEmpty()) {
+                                handleNightLogic();
+                            }
+                            if (!this.tasks.isEmpty()) {
+                                this.currentTask = (Task) this.tasks.remove(0);
+                                this.currentTask.begin();
+                            }
+                        } else {
+                            this.currentTask.update();
                         }
                     }
-                }
-                // 任务队列为空时的处理
-                else {
-                    if (ModSimLoader.isDayTime(this.world)) {
-                        this.pickRandomTask(); // 白天随机任务
+                } else {
+                    // 白天：任务队列处理
+                    if (this.tasks.size() > 0) {
+                        if (this.currentTask == null) {
+                            this.currentTask = (Task) this.tasks.remove(0);
+                            this.currentTask.begin();
+                        } else {
+                            this.currentTask.update();
+                        }
                     } else {
-                        interruptCurrentTasks(); // 强制中断所有非优先任务（核心！）
-                        handleNightLogic(); // 夜晚回家/睡觉
+                        this.pickRandomTask();
                     }
                 }
             }
@@ -2177,6 +2581,10 @@ public class NpcData {
     }
     // 封装夜晚逻辑
     private void handleNightLogic() {
+        // P3: 士兵 24 小时巡逻，不参与回家/睡觉
+        if (isSoldier()) {
+            return;
+        }
         String fs_n1 = new TextComponentTranslation("container.sim.folk_data.Sleeping").getUnformattedText();
         String fs_n2 = new TextComponentTranslation("container.sim.folk_data_Going_home").getUnformattedText();
 
@@ -2186,7 +2594,7 @@ public class NpcData {
                 this.addTask(new TaskSleep(this, -1L, fs_n1));
             }
         }
-        // 优先级2：有家但不在家 -> 回家
+        // 优先级2：有家但不在家 -> 走回家（走不到时由移动看门狗兜底传送）
         else if (this.home != null) {
             if (!hasTaskOfType(TaskGoTo.class)) {
                 TaskGoTo task = new TaskGoTo(this, -1L, this.home, fs_n2);
@@ -2200,21 +2608,78 @@ public class NpcData {
             }
         }
     }
-    /** 强制终止当前任务（若非优先任务）并清空队列 */
+
+    /** P3: 傍晚自由时间：优先找人社交，找不到就闲逛；时长受剩余自由时间限制。 */
+    private void pickEveningTask() {
+        try {
+            long nightTicks = this.world.getWorldTime() % 24000L;
+            long remainTicks = (12000L + EVENING_FREE_TICKS) - nightTicks;
+            long remainMs = Math.max(3000L, remainTicks * 50L);
+            // P9: 傍晚自由时间先解决吃饭——背包没食物且饿了就去食品店，
+            // 吃完/不饿才去社交/闲逛。
+            if (this.hunger < 8.0D && !this.hasFoodInInventory()) {
+                Building shop = findFoodShop();
+                if (shop != null) {
+                    this.addTask(new TaskBuyFood(this, Math.min(90000L, remainMs), shop));
+                    return;
+                }
+            }
+            NpcData partner = null;
+            for (NpcData fd : ModSimLoader.folks) {
+                if (fd == null || fd == this || fd.entity == null || fd.home == null) {
+                    continue;
+                }
+                if (this.getV3() != null && fd.getV3() != null
+                        && this.getV3().distanceSq(fd.getV3()) < 1600.0D) {
+                    partner = fd;
+                    break;
+                }
+            }
+            if (partner != null && new Random().nextInt(2) == 0) {
+                this.addTask(new TaskSocialise(this, Math.min(remainMs, 15000L), partner, this.home, false));
+            } else {
+                this.addTask(new TaskWander(this, Math.min(remainMs, 10000L)));
+            }
+        } catch (Exception e) {
+            ModSimLoader.log.error("pickEveningTask出错了：" + e.getMessage());
+        }
+    }
+
+    /** P3: 傍晚自由时间只保留社交/闲逛任务，丢掉工作/购物等白天任务。 */
+    private void discardNonEveningTasks() {
+        for (int i = this.tasks.size() - 1; i >= 0; i--) {
+            Task t = this.tasks.get(i);
+            if (!(t instanceof TaskSocialise) && !(t instanceof TaskWander)) {
+                this.tasks.remove(i);
+            }
+        }
+    }
+
+    /** P3: 深夜只保留"回家/睡觉"任务，丢掉其余任务（原来 interrupt 不清队列，NPC 半夜还在跑白天任务）。 */
+    private void discardNonNightTasks() {
+        String sleeping = new TextComponentTranslation("container.sim.folk_data.Sleeping", new Object[0]).getUnformattedText();
+        String goingHome = new TextComponentTranslation("container.sim.folk_data_Going_home", new Object[0]).getUnformattedText();
+        for (int i = this.tasks.size() - 1; i >= 0; i--) {
+            Task t = this.tasks.get(i);
+            String s = t.getStatusText();
+            boolean keep = t instanceof TaskSleep || t instanceof TaskGoTo
+                    || (s != null && (s.equals(sleeping) || s.equals(goingHome)));
+            if (!keep) {
+                this.tasks.remove(i);
+            }
+        }
+    }
+    /** 强制终止当前任务（若不是回家/睡觉） */
     private void interruptCurrentTasks() {
-        // 1. 终止当前任务（若不是回家/睡觉）
         if (this.currentTask != null) {
-            String fs_n1 = new TextComponentTranslation("container.sim.folk_data.Sleeping").getUnformattedText();
-            String fs_n2 = new TextComponentTranslation("container.sim.folk_data_Going_home").getUnformattedText();
+            String sleeping = new TextComponentTranslation("container.sim.folk_data.Sleeping").getUnformattedText();
+            String goingHome = new TextComponentTranslation("container.sim.folk_data_Going_home").getUnformattedText();
             String currentStatus = this.currentTask.getStatusText();
-            // 若当前任务不是“睡觉”或“回家”，则强制完成（终止）
-            if (currentStatus == null || (!currentStatus.equals(fs_n1) && !currentStatus.equals(fs_n2))) {
+            if (currentStatus == null || (!currentStatus.equals(sleeping) && !currentStatus.equals(goingHome))) {
                 this.currentTask.onTaskComplete(); // 终止当前任务
                 this.currentTask = null; // 清空当前任务引用
             }
         }
-        // 2. 清空任务队列（丢弃所有未执行任务）
-//        this.tasks.clear();
     }
     /**
      * @return boolean
@@ -2254,6 +2719,14 @@ public class NpcData {
      **/
     public void onSecond() {
         try {
+            // P2+: 移动无进展看门狗
+            tickMoveWatchdog();
+            // P2+: 屋顶看门狗（部分情况下 NPC 会停在屋顶）
+            tickRoofWatchdog();
+            // P3: 深夜强制睡觉兜底（士兵除外）
+            enforceNightSleep();
+            // P4: 先不做定价系统——饿了先吃自己背包里的食物，保证不会被饿死
+            trySelfFeed();
             if (this.entity != null) {
                 //应该工作就去工作
                 if (this.job != null && this.shouldWork()) {
@@ -2431,9 +2904,10 @@ public class NpcData {
                             ModSimLoader.sendChat(this.getName() +"::"+  fs_ldzl);
                         }else{
                             //孕妇难产死了 谢谢点赞
-                            this.entity.setDead();//标记实体死亡
+                            ModSimLoader.log.info("NPC {} 因无医疗设施难产致死", this.getName());
+                            // P10(S0): 统一走 onDeath 清理，避免只 setDead 留下幽灵数据。
+                            this.onDeath(DamageSource.STARVE);
                             this.setStatus(new TextComponentTranslation("container.sim.folk_data_a_baby_day", new Object[0]).getUnformattedText());
-                            ModSimLoader.log.info("NPC {} 因无医疗设施难产致死", this.entity.getName());
                             String fs_ldzl =new TextComponentTranslation("container.sim.folk_data_a_baby_day", new Object[0]).getUnformattedText();
                             ModSimLoader.sendChat(this.getName() +"::"+  fs_ldzl);
 
@@ -2475,8 +2949,15 @@ public class NpcData {
      * @Param []
      **/
     public void nextTask() {
-        this.currentTask = null;
-        this.tasks.remove(0);
+        // P9: 原来无条件 this.tasks.remove(0)。当任务已完成/被 addTask(TaskSleep)
+        // 清空/重复完成时，对空列表 remove(0) 会直接 ArrayIndexOutOfBoundsException
+        // 崩服（TaskBuyFood 完成时踩到过）。改为安全移除。
+        if (this.currentTask != null) {
+            this.tasks.remove(this.currentTask);
+            this.currentTask = null;
+        } else if (!this.tasks.isEmpty()) {
+            this.tasks.remove(0);
+        }
         if (this.tasks.size() > 0) {
             this.currentTask = (Task) this.tasks.get(0);
             this.currentTask.begin();
@@ -2493,6 +2974,15 @@ public class NpcData {
      **/
     public void pickRandomTask() {
         try {
+            // P9: 没有职业/空闲时，吃饭是绝对第一优先级：
+            // 背包有食物时 trySelfFeed 会每秒自动吃；没食物才去最近的食品店。
+            if (this.hunger < 8.0D && !this.hasFoodInInventory()) {
+                Building shop = findFoodShop();
+                if (shop != null) {
+                    this.addTask(new TaskBuyFood(this, 120000L, shop));
+                    return;
+                }
+            }
             //有家并且随机任务是3
             if (this.home != null && new Random().nextInt(4) == 3) {
                 //回家在家放松
@@ -2704,30 +3194,48 @@ public class NpcData {
         }
         return npcData;
     }
-    public void forceMoveToXYZs(V3 v3) {
-//        V3 v31=new V3(v3.x,v3.y+1,v3.z);
-        this.entity.getNavigator().clearPath();
-        V3 v31 = getAdjustedV3(v3);
-        Path path=this.entity.getNavigator().getPathToXYZ(v31.x,v31.y,v31.z);
-        Path path1=this.entity.getNavigator().getPath();
-        //已有地址 则更新地址
-        if(path==path1&&path!=null&&path1!=null){
-            this.entity.getNavigator().tryMoveToXYZ(v31.x,v31.y,v31.z,10);
-            this.entity.getNavigator().onUpdateNavigation();
-        }else{
-            spawnPortalParticles();
-//            this.entity.move(MoverType.SELF,v31.x,v31.y,v31.z);
-            //tp命令
-            this.entity.getNavigator().tryMoveToXYZ(v31.x,v31.y,v31.z,10);
-            this.entity.setPositionAndUpdate(v31.x,v31.y,v31.z);
-            this.entity.noClip = false;
-//            this.entity.onUpdate(); // 触发生命周期，同步坐标
+    /**
+     * P4: 只走路——没有路径就返回 false，**绝不传送**，也不登记看门狗目标。
+     * 巡逻、追击、闲逛这类"机会性移动"用它，避免被传送系统干扰。
+     */
+    public boolean walkTo(V3 v3) {
+        if (this.entity == null || v3 == null || !canReach(v3)) {
+            return false;
         }
-        if(path!=null){
-            //设置地址
-            this.entity.getNavigator().tryMoveToXYZ(v31.x,v31.y,v31.z,10);
-            this.entity.getNavigator().setPath(path,10);
+        try {
+            V3 target = getAdjustedV3(v3);
+            Path path = this.entity.getNavigator().getPathToXYZ(target.x, target.y, target.z);
+            if (path == null) {
+                return false;
+            }
+            this.entity.getNavigator().setPath(path, 1.0D);
+            return true;
+        } catch (Exception e) {
+            return false;
+        }
+    }
 
+    public void forceMoveToXYZs(V3 v3) {
+        if (this.entity == null || v3 == null) {
+            return;
+        }
+        if (!canReach(v3)) {
+            return;
+        }
+        V3 target = getAdjustedV3(v3);
+        // P10(S0): 先登记目标，让“无进展看门狗”有机会在路径失败时救援；
+        // 但不再因为距离 >32 就立即传送。所有移动先走寻路。
+        noteMoveTarget(v3);
+        if (!isTargetLoaded(target)) {
+            return;
+        }
+        try {
+            Path path = this.entity.getNavigator().getPathToXYZ(target.x, target.y, target.z);
+            if (path != null) {
+                this.entity.getNavigator().setPath(path, 1.0D);
+            }
+        } catch (Exception e) {
+            ModSimLoader.log.error("forceMoveToXYZs出错了：" + e.getMessage());
         }
     }
     /**
@@ -2738,66 +3246,410 @@ public class NpcData {
      * @Param [v3]
      **/
     public boolean forceMoveToXYZ(V3 v3) {
-        this.stayPut=false;
-        this.entity.getNavigator().clearPath();/**/
-        // 增加 1 的偏移量
+        this.stayPut = false;
+        if (this.entity == null || v3 == null) {
+            return false;
+        }
+        if (!canReach(v3)) {
+            return false;
+        }
         V3 targetV3 = getAdjustedV3(v3);
-
+        noteMoveTarget(v3);
+        if (!isTargetLoaded(targetV3)) {
+            return false;
+        }
         try {
-            // 获取到目标位置的路径
-            Path path = this.entity.getNavigator().getPathToXYZ(targetV3.x,targetV3.y,targetV3.z);
-            //当前路径
-            Path currentPath = this.entity.getNavigator().getPath();
-
-
-
-            // 如果路径不为空，设置路径和速度
+            // P10(S0): 删除了“距离 >32 格立即传送”。
+            // 远距离移动必须先寻路；只有看门狗确认连续 5 秒无进展才允许救援传送。
+            Path path = this.entity.getNavigator().getPathToXYZ(targetV3.x, targetV3.y, targetV3.z);
             if (path != null) {
-                this.entity.getNavigator().setPath(path, 1.5);
-                currentPath = this.entity.getNavigator().getPath();
-            }else{
-                spawnPortalParticles();
-//                this.entity.move(MoverType.SELF,targetV3.x, targetV3.y, targetV3.z);
-                //tp命令
-                this.entity.getNavigator().tryMoveToXYZ(targetV3.x,targetV3.y,targetV3.z,10);
-                this.entity.setPositionAndUpdate(targetV3.x, targetV3.y, targetV3.z);
-                this.entity.noClip = false;
-            }
-            // 如果已有路径且路径相同，则更新导航
-            if (currentPath!=null&&!isSamePath(path, currentPath)) {
-                this.entity.getNavigator().onUpdateNavigation();
-            }
-            // 检测 NPC 当前位置与终点位置的距离
-            double distance = this.entity.getDistance(targetV3.x, targetV3.y, targetV3.z);
-            path = this.entity.getNavigator().getPathToXYZ(targetV3.x,targetV3.y,targetV3.z);
-            if (distance >= 15||path == null) {
-                // 生成粒子效果
-                spawnPortalParticles();
-//                this.entity.move(MoverType.SELF,targetV3.x, targetV3.y, targetV3.z);
-                //tp命令
-                this.entity.getNavigator().tryMoveToXYZ(targetV3.x,targetV3.y,targetV3.z,10);
-
-                this.entity.setPositionAndUpdate(targetV3.x, targetV3.y, targetV3.z);
-                this.entity.noClip = false;
-//                this.entity.getNavigator().clearPath();
+                this.entity.getNavigator().setPath(path, 1.0D);
                 return true;
             }
-            // 检测当前位置前方是否有方块阻挡
-            if (isPathBlocked(1)) {
-                // 如果前方有方块阻挡，重新获取路径
-                path = this.entity.getNavigator().getPathToXYZ(targetV3.x,targetV3.y,targetV3.z);
-                if (path != null) {
-                    this.entity.getNavigator().setPath(path, 2D);
-                }
-                this.entity.getNavigator().onUpdateNavigation();
-            }
-
+            return false;
         } catch (Exception e) {
-            // 记录错误信息
             StackTraceElement element = e.getStackTrace()[0];
             ModSimLoader.log.error("forceMoveToXYZ出错了：" + e.getMessage() + "行数：" + element.getLineNumber());
+            return false;
         }
-        return true;
+    }
+
+    /**
+     * P10(S0): 维度必须严格相等。
+     * 原实现把 dimension==0 当通配符，导致主世界目标可以在地狱/末地执行，
+     * 反之亦然；这是跨维度乱传的根源。
+     */
+    private boolean canReach(V3 v3) {
+        return this.entity != null && v3 != null && v3.dimension == this.entity.dimension;
+    }
+
+    /** P10(S0): 目标方块所在区块必须已加载，禁止寻路/传送隐式加载区块。 */
+    private boolean isTargetLoaded(V3 v3) {
+        if (this.entity == null || v3 == null || this.entity.world == null) {
+            return false;
+        }
+        if (v3.dimension != this.entity.dimension) {
+            return false;
+        }
+        return this.entity.world.isBlockLoaded(new BlockPos(v3.x, v3.y, v3.z));
+    }
+
+    /** P10(S0): 传送落点必须是“脚下实体方块 + 两格空气”。 */
+    private boolean isSafeTeleport(V3 v3) {
+        if (!isTargetLoaded(v3)) {
+            return false;
+        }
+        World w = this.entity.world;
+        BlockPos feet = new BlockPos(v3.x, v3.y, v3.z);
+        if (!w.isAirBlock(feet) || !w.isAirBlock(feet.up())) {
+            return false;
+        }
+        IBlockState ground = w.getBlockState(feet.down());
+        return ground.getMaterial().isSolid() && !ground.getMaterial().isLiquid();
+    }
+
+    /** P10(S0): 冷却中的安全传送；只接受 attemptTeleport 的落点检查结果。 */
+    private boolean teleportWithCooldown(V3 target) {
+        long now = System.currentTimeMillis();
+        if (now - this.lastTeleportTime < TELEPORT_COOLDOWN_MS) {
+            return false;
+        }
+        if (!isSafeTeleport(target)) {
+            return false;
+        }
+        this.lastTeleportTime = now;
+        boolean ok = false;
+        try {
+            if (this.entity instanceof net.minecraft.entity.EntityLivingBase) {
+                ok = ((net.minecraft.entity.EntityLivingBase) this.entity).attemptTeleport(target.x, target.y, target.z);
+            }
+        } catch (Exception e) {
+            ModSimLoader.log.error("teleportWithCooldown出错了：" + e.getMessage());
+            return false;
+        }
+        if (ok) {
+            this.pos = V3.fromVec3d(this.entity.getPositionVector());
+            this.pos.dimension = this.entity.dimension;
+            spawnPortalParticles();
+        }
+        return ok;
+    }
+
+    /** P2+: 记录当前移动目标，供"无进展看门狗"判断。 */
+    private void noteMoveTarget(V3 v3) {
+        // P9: 只有"目标变化"时才重置无进展计数。取货等任务会每秒重发
+        // forceMoveToXYZ（原来甚至每 tick 重发），每次都把 noProgressCount
+        // 清零，导致看门狗永远触发不了——NPC 卡在栅栏/障碍旁可以
+        // "永远收集材料"。同目标重发不再重置，交给看门狗自己数秒。
+        boolean sameTarget = this.pendingMoveTarget != null && this.pendingMoveTarget.equals(v3);
+        this.pendingMoveTarget = new V3(v3.x, v3.y, v3.z, v3.dimension);
+        if (!sameTarget) {
+            if (this.entity != null) {
+                this.lastProgressX = this.entity.posX;
+                this.lastProgressZ = this.entity.posZ;
+            }
+            this.lastProgressCheck = System.currentTimeMillis();
+            this.noProgressCount = 0;
+        }
+    }
+
+    /**
+     * P2+: 移动进度看门狗（每秒调用）。
+     * 有目标、还没到，且连续 5 秒几乎没位移 → 强制救援传送到目标附近。
+     * 这能兜住"卡在栅栏/门/方块缝里"这类非窒息型卡死。
+     */
+    private void tickMoveWatchdog() {
+        if (this.entity == null || this.pendingMoveTarget == null) {
+            return;
+        }
+        // P4: 士兵不参与"移动无进展"传送——巡逻/追击本身就是到处跑，
+        // 只有窒息救援这种紧急情况才允许传送士兵。
+        if (isSoldier()) {
+            this.pendingMoveTarget = null;
+            this.noProgressCount = 0;
+            return;
+        }
+        // P4: 与战斗/静止状态解耦——士兵停下来打怪、商店站桩、睡觉都不算"卡死"
+        if (this.stayPut || this.currentTask instanceof TaskSleep) {
+            this.noProgressCount = 0;
+            return;
+        }
+        if (this.entity instanceof net.minecraft.entity.EntityLivingBase) {
+            net.minecraft.entity.EntityLivingBase lb = (net.minecraft.entity.EntityLivingBase) this.entity;
+            if (lb.getRevengeTarget() != null) {
+                this.noProgressCount = 0;
+                this.lastProgressCheck = System.currentTimeMillis();
+                this.lastProgressX = this.entity.posX;
+                this.lastProgressZ = this.entity.posZ;
+                return;
+            }
+        }
+        V3 t = this.pendingMoveTarget;
+        double dx = Math.abs(this.entity.posX - t.x);
+        double dz = Math.abs(this.entity.posZ - t.z);
+        if (dx < 2.0D && dz < 2.0D) {
+            this.pendingMoveTarget = null;
+            this.noProgressCount = 0;
+            return;
+        }
+        long now = System.currentTimeMillis();
+        if (now - this.lastProgressCheck < 1000L) {
+            return;
+        }
+        double moved = Math.abs(this.entity.posX - this.lastProgressX)
+                + Math.abs(this.entity.posZ - this.lastProgressZ);
+        if (moved < 0.3D) {
+            ++this.noProgressCount;
+            if (this.noProgressCount >= 5) {
+                ModSimLoader.log.warn("NPC {} 移动无进展，救援传送到 {}", this.getName(), t);
+                forceRescueTeleport(t);
+                this.pendingMoveTarget = null;
+                this.noProgressCount = 0;
+            }
+        } else {
+            this.noProgressCount = 0;
+        }
+        this.lastProgressX = this.entity.posX;
+        this.lastProgressZ = this.entity.posZ;
+        this.lastProgressCheck = now;
+    }
+
+    /** P2+: 传送全局限频：同一 NPC 至少间隔 2 秒才允许下一次强制传送。 */
+    private static final long TELEPORT_MIN_INTERVAL_MS = 2000L;
+    /** P4: 超过这个距离的工作类移动允许一次冷却传送（巡逻用 walkTo，不受影响）。 */
+    private static final double LONG_DISTANCE_TELEPORT = 32.0D;
+
+    /**
+     * P2+: 无视冷却的定点传送（去工作超时、救援等硬性场景）。
+     * 跨维度会被拒绝；使用原版 attemptTeleport（自带落点检查）。
+     */
+    public void forceTeleportTo(V3 v3) {
+        if (this.entity == null || v3 == null) {
+            return;
+        }
+        if (v3.dimension != this.entity.dimension) {
+            ModSimLoader.log.warn("forceTeleportTo 跨维度被拒绝: 当前 {} 目标 {}", this.entity.dimension, v3.dimension);
+            return;
+        }
+        // P4: 全局限频，避免窒息救援/看门狗/去工作超时在同一秒里互相抢着传送
+        long now = System.currentTimeMillis();
+        if (now - this.lastTeleportTime < TELEPORT_MIN_INTERVAL_MS) {
+            return;
+        }
+        try {
+            V3 adjusted = getAdjustedV3(v3);
+            // P10(S0): 目标区块未加载/落点不安全就不传送。
+            // 原实现失败后 setPositionAndUpdate 强塞，可能把 NPC 塞进方块或空中。
+            if (!isSafeTeleport(adjusted)) {
+                ModSimLoader.log.warn("forceTeleportTo 目标不安全或未加载，取消: {}", adjusted);
+                return;
+            }
+            this.lastTeleportTime = now;
+            boolean ok = this.entity instanceof net.minecraft.entity.EntityLivingBase
+                    && ((net.minecraft.entity.EntityLivingBase) this.entity)
+                    .attemptTeleport(adjusted.x, adjusted.y, adjusted.z);
+            if (!ok) {
+                ModSimLoader.log.warn("forceTeleportTo 落点被原版拒绝: {}", adjusted);
+                return;
+            }
+            this.pos = V3.fromVec3d(this.entity.getPositionVector());
+            this.pos.dimension = this.entity.dimension;
+            spawnPortalParticles();
+        } catch (Exception e) {
+            ModSimLoader.log.error("forceTeleportTo出错了：" + e.getMessage());
+        }
+    }
+
+    /** P3: 把 NPC 精确放到指定位置（睡觉用，不产生粒子）。 */
+    public void snapTo(V3 v3) {
+        if (this.entity == null || v3 == null) {
+            return;
+        }
+        if (v3.dimension != this.entity.dimension) {
+            return;
+        }
+        try {
+            V3 adjusted = getAdjustedV3(v3);
+            if (!isTargetLoaded(adjusted)) {
+                return;
+            }
+            this.entity.setPositionAndUpdate(adjusted.x, adjusted.y, adjusted.z);
+            this.entity.getNavigator().clearPath();
+            this.pos = V3.fromVec3d(this.entity.getPositionVector());
+            this.pos.dimension = this.entity.dimension;
+        } catch (Exception e) {
+            ModSimLoader.log.error("snapTo出错了：" + e.getMessage());
+        }
+    }
+
+    /** P2+: 无视冷却的救援传送（看门狗/窒息救援使用）。 */
+    private void forceRescueTeleport(V3 target) {
+        forceTeleportTo(target);
+    }
+
+    /**
+     * P4: 先不做定价系统——NPC 饿了先吃自己背包里的食物；
+     * 背包没食物时由 pickRandomTask 去食品店免费取用（TaskBuyFood）。
+     * 配合"饿到 0 也不会死"，保证 NPC 不会被饿死。
+     */
+    private void trySelfFeed() {
+        try {
+            if (this.hunger >= 8.0D || this.inventory == null || this.inventory.isEmpty()) {
+                return;
+            }
+            for (int i = 0; i < this.inventory.size(); i++) {
+                ItemStack st = this.inventory.get(i);
+                if (st == null || st.isEmpty() || !(st.getItem() instanceof ItemFood)) {
+                    continue;
+                }
+                ItemFood food = (ItemFood) st.getItem();
+                int heal = Math.max(1, food.getHealAmount(st) / 2);
+                this.hunger = Math.min(10.0D, this.hunger + heal);
+                st.shrink(1);
+                if (st.isEmpty()) {
+                    this.inventory.remove(i);
+                }
+                ModSimLoader.log.info("{} 吃了背包里的食物，饥饿值 {}", this.getName(), this.hunger);
+                return;
+            }
+        } catch (Exception e) {
+            ModSimLoader.log.error("trySelfFeed出错了：" + e.getMessage());
+        }
+    }
+
+    /**
+     * P9: 背包里是否有可吃的东西。
+     * 有 → trySelfFeed 每秒自动吃；没有 → 白天/傍晚的自由时间应优先去食品店。
+     */
+    public boolean hasFoodInInventory() {
+        try {
+            if (this.inventory == null) {
+                return false;
+            }
+            for (ItemStack st : this.inventory) {
+                if (st != null && !st.isEmpty() && st.getItem() instanceof ItemFood) {
+                    return true;
+                }
+            }
+        } catch (Exception e) {
+            ModSimLoader.log.error("hasFoodInInventory出错了：" + e.getMessage());
+        }
+        return false;
+    }
+
+    /** P3: 士兵 24 小时巡逻，不受夜晚回家/睡觉规则影响。 */
+    public boolean isSoldier() {
+        return this.job instanceof com.trhsy.sim.npcCode.job.JobSoldier;
+    }
+
+    /** P4: 最近的食品店（面包师/杂货商/食品商/麦当劳/汉堡店），用于"饿了买吃的"。 */
+    private Building findFoodShop() {
+        Building best = null;
+        double bestDist = Double.MAX_VALUE;
+        for (Building b : ModSimLoader.buildings) {
+            if (b == null || b.jobType == null || b.jobType.isEmpty()) {
+                continue;
+            }
+            String jid = SimIds.jobIdFromDisplay(b.jobType);
+            if (!(jid.equals(SimIds.vocation(6)) || jid.equals(SimIds.vocation(9))
+                    || jid.equals(SimIds.vocation(26)) || jid.equals(SimIds.vocation(35))
+                    || jid.equals(SimIds.vocation(36)))) {
+                continue;
+            }
+            V3 ref = b.livingXYZ != null ? b.livingXYZ : b.controlXYZ;
+            if (ref == null || this.getV3() == null) {
+                continue;
+            }
+            double d = ref.distanceSq(this.getV3());
+            if (d < bestDist) {
+                bestDist = d;
+                best = b;
+            }
+        }
+        return best;
+    }
+
+    /**
+     * P2+: 屋顶看门狗。NPC 高于"移动目标/住宅/工作点"5 格以上并持续 5 秒，
+     * 判定为卡在屋顶（多半是被旧的向上落点搜索放上去的），救援传送到目标。
+     */
+    private void tickRoofWatchdog() {
+        try {
+            if (this.entity == null || this.world.isRemote) {
+                return;
+            }
+            // P4: 战斗/静止时不判定屋顶（避免打怪时被"屋顶"逻辑传来传去）
+            if (this.stayPut) {
+                this.roofTicks = 0;
+                return;
+            }
+            if (this.entity instanceof net.minecraft.entity.EntityLivingBase) {
+                net.minecraft.entity.EntityLivingBase lb = (net.minecraft.entity.EntityLivingBase) this.entity;
+                if (lb.getRevengeTarget() != null) {
+                    this.roofTicks = 0;
+                    return;
+                }
+            }
+            // P4: 屋顶判定只针对"自己家"（x/z 8 格内、y 高 5 格以上）；
+            // 巡逻中的士兵、在山上工作、在别人家楼顶都不算。
+            if (this.home == null || this.home.livingXYZ == null || isSoldier()) {
+                this.roofTicks = 0;
+                return;
+            }
+            V3 ref = this.home.livingXYZ;
+            double dx = Math.abs(this.entity.posX - ref.x);
+            double dz = Math.abs(this.entity.posZ - ref.z);
+            if (dx < 8.0D && dz < 8.0D && this.entity.posY - ref.y > 5.0D) {
+                ++this.roofTicks;
+                if (this.roofTicks >= 5) {
+                    this.roofTicks = 0;
+                    ModSimLoader.log.warn("NPC {} 疑似卡在屋顶，救援传送到 {}", this.getName(), ref);
+                    forceRescueTeleport(ref);
+                }
+            } else {
+                this.roofTicks = 0;
+            }
+        } catch (Exception e) {
+            ModSimLoader.log.error("tickRoofWatchdog出错了：" + e.getMessage());
+        }
+    }
+
+    /**
+     * P3: 深夜强制睡觉兜底。士兵除外；深夜（自由时间结束后）10 秒仍未进入睡觉任务，
+     * 就清掉任务、必要时传送回家、强制睡觉。任务系统万一没接上，这里保证不出"整夜闲逛"。
+     */
+    private void enforceNightSleep() {
+        try {
+            if (this.entity == null || this.world.isRemote || isSoldier()) {
+                return;
+            }
+            boolean isDay = ModSimLoader.isDayTime(this.world);
+            long nightTicks = this.world.getWorldTime() % 24000L;
+            if (isDay || nightTicks < 12000L + EVENING_FREE_TICKS) {
+                this.deepNightTicks = 0;
+                return;
+            }
+            if (this.currentTask instanceof TaskSleep) {
+                this.deepNightTicks = 0;
+                return;
+            }
+            this.deepNightTicks += 20;
+            if (this.deepNightTicks < 200) {
+                return;
+            }
+            this.deepNightTicks = 0;
+            this.tasks.clear();
+            this.currentTask = null;
+            if (this.home != null && this.home.livingXYZ != null && !this.isAtBuilding(this.home)) {
+                this.forceTeleportTo(this.home.livingXYZ);
+            }
+            this.currentTask = new TaskSleep(this, -1L,
+                    new TextComponentTranslation("container.sim.folk_data.Sleeping", new Object[0]).getUnformattedText());
+            this.currentTask.begin();
+            ModSimLoader.log.info("{} 深夜未入睡，已强制回家睡觉", this.getName());
+        } catch (Exception e) {
+            ModSimLoader.log.error("enforceNightSleep出错了：" + e.getMessage());
+        }
     }
     /**
      * 检测当前位置前方是否有方块阻挡
@@ -2859,58 +3711,20 @@ public class NpcData {
      * 生成传送门粒子效果
      */
     private void spawnPortalParticles() {
-       //第三版
-        // 使用实体自带的随机数生成器（更高效且与实体状态关联）
-        Random random = this.entity.getRNG();
-        // 获取世界实例（缓存避免重复调用）
-        World world =  Minecraft.getMinecraft().world;
-        // 粒子数量（可根据需求调整）
-        int particleCount = 16;
-        //
-        for (int i = 0; i < particleCount; ++i) {
-            // 计算粒子在实体周围的随机位置（扩展范围）
-            // x/z 方向：在实体位置的 ±0.5 格内随机偏移（可根据需求调整系数）
-            double xOffset = (random.nextDouble() - 0.5) * 1.0; // -0.5 到 +0.5
-            double zOffset = (random.nextDouble() - 0.5) * 1.0;
-            // y 方向：在实体高度的中间位置（0.8125F 是原代码的固定值，可根据需求调整）
-            double yOffset = 0.8125F + (random.nextDouble() - 0.5) * 0.2; // 上下小范围波动
-
-            // 最终粒子坐标
-            double x = this.pos.x + xOffset;
-            double y = this.pos.y + yOffset;
-            double z = this.pos.z + zOffset;
-            // 粒子运动偏移（模拟流动效果）
-            double motionX = (random.nextDouble() - 0.5) * 0.1; // 左右轻微晃动
-            double motionY = (random.nextDouble() - 0.5) * 0.1; // 上下轻微晃动
-            double motionZ = (random.nextDouble() - 0.5) * 0.1;
-// 生成传送门粒子（参数：世界、x、y、z、运动X、运动Y、运动Z、额外数据）
-            world.spawnParticle(
-                    EnumParticleTypes.PORTAL,
-                    x, y, z,
-                    motionX, motionY, motionZ,
-                    new int[0]
-            );
-/*
-            // 粒子运动偏移（模拟流动效果） 第二版
-            double motionX = (random.nextDouble() - 0.5) * 0.1; // 左右轻微晃动
-            double motionY = (random.nextDouble() - 0.5) * 0.1; // 上下轻微晃动
-            double motionZ = (random.nextDouble() - 0.5) * 0.1;
-
-            double d0 = (double) ((float) this.pos.x + (5.0F + new Random().nextFloat() * 6.0F) / 16.0F);
-            double d1 = (double) ((float) this.pos.y + 0.8125F);
-            double d2 = (double) ((float) this.pos.z + (5.0F + new Random().nextFloat() * 6.0F) / 16.0F);
-            double d3 = 0.0D;
-            double d4 = 0.0D;
-            double d5 = 0.0D;
-            Minecraft mc = Minecraft.getMinecraft();
-            mc.world.spawnParticle(EnumParticleTypes.PORTAL, d0, d1, d2, 0.0D, 0.0D, 0.0D, new int[0]);*/
-//            double d0 = random.nextDouble() * 0.5D;
-//            double d1 = random.nextDouble() * 0.5D;
-//            double d2 = random.nextDouble() * 0.5D;
-//            double d3 = random.nextDouble() * (double) this.entity.width * 2.0D - (double) this.entity.width;
-//            double d4 = 0.5D + random.nextDouble() * (double) this.entity.height;
-//            double d5 = random.nextDouble() * (double) this.entity.width * 2.0D - (double) this.entity.width;
-//            world.spawnParticle(EnumParticleTypes.PORTAL, this.pos.x + d3, this.pos.y + d4, this.pos.z + d5, d0, d1, d2);
+        // P2: 服务端安全的粒子。原实现用 Minecraft.getMinecraft().world：
+        // 专用服务器上为 null（NPE 被吞，每次传送刷错误日志），单机则可能把粒子
+        // 生成在客户端世界。WorldServer.spawnParticle 会自动广播给附近玩家。
+        try {
+            World w = this.entity != null ? this.entity.world : this.world;
+            if (!(w instanceof WorldServer) || w.isRemote) {
+                return;
+            }
+            WorldServer ws = (WorldServer) w;
+            double x = this.pos != null ? this.pos.x : this.entity.posX;
+            double y = (this.pos != null ? this.pos.y : this.entity.posY) + 0.8D;
+            double z = this.pos != null ? this.pos.z : this.entity.posZ;
+            ws.spawnParticle(EnumParticleTypes.PORTAL, false, x, y, z, 24, 0.5D, 0.5D, 0.5D, 0.05D);
+        } catch (Exception ignored) {
         }
     }
     /**
@@ -2919,7 +3733,31 @@ public class NpcData {
      * @return 调整后的 V3 位置
      */
     private V3 getAdjustedV3(V3 v3) {
-        return new V3(v3.x+0.1, v3.y + 1.1, v3.z+0.1);
+        // P2+: 落点检查。只尝试"目标上方1格 / 目标同高 / 上方2格"，
+        // **绝不向上爬到屋顶**（旧实现向上扫 4 格，室内目标被挡时会把 NPC 放到屋顶上）。
+        double y = v3.y + 1.0D;
+        World w = this.entity != null ? this.entity.world : this.world;
+        if (w != null) {
+            double[] candidates = {v3.y + 1.0D, v3.y, v3.y + 2.0D};
+            for (double cy : candidates) {
+                BlockPos pos = new BlockPos(v3.x, cy, v3.z);
+                // P10(S0): 未加载区块不要 isAirBlock，避免隐式加载。
+                if (!w.isBlockLoaded(pos)) {
+                    continue;
+                }
+                if (!w.isAirBlock(pos) || !w.isAirBlock(pos.up())) {
+                    continue;
+                }
+                // P10(S0): 必须有实体地面，不能传送到空中/液体上。
+                IBlockState ground = w.getBlockState(pos.down());
+                if (!ground.getMaterial().isSolid() || ground.getMaterial().isLiquid()) {
+                    continue;
+                }
+                y = cy;
+                break;
+            }
+        }
+        return new V3(v3.x + 0.5D, y, v3.z + 0.5D, v3.dimension);
     }
 
     /**
@@ -2997,15 +3835,34 @@ public class NpcData {
      * @Param [v3]
      **/
     public boolean isAtLocation(V3 v3) {
-        if (this.entity == null) {
+        if (this.entity == null || v3 == null) {
             return false;
-        } else {
-            double fs_x=Math.abs(this.entity.posX - v3.x);
-            double fs_z=Math.abs(this.entity.posZ - v3.z);
-            Boolean fs_xxs=fs_x< 1.5D;
-            Boolean fs_zzs=fs_z< 1.5D;
-            return  fs_xxs&&fs_zzs;
         }
+        // P2: 加上维度与 y 的检查；x/z 容差保持 1.5 以兼容既有调用点。
+        if (v3.dimension != 0 && v3.dimension != this.entity.dimension) {
+            return false;
+        }
+        double fs_x = Math.abs(this.entity.posX - v3.x);
+        double fs_z = Math.abs(this.entity.posZ - v3.z);
+        double fs_y = Math.abs(this.entity.posY - v3.y);
+        return fs_x < 1.5D && fs_z < 1.5D && fs_y < 4.0D;
+    }
+
+    /**
+     * P9: "到达一个点"的判定（取货/送货用）：水平圆形半径 + 垂直容差。
+     * 与 isAtLocation 的区别：水平用真实距离（圆形），更符合站在箱子附近的语义。
+     */
+    public boolean isAtDestination(V3 v3, double radiusXZ, double radiusY) {
+        if (this.entity == null || v3 == null) {
+            return false;
+        }
+        if (v3.dimension != 0 && v3.dimension != this.entity.dimension) {
+            return false;
+        }
+        double dx = this.entity.posX - v3.x;
+        double dz = this.entity.posZ - v3.z;
+        double dy = Math.abs(this.entity.posY - v3.y);
+        return dx * dx + dz * dz <= radiusXZ * radiusXZ && dy <= radiusY;
     }
 
     /**
@@ -3102,65 +3959,74 @@ public class NpcData {
      **/
     public void onDeath(DamageSource cause) {
         try {
-            //客户端
-            if (this.entity!=null&&!this.world.isRemote) {
-                String deathMessage = "";
-                if (cause == DamageSource.STARVE) {
-                    //张三 饿死了。他们当时18岁。
-                    deathMessage = this.getName() + new TextComponentTranslation("container.sim.folk_data_death_by_They", new Object[0]).getUnformattedText() + this.age + new TextComponentTranslation("container.sim.folk_data_death_by_years", new Object[0]).getUnformattedText();
-                }
-                if (cause == DamageSource.IN_WALL) {
-                    //被活埋
-                    deathMessage = this.getName() + new TextComponentTranslation("container.sim.folk_data_death_by_died", new Object[0]).getUnformattedText() + new TextComponentTranslation("container.sim.folk_data_death_under", new Object[0]).getUnformattedText() + this.age + new TextComponentTranslation("container.sim.folk_data_death_by_years", new Object[0]).getUnformattedText();
-                } else {
-                    //已经死了
-                    deathMessage = this.getName() + new TextComponentTranslation("container.sim.folk_data_death_by_were", new Object[0]).getUnformattedText() + this.age + new TextComponentTranslation("container.sim.folk_data_death_by_years", new Object[0]).getUnformattedText();
-                }
+            // P10(S0): 幂等：重复回调（实体死亡 + 数据层清理）只执行一次。
+            if (this.isDead || this.world == null || this.world.isRemote) {
+                return;
+            }
+            String deathMessage;
+            if (cause == DamageSource.STARVE) {
+                //张三 饿死了。他们当时18岁。
+                deathMessage = this.getName() + new TextComponentTranslation("container.sim.folk_data_death_by_They", new Object[0]).getUnformattedText() + this.age + new TextComponentTranslation("container.sim.folk_data_death_by_years", new Object[0]).getUnformattedText();
+            } else if (cause == DamageSource.IN_WALL) {
+                //被活埋
+                deathMessage = this.getName() + new TextComponentTranslation("container.sim.folk_data_death_by_died", new Object[0]).getUnformattedText() + new TextComponentTranslation("container.sim.folk_data_death_under", new Object[0]).getUnformattedText() + this.age + new TextComponentTranslation("container.sim.folk_data_death_by_years", new Object[0]).getUnformattedText();
+            } else {
+                //已经死了
+                deathMessage = this.getName() + new TextComponentTranslation("container.sim.folk_data_death_by_were", new Object[0]).getUnformattedText() + this.age + new TextComponentTranslation("container.sim.folk_data_death_by_years", new Object[0]).getUnformattedText();
+            }
+            if (this.pos != null) {
                 deathMessage += ":" + this.pos.x + "," + this.pos.y + "," + this.pos.z;
-                this.isDead = true;
-                this.saveFolk();
-                for (NpcData npcData : ModSimLoader.folks) {
-                    //ModSimLoader.log.info("比较npc-ID: " + npcData.ID + " 和Id： " + this.ID);
-                    if (npcData.ID==this.ID && !npcData.entity.world.isRemote) {
-                        ModSimLoader.log.info("找到匹配ID:"+npcData.ID);
-                        ModSimLoader.sendChat(deathMessage);
-                        if (this.home != null) {
-                            ModSimLoader.log.info("房子不为空，开始移出");
-                            this.home.occupants.remove(this);
-                            this.home.saveBuilding();
-                        }
-                        if (this.job != null) {
-                            this.fire();
-                        }
-                        for (Building building:ModSimLoader.buildings){
-                            building.occupants.remove(this);
-                        }
-                        for (FolkRelationship folkRelationship : npcData.relationships) {
-                            if (folkRelationship.folk2==this.ID) {
-                                npcData.relationships.remove(folkRelationship);
-                                npcData.saveFolk();
-                            }
-                        }
-                        this.entity.setDead();
-                        ModSimLoader.folks.remove(this);
+            }
+            this.isDead = true;
 
-
-                    }
-
-                }
-                try {
-                    Files.deleteIfExists((new File(this.getSaveFolder() + File.separator + "npc" + File.separator + this.ID + ".sk2")).toPath());
-                    ModSimLoader.log.warn("已删除["+this.ID+"]");
-                } catch (Exception var5) {
-                    StackTraceElement element = var5.getStackTrace()[0];
-                    ModSimLoader.log.error("npcDeath-onDeath出错了：" + var5.getMessage() + "行数：" + element.getLineNumber());
+            // 1) 从住宅/所有建筑中移除
+            Building oldHome = this.home;
+            if (oldHome != null) {
+                oldHome.occupants.remove(this);
+                oldHome.saveBuilding();
+            }
+            for (Building building : ModSimLoader.buildings) {
+                if (building != null && building.occupants != null) {
+                    building.occupants.remove(this);
                 }
             }
+
+            // 2) 解雇（内部会清理控制箱/建筑雇员）
+            if (this.job != null) {
+                this.fire();
+            }
+
+            // 3) 清理其他人关系里的引用（快照遍历，避免 remove 时跳过）
+            for (NpcData other : new ArrayList<>(ModSimLoader.folks)) {
+                if (other == null || other == this) {
+                    continue;
+                }
+                boolean changed = other.relationships.removeIf(rel ->
+                        rel != null && rel.folk2 != null && this.ID != null && this.ID.equals(rel.folk2));
+                if (changed) {
+                    other.saveFolk();
+                }
+            }
+            this.relationships.clear();
+
+            // 4) 实体死亡 + 数据移除（全服只保留一份清理路径）
+            if (this.entity != null) {
+                this.entity.theData = null;
+                this.entity.setDead();
+                this.entity = null;
+            }
+            final UUID deadId = this.ID;
+            ModSimLoader.folks.removeIf(n -> n == this || (n != null && n.ID != null && n.ID.equals(deadId)));
+            SimStore store = SimStore.get(this.world);
+            if (store != null) {
+                store.removeNpc(deadId);
+            }
+            ModSimLoader.sendChat(deathMessage);
+            ModSimLoader.log.info("NPC 已清理: {} ({})", this.getName(), deadId);
         } catch (Exception e) {
             StackTraceElement element = e.getStackTrace()[0];
-            ModSimLoader.log.error("npcDeath-onDeath1出错了：" + e.getMessage() + "行数：" + element.getLineNumber());
+            ModSimLoader.log.error("npcDeath-onDeath出错了：" + e.getMessage() + "行数：" + element.getLineNumber());
         }
-
     }
 
     /**

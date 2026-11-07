@@ -12,13 +12,14 @@ import com.trhsy.sim.network.client.*;
 import com.trhsy.sim.npcCode.NpcData;
 import com.trhsy.sim.npcCode.NpcIdentity;
 import com.trhsy.sim.npcCode.build.Building;
+import net.minecraft.block.BlockLiquid;
+import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.*;
 import net.minecraft.entity.ai.*;
 import net.minecraft.entity.item.EntityItem;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.inventory.Container;
-import net.minecraft.inventory.EntityEquipmentSlot;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemFood;
 import net.minecraft.item.ItemStack;
@@ -26,9 +27,11 @@ import net.minecraft.network.play.server.SPacketAnimation;
 import net.minecraft.pathfinding.PathNavigateGround;
 import net.minecraft.util.DamageSource;
 import net.minecraft.util.EnumHand;
+import net.minecraft.util.EnumParticleTypes;
 import net.minecraft.util.SoundCategory;
 import net.minecraft.util.SoundEvent;
 import net.minecraft.util.math.AxisAlignedBB;
+import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.text.TextComponentTranslation;
 import net.minecraft.world.World;
@@ -71,6 +74,13 @@ public class EntityNpc extends EntityCreature implements INpc {
 
     private boolean aiInitialized =false;//新增：AI初始化标志
 
+    // P2+: 窒息/溺水救援。NPC 卡在方块里会持续受到 IN_WALL 伤害，溺水会受 DROWN 伤害；
+    // 连续 3 秒处于危险状态就找最近的安全落点做一次救援传送（5 秒冷却）。
+    private int dangerTicks = 0;
+    private long lastRescueTime = 0L;
+    private static final int RESCUE_TRIGGER_TICKS = 60;
+    private static final long RESCUE_COOLDOWN_MS = 5000L;
+
     public EntityNpc(World worldIn) {
         super(worldIn);
         this.inventoryContainer = new ContainerNpc(this.inventory, !worldIn.isRemote, this);
@@ -86,7 +96,9 @@ public class EntityNpc extends EntityCreature implements INpc {
             ((PathNavigateGround) this.getNavigator()).setCanSwim(true);
             this.setSize(0.4F, 1.8F);
             this.enablePersistence();
-            this.noClip = true;
+            // P10(S0): 区块重载时 Forge 用 EntityNpc(World) 构造器重建实体。
+            // 这里必须是 false，否则 NPC 每次读档都会变成穿墙状态。
+            this.noClip = false;
         } catch (Exception e) {
             StackTraceElement element = e.getStackTrace()[0];
             ModSimLoader.log.error("EntityFolk1出错了：" + e.getMessage() + "行数：" + element.getLineNumber());
@@ -114,6 +126,7 @@ public class EntityNpc extends EntityCreature implements INpc {
             this.isBeingCreated = isCreating;
             this.setSize(0.4F, 1.8F);
             this.enablePersistence();
+            this.noClip = false;
         } catch (Exception e) {
             StackTraceElement element = e.getStackTrace()[0];
             ModSimLoader.log.error("EntityFolk2出错了：" + e.getMessage() + "行数：" + element.getLineNumber());
@@ -160,7 +173,7 @@ public class EntityNpc extends EntityCreature implements INpc {
             if (theData == null) {
             return;
             }
-                //智能游泳
+                //智能游泳（保留：防止 NPC 在水中淹死）
                 this.tasks.addTask(0, new EntityAISwimming(this));
 
                 //开门
@@ -170,7 +183,7 @@ public class EntityNpc extends EntityCreature implements INpc {
                 //打开栅栏门
                 this.tasks.addTask(3, new FolkAIOpenFenceGate(this, true));
 
-                //自由闲逛
+                //自由闲逛（只在真正空闲时启用，见 FolkAIWander）
                 this.tasks.addTask(6, new FolkAIWander(this, 1.0D));
                 //最近观看
 //            this.tasks.addTask(7, new EntityAIWatchClosest(this, EntityPlayer.class, 1.0F));
@@ -178,15 +191,10 @@ public class EntityNpc extends EntityCreature implements INpc {
                 //看起来很空闲
                 this.tasks.addTask(8, new EntityAILookIdle(this));
 
-                //住进屋子
-                this.tasks.addTask(2, new EntityAIMoveIndoors(this));
-                //限制走向
-//            this.tasks.addTask(12, new EntityAIMoveTowardsRestriction(this, 0.3D));
-                //避开实体僵尸
-//            this.tasks.addTask(13, new EntityAIAvoidEntity(this, EntityZombie.class, 8.0F, 0.6D, 0.6D));
-                //受到伤害会跑
-                this.tasks.addTask(0, new EntityAIPanic(this, 1.5));
-                this.tasks.addTask(10, new EntityAIWatchClosest(this, EntityLiving.class, 1.0F));
+                // P10(S0): 不再注册 EntityAIMoveIndoors / EntityAIPanic。
+                // 这两个 AI 会和职业任务的 navigator.setPath 抢控制权，
+                // 表现为“上班路上突然跑进屋/逃跑/原地转圈”。
+                // 受击逃跑/进屋由职业任务和 stayPut 统一管理。
         } catch (Exception e) {
             StackTraceElement element = e.getStackTrace()[0];
             ModSimLoader.log.error("initEntityAI出错了：" + e.getMessage() + "行数：" + element.getLineNumber());
@@ -222,7 +230,8 @@ public class EntityNpc extends EntityCreature implements INpc {
      **/
     @Override
     protected boolean canDespawn() {
-        return true;
+        // P10(S0): NPC 是存档数据的一部分，不能被原版自然清除。
+        return false;
     }
 
     /**
@@ -238,6 +247,19 @@ public class EntityNpc extends EntityCreature implements INpc {
         try {
             if (System.currentTimeMillis() - this.secondTimer > 1000L) {
                 this.secondTimer = System.currentTimeMillis();
+                // P2+: 每秒检查一次是否处于"窒息/溺水"危险状态，连续 3 秒则救援传送。
+                if (!this.world.isRemote) {
+                    boolean suffocating = this.isEntityInsideOpaqueBlock();
+                    boolean drowning = this.isInWater() && this.getAir() <= 0;
+                    if (suffocating || drowning) {
+                        this.dangerTicks += 20;
+                        if (this.dangerTicks >= RESCUE_TRIGGER_TICKS) {
+                            this.rescueToSafeLocation();
+                        }
+                    } else if (this.dangerTicks > 0) {
+                        this.dangerTicks = Math.max(0, this.dangerTicks - 20);
+                    }
+                }
                 //获取NPC旁边的所有实体
                 List<Entity> list1 = this.world.getEntitiesWithinAABBExcludingEntity(this, (new AxisAlignedBB(this.posX, this.posY, this.posZ, this.posX + 1.0D, this.posY + 1.0D, this.posZ + 1.0D)).expand(2.0D, 4.0D, 2.0D));
                 for (Entity entity1 : list1) {
@@ -249,15 +271,17 @@ public class EntityNpc extends EntityCreature implements INpc {
                             Item item = is.getItem();
 //                            ModSimLoader.log.info("NPC手持物品：" + item.getUnlocalizedName());
                             if (item instanceof ItemFood) {
-//                                ModSimLoader.log.info("NPC手持物品：" + item.getUnlocalizedName()+",为食物。");
-                                //如果手里拿的是食物就，并且饿了就吃了
-                                if (this.theData != null && this.theData.hunger < 10 && item != null) {
-                                    ModSimLoader.log.info("NPC手持物品：" + item.getUnlocalizedName() + ",为食物，并且当前饥饿值为：" + this.theData.hunger);
+                                // P10(S0): 只吃“无主、可拾取、确实饿了”的掉落食物。
+                                // 原实现会抢玩家刚扔出的物品，也会在 hunger=9 时继续吃。
+                                if (this.theData != null && this.theData.hunger < 8.0D
+                                        && !entityitem.cannotPickup()
+                                        && (entityitem.getOwner() == null || entityitem.getOwner().isEmpty())) {
+                                    ModSimLoader.log.info("NPC拾取食物：{}，当前饥饿值：{}", item.getUnlocalizedName(), this.theData.hunger);
                                     ItemFood itemFood = (ItemFood) item;
                                     int healAmount = itemFood.getHealAmount(is);
-                                    this.theData.hunger += healAmount;
+                                    this.theData.hunger = Math.min(10.0D, this.theData.hunger + healAmount);
                                     entityitem.setDead();
-                                    ModSimLoader.log.info("NPC吃东西了，饥饿值：" + this.theData.hunger);
+                                    ModSimLoader.log.info("NPC吃东西了，饥饿值：{}", this.theData.hunger);
                                 }
                             }
                         } catch (Exception var8) {
@@ -277,18 +301,9 @@ public class EntityNpc extends EntityCreature implements INpc {
                         initEntityAI();
                         aiInitialized = true;
                     }
-                    //获取设备
-                    Iterable<ItemStack> itemStacks = this.getHeldEquipment();
-                    for (ItemStack items : itemStacks) {
-                        Item item = items.getItem();
-                        if (item instanceof ItemFood) {
-                            ItemFood itemFood = (ItemFood) item;
-                            int healAmount = itemFood.getHealAmount(items);
-                            this.theData.hunger += healAmount;
-                            ModSimLoader.log.info("当前npc[" + this.theData.getName() + "]饱和度：" + this.theData.hunger);
-                            this.setItemStackToSlot(EntityEquipmentSlot.MAINHAND, ItemStack.EMPTY);
-                        }
-                    }
+                    // P10(S0): 删除了“手持食物自动吃”的逻辑。
+                    // 职业手持物是工作道具（奶酪、工具等），不是口粮；
+                    // NPC 的口粮统一由 NpcData.trySelfFeed()/商店喂食处理。
                 }
             }
 
@@ -334,6 +349,99 @@ public class EntityNpc extends EntityCreature implements INpc {
     }
 
     /**
+     * P2+: 受到窒息/溺水伤害时累计危险时间（与 onUpdate 的每秒检查互为补充，
+     * 因为伤害事件本身也能证明"持续窒息"确实在发生）。
+     */
+    @Override
+    public boolean attackEntityFrom(DamageSource source, float amount) {
+        boolean result = super.attackEntityFrom(source, amount);
+        if (!this.world.isRemote && source != null
+                && (source == DamageSource.IN_WALL || source == DamageSource.DROWN)) {
+            this.dangerTicks += 20;
+            if (this.dangerTicks >= RESCUE_TRIGGER_TICKS) {
+                this.rescueToSafeLocation();
+            }
+        }
+        return result;
+    }
+
+    /** P2+: 找一个安全落点并传送过去；找不到就返回（不硬传送进未知位置）。 */
+    private void rescueToSafeLocation() {
+        long now = System.currentTimeMillis();
+        if (now - this.lastRescueTime < RESCUE_COOLDOWN_MS) {
+            return;
+        }
+        this.lastRescueTime = now;
+        this.dangerTicks = 0;
+        BlockPos safe = this.findSafePosition();
+        if (safe == null) {
+            ModSimLoader.log.warn("NPC {} 处于危险位置但找不到安全落点", this.getUniqueID());
+            return;
+        }
+        double x = safe.getX() + 0.5D;
+        double y = safe.getY();
+        double z = safe.getZ() + 0.5D;
+        boolean ok = this.attemptTeleport(x, y, z);
+        if (!ok) {
+            this.setPositionAndUpdate(x, y, z);
+        }
+        if (this.world instanceof WorldServer) {
+            ((WorldServer) this.world).spawnParticle(EnumParticleTypes.PORTAL, false,
+                    this.posX, this.posY + 0.8D, this.posZ, 24, 0.5D, 0.5D, 0.5D, 0.05D);
+        }
+        if (this.theData != null) {
+            // 用实体实际落点同步数据层坐标（attemptTeleport 会在请求点附近找安全落点）
+            this.theData.pos = com.trhsy.sim.npcCode.V3.fromVec3d(this.getPositionVector());
+        }
+        ModSimLoader.log.warn("NPC {} 持续窒息/溺水，已救援传送到 {}", this.getUniqueID(), safe);
+    }
+
+    /** P2+: 螺旋搜索最近的可站立位置；找不到再退回家/工作点/世界出生点。 */
+    private BlockPos findSafePosition() {
+        BlockPos origin = this.getPosition();
+        for (int r = 1; r <= 8; r++) {
+            for (int dy = -2; dy <= 2; dy++) {
+                for (int dx = -r; dx <= r; dx++) {
+                    for (int dz = -r; dz <= r; dz++) {
+                        if (Math.max(Math.abs(dx), Math.max(Math.abs(dy), Math.abs(dz))) != r) {
+                            continue;
+                        }
+                        BlockPos p = origin.add(dx, dy, dz);
+                        if (this.isSafeStanding(p)) {
+                            return p;
+                        }
+                    }
+                }
+            }
+        }
+        if (this.theData != null) {
+            if (this.theData.home != null && this.theData.home.livingXYZ != null) {
+                BlockPos home = this.theData.home.livingXYZ.toBlockPos().up();
+                if (this.isSafeStanding(home)) {
+                    return home;
+                }
+            }
+            if (this.theData.job != null && this.theData.job.workPlace != null) {
+                BlockPos work = this.theData.job.workPlace.toBlockPos().up();
+                if (this.isSafeStanding(work)) {
+                    return work;
+                }
+            }
+        }
+        BlockPos spawn = this.world.getSpawnPoint().up();
+        return this.isSafeStanding(spawn) ? spawn : null;
+    }
+
+    private boolean isSafeStanding(BlockPos p) {
+        if (p.getY() <= 0 || p.getY() >= 255) {
+            return false;
+        }
+        IBlockState ground = this.world.getBlockState(p.down());
+        return this.world.isAirBlock(p) && this.world.isAirBlock(p.up())
+                && ground.isFullBlock() && !(ground.getBlock() instanceof BlockLiquid);
+    }
+
+    /**
      * @return void
      * @Author fan
      * @Description //TODO 死亡
@@ -349,13 +457,13 @@ public class EntityNpc extends EntityCreature implements INpc {
                 // 2. 高效查找匹配的 NpcData（建议用 Map 存储优化查找）
                 NpcData matchedData = null;
                 for (NpcData npcData : ModSimLoader.folks) {
-                    if (npcData.ID==this.getUniqueID()) {
-                        npcData.onDeath(cause);
+                    if (npcData.ID != null && npcData.ID.equals(this.getUniqueID())) {
                         matchedData = npcData;
-                        break; // 找到后立即退出循环，提高效率
+                        break;
                     }
                 }
                 if (matchedData != null) {
+                    // P10(S0): 只调用一次（原实现循环内调用一次、循环外又调用一次）。
                     matchedData.onDeath(cause);
                 } else {
                     for (Building building:ModSimLoader.buildings){

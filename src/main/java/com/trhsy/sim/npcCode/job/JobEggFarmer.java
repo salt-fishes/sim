@@ -12,7 +12,8 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.text.TextComponentTranslation;
 import net.minecraft.world.World;
-import scala.util.Random;
+
+import java.util.Random;
 
 /**
  * @ClassName JobEggFarmer
@@ -21,7 +22,7 @@ import scala.util.Random;
  * @Date 2023/4/89:01
  **/
 public class JobEggFarmer extends Job{
-    //工作阶段
+    //工作阶段（保留字段兼容；新逻辑每轮重建任务）
     public int eggFarmerStage = 0;
     public JobEggFarmer(NpcData folk, BlockPos pos, World world) {
         super(folk, pos, world);
@@ -35,41 +36,32 @@ public class JobEggFarmer extends Job{
         }
 
     }
+
+    /**
+     * P3: 一次构建整轮任务再执行（旧实现只入队不开始，NPC 到岗后停在"去工作"）。
+     * 末尾照料任务原来是 -1L（永不超时），改成有限时长，保证轮次能结束。
+     */
     @Override
     public void onUpdate() {
         super.onUpdate();
         try {
-            if (this.atWork) {
-                if (this.stage == -1) {
-                    this.eggFarmerStage = 0;
-                    this.stage = 0;
-                } else if (this.eggFarmerStage == 0) {
-                    this.eggFarmerStage = 1;
-                    //去上班
-                    this.addJobTask(new JobTaskIdle(this, 200L, new TextComponentTranslation("container.sim.job.builder_Arrived",new Object[0]).getUnformattedText()));
-                } else if (this.eggFarmerStage == 1) {
-                    //生成鸡
-                    this.addJobTask(new JobTaskSpawnLivestock(this, new TextComponentTranslation("container.sim.job_Livestock_chicken",new Object[0]).getUnformattedText(), EntityChicken.class, 5000L));
-                    this.eggFarmerStage = 2;
-                } else if (this.eggFarmerStage == 2) {
-                    //照料鸡
-                    this.addJobTask(new JobTaskIdle(this, 180000L, new TextComponentTranslation("container.sim.job.crop.farmer.Tending1",new Object[0]).getUnformattedText()+new TextComponentTranslation("container.sim.job_Livestock_chicken",new Object[0]).getUnformattedText()));
-                    this.eggFarmerStage = 3;
-                } else if (this.eggFarmerStage == 3) {
-                    //往工作项放东西
-                    this.addJobTask(new JobTaskPlaceInChest(this, 10000L, new ItemStack(Items.EGG, new Random().nextInt(5) + 1)));
-                    this.eggFarmerStage = 4;
-                }else if (this.eggFarmerStage == 4) {
-                    //照料鸡
-                    this.addJobTask(new JobTaskIdle(this, -1L, new TextComponentTranslation("container.sim.job.crop.farmer.Tending1",new Object[0]).getUnformattedText()+new TextComponentTranslation("container.sim.job_Livestock_chicken",new Object[0]).getUnformattedText()));
-                    this.eggFarmerStage = 5;
-                }else{
-                    if (this.jobTasks.size() > 0&&this.currentTask==null) {
-                        this.currentTask = (JobTask) this.jobTasks.get(0);
-                        this.currentTask.begin();
-                    }
-                }
+            if (!this.atWork) {
+                return;
             }
+            if (this.currentTask != null || !this.jobTasks.isEmpty()) {
+                return;
+            }
+            String chicken = new TextComponentTranslation("container.sim.job_Livestock_chicken",new Object[0]).getUnformattedText();
+            String tending = new TextComponentTranslation("container.sim.job.crop.farmer.Tending1",new Object[0]).getUnformattedText() + chicken;
+            this.addJobTask(new JobTaskIdle(this, 200L, new TextComponentTranslation("container.sim.job.builder_Arrived",new Object[0]).getUnformattedText()));
+            this.addJobTask(new JobTaskSpawnLivestock(this, chicken, EntityChicken.class, 5000L));
+            this.addJobTask(new JobTaskIdle(this, 180000L, tending));
+            this.addJobTask(new JobTaskPlaceInChest(this, 10000L, new ItemStack(Items.EGG, new Random().nextInt(5) + 1)));
+            this.addJobTask(new JobTaskIdle(this, 60000L, tending));
+            this.eggFarmerStage = 0;
+            this.stage = 0;
+            this.currentTask = (JobTask) this.jobTasks.get(0);
+            this.currentTask.begin();
         }catch (Exception e){
             StackTraceElement element = e.getStackTrace()[0];
             ModSimLoader.log.error("JobEggFarmer-onUpdate出错了：" + e.getMessage() + "行数：" + element.getLineNumber());

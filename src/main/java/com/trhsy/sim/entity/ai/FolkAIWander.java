@@ -42,8 +42,16 @@ public class FolkAIWander extends EntityAIWander {
     public boolean shouldExecute() {
         if (this.folk.theData == null) {
             return false;
-        }else if(!this.folk.theData.stayPut){
-            if (!this.mustUpdate) {
+        }
+        // P10(S0): 只有真正空闲的 NPC 才闲逛。
+        // 上班途中/在工作/有任务/被要求站定时都不允许和职业导航抢路径。
+        if (this.folk.theData.stayPut
+                || this.folk.theData.currentTask != null
+                || (this.folk.theData.job != null
+                    && (this.folk.theData.job.onWayToWork || this.folk.theData.job.atWork))) {
+            return false;
+        }
+        if (!this.mustUpdate) {
                 //获得空闲时间
                 if (this.entity.getIdleTime() >= 100) {
                     return false;
@@ -64,42 +72,21 @@ public class FolkAIWander extends EntityAIWander {
                 this.mustUpdate = false;
                 return true;
             }
-        }else {
+    }
+
+    @Override
+    public boolean shouldContinueExecuting() {
+        if (this.folk.theData != null
+                && (this.folk.theData.stayPut || this.folk.theData.currentTask != null)) {
             return false;
         }
-
-        /*else if (!this.folk.theData.stayPut && !(this.folk.theData.currentTask instanceof TaskSleep)) {
-            if (!this.mustUpdate) {
-                if (this.entity.getIdleTime() >= 100) {
-                    return false;
-                }
-
-                if (this.entity.getRNG().nextInt(this.executionChance) != 0) {
-                    return false;
-                }
-            }
-
-            Vec3d vec3d = this.getPosition();
-            if (vec3d == null) {
-                return false;
-            } else {
-                this.x = vec3d.x;
-                this.y = vec3d.y;
-                this.z = vec3d.z;
-                this.mustUpdate = false;
-                return true;
-            }
-        }*/
+        return super.shouldContinueExecuting();
     }
+
     @Override
     public void startExecuting()
     {
         this.entity.getNavigator().tryMoveToXYZ(this.x, this.y, this.z, this.speed);
-    }
-    @Override
-    public boolean shouldContinueExecuting()
-    {
-        return !this.entity.getNavigator().noPath();
     }
     /**
      * Makes task to bypass chance

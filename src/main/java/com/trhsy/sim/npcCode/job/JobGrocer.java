@@ -37,8 +37,7 @@ public class JobGrocer extends Job{
             this.colItems.add(new ItemStack(Items.CARROT, 16));
             //甜菜根
             this.colItems.add(new ItemStack(Items.BEETROOT, 16));
-            //苹果
-            this.colItems.add(new ItemStack(Items.APPLE, 16));
+            // P9: 苹果没有任何自动化来源（无果树职业、无采集映射），已从清单移除
             //南瓜
             this.colItems.add(new ItemStack(Blocks.PUMPKIN, 8));
             //西瓜

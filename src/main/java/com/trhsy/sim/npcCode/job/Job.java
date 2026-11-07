@@ -11,11 +11,13 @@ import net.minecraft.block.Block;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.init.Blocks;
 import net.minecraft.inventory.IInventory;
+import net.minecraftforge.items.IItemHandler;
+import net.minecraftforge.items.ItemHandlerHelper;
+import net.minecraftforge.items.wrapper.InvWrapper;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemFood;
 import net.minecraft.item.ItemStack;
 import net.minecraft.tileentity.TileEntity;
-import net.minecraft.tileentity.TileEntityFurnace;
 import net.minecraft.util.SoundCategory;
 import net.minecraft.util.SoundEvent;
 import net.minecraft.util.math.BlockPos;
@@ -70,6 +72,16 @@ public abstract class Job {
     LinkedHashMap<Building, ItemStack> collectionPoints = new LinkedHashMap();
     //物品抓取计时
     transient long itemGrabTimer = 0L;
+    //P2: 去工作目标的最近一次重发时间（原实现每 tick 重发一次寻路）
+    private transient long lastWorkMoveTime = 0L;
+    //P2+: "去工作"状态起始时间；超过 5 秒仍未到岗 → 直接传送到工作地点
+    private transient long workTravelStartTime = 0L;
+    private static final long WORK_TRAVEL_TIMEOUT_MS = 5000L;
+    //P4: 去工作的"无进展"计时（不是一到 5 秒就传，只有距离不再缩短才传）
+    private transient double lastWorkDistance = -1.0D;
+    private transient long lastWorkProgressTime = 0L;
+    /** P4: 每分钟工资（玩家支付给 NPC，用于经济闭环）。 */
+    private static final float WAGE_PER_MINUTE = 0.2F;
     //列
     private int colCount = 0;
 
@@ -78,14 +90,14 @@ public abstract class Job {
     public Job(NpcData folk, BlockPos pos, World world) {
         this.folk = folk;
 //        folk.respawn(world, pos);
-        this.workPlace = new V3(pos);
+        this.workPlace = new V3(pos, world.provider.getDimension());
         this.jobWorld = world;
     }
 
     public Job(NpcData folk, V3 pos, World world) {
         this.folk = folk;
 //        folk.respawn(world, pos.toBlockPos());
-        this.workPlace = pos;
+        this.workPlace = new V3(pos.x, pos.y, pos.z, world.provider.getDimension());
         this.jobWorld = world;
     }
 
@@ -98,30 +110,32 @@ public abstract class Job {
      **/
     public void nextTask() {
         try {
-//        ModSimLoader.log.info("移动到下一个任务");
-            int curTask = 0;
-
-            for (int i = 0; i < this.jobTasks.size(); ++i) {
-                if (this.jobTasks.get(i) == this.currentTask) {
-                    curTask = i;
-                    ModSimLoader.log.info("当前任务索引为 " + i);
-                }
-            }
-
-            if (curTask >= this.jobTasks.size() - 1) {
+            // P3: 队列语义。完成的任务立即移出列表，jobTasks 不再无限增长；
+            // stage 只在"任务耗尽"时置 -1，各职业的 stage==-1 分支会重建本轮任务。
+            if (this.currentTask != null) {
+                this.jobTasks.remove(this.currentTask);
                 this.currentTask = null;
-                this.stage = -1;
-                ModSimLoader.log.info("没有剩余任务");
-            } else {
-                ModSimLoader.log.info("将任务[" + this.jobName + "]更改为 " + this.jobTasks.get(curTask + 1) + "(" + curTask + 1 + ")");
-                this.stage = curTask + 1;
-                this.currentTask = (JobTask) this.jobTasks.get(curTask + 1);
+            }
+            if (!this.jobTasks.isEmpty()) {
+                // 注意：推进时**不要**改 stage —— 有些职业（如快递员）把 stage 当作
+                // 自己的状态机，只有在队列耗尽时才置 -1 让它们重建。
+                this.currentTask = (JobTask) this.jobTasks.get(0);
                 this.currentTask.begin();
+            } else {
+                this.stage = -1;
+                this.onTasksExhausted();
             }
         } catch (Exception e) {
             StackTraceElement element = e.getStackTrace()[0];
             ModSimLoader.log.error("Job-nextTask出错了：" + e.getMessage() + "行数：" + element.getLineNumber());
         }
+    }
+
+    /**
+     * 本轮任务耗尽（任务队列为空）。
+     * 默认什么也不做：各职业在 onUpdate 的 {@code stage == -1} 分支重建下一轮任务。
+     */
+    protected void onTasksExhausted() {
     }
 
     /**
@@ -273,6 +287,7 @@ public abstract class Job {
         this.folk.stayPut = false;
         this.atWork = false;
         this.onWayToWork = false;
+        this.workTravelStartTime = 0L;
         this.currentTask = null;
     }
 
@@ -291,10 +306,47 @@ public abstract class Job {
     private void handleGoingToWork() {
 
         if (this.folk.shouldWork() && !this.atWork && !this.folk.entity.world.isRemote) {
-            this.onWayToWork = true;
+            if (!this.onWayToWork) {
+                this.onWayToWork = true;
+                this.workTravelStartTime = System.currentTimeMillis();
+            }
             this.folk.stayPut = false;
+            long now = System.currentTimeMillis();
+            // P4: "去工作"改为"5 秒无进展才传送"（原来一到 5 秒就传，正常赶路也会被传，
+            // 士兵半路打怪更是被直接拽走）。
+            if (this.folk.entity instanceof net.minecraft.entity.EntityLivingBase) {
+                net.minecraft.entity.EntityLivingBase lb = (net.minecraft.entity.EntityLivingBase) this.folk.entity;
+                if (lb.getRevengeTarget() != null) {
+                    // 战斗中不算卡住
+                    this.lastWorkDistance = -1.0D;
+                    this.lastWorkProgressTime = now;
+                }
+            }
+            double dist = Math.abs(this.folk.entity.posX - this.workPlace.x)
+                    + Math.abs(this.folk.entity.posZ - this.workPlace.z);
+            if (this.lastWorkDistance < 0.0D || dist < this.lastWorkDistance - 0.5D) {
+                // 距离在缩短 = 正常赶路
+                this.lastWorkDistance = dist;
+                this.lastWorkProgressTime = now;
+            }
+            if (now - this.lastWorkProgressTime > WORK_TRAVEL_TIMEOUT_MS) {
+                this.lastWorkProgressTime = now;
+                this.lastWorkDistance = -1.0D;
+                if (this.folk.isSoldier()) {
+                    // P4: 士兵是 24 小时巡逻岗，不因"上班慢"被传送
+                    return;
+                }
+                this.folk.setStatus(new TextComponentTranslation("container.sim.folk_data_Going_work", new Object[0]).getUnformattedText());
+                this.folk.forceTeleportTo(this.workPlace);
+                return;
+            }
+            // 正常最多每 2 秒重发一次移动目标（原来每 tick 都 clearPath + A*）
+            if (now - this.lastWorkMoveTime < 2000L) {
+                return;
+            }
+            this.lastWorkMoveTime = now;
             this.folk.setStatus(new TextComponentTranslation("container.sim.folk_data_Going_work", new Object[0]).getUnformattedText());
-            V3 v3 = new V3(this.workPlace.x, this.workPlace.y, this.workPlace.z);
+            V3 v3 = new V3(this.workPlace.x, this.workPlace.y, this.workPlace.z, this.workPlace.dimension);
             this.folk.forceMoveToXYZ(v3);
         }
     }
@@ -309,9 +361,10 @@ public abstract class Job {
             this.onArrive();
             this.folk.stayPut = false;
             this.folk.entity.getNavigator().clearPath();
-            if(this.currentTask!=null){
-                this.currentTask.onTaskComplete();
-            }
+            // P8: 删掉了这里对 currentTask.onTaskComplete() 的直接调用。它只触发
+            // 任务回调（JobTaskCollectItems 会清空自己的目的地列表）却不标记完成，
+            // 会把正在执行的任务破坏成"永远收集/空指针卡死"。
+            // 任务的状态由各任务自己的 onUpdate/update() 推进，不在这里干预。
         }
     }
 
@@ -326,12 +379,20 @@ public abstract class Job {
                 this.itemGrabTimer = System.currentTimeMillis();
                 List<IInventory> chests = inventoriesFindClosest(this.folk.getV3(), 5);
                 for (IInventory inv : chests) {
+                    if (!isInventoryValid(inv)) {
+                        continue;
+                    }
                     for (int i = 0; i < inv.getSizeInventory(); ++i) {
+                        ItemStack slotStack = inv.getStackInSlot(i);
+                        if (slotStack == null || slotStack.isEmpty()) {
+                            continue;
+                        }
                         for (int j = 0; j < this.collectionItems.size(); j++) {
                             Item item = this.collectionItems.get(j);
-                            if (inv.getStackInSlot(i).getItem().getUnlocalizedName().contentEquals(item.getUnlocalizedName())) {
-                                this.folk.inventory.add(inv.getStackInSlot(i));
+                            if (slotStack.getItem().getUnlocalizedName().contentEquals(item.getUnlocalizedName())) {
+                                this.folk.inventory.add(slotStack);
                                 inv.removeStackFromSlot(i);
+                                break;
                             }
                         }
                     }
@@ -365,20 +426,39 @@ public abstract class Job {
 
         try {
             World world = ((net.minecraft.entity.Entity) folk.entity).world;
-            TileEntity te = world.getTileEntity(startXYZ.toBlockPos());
-            if (te != null && te instanceof IInventory && !(te instanceof TileEntityFurnace)) {
+            // P10(S0): 起点未加载时不做任何扫描，避免 getTileEntity 隐式加载区块。
+            BlockPos center = startXYZ.toBlockPos();
+            if (!world.isBlockLoaded(center)) {
+                return ret;
+            }
+            TileEntity te = world.getTileEntity(center);
+            if (isAllowedJobContainer(te)) {
                 ret.add((IInventory) te);
             }
-            // 遍历搜索范围内的所有方块
+            // 遍历搜索范围内的所有方块。
+            // P4: 只检查"外壳"（切比雪夫距离 == d），跳过内部已检查过的位置：
+            // 覆盖率不变，getTileEntity 调用次数从 O(d^3) 降到 O(6d^2)。
             for (int d = 1; d < searchDistance; ++d) {
                 for (int yo = -d; yo <= d; ++yo) {
                     for (int xo = -d; xo <= d; ++xo) {
                         for (int zo = -d; zo <= d; ++zo) {
+                            int chebyshev = Math.max(Math.abs(xo), Math.max(Math.abs(yo), Math.abs(zo)));
+                            if (chebyshev != d) {
+                                continue;
+                            }
                             int sx = (int) (Math.round(startXYZ.x) + (long) xo);
                             int sy = (int) (Math.round(startXYZ.y) + (long) yo);
                             int sz = (int) (Math.round(startXYZ.z) + (long) zo);
-                            te = world.getTileEntity(new BlockPos(sx, sy, sz));
-                            if (te != null && te instanceof IInventory && ((IInventory) te).getSizeInventory() > 9 && !this.alreadyGotChest(ret, (IInventory) te)) {
+                            BlockPos pos = new BlockPos(sx, sy, sz);
+                            if (!world.isBlockLoaded(pos)) {
+                                continue;
+                            }
+                            te = world.getTileEntity(pos);
+                            // P10(S0): 只认原版箱子/陷阱箱，不再把任意 IInventory
+                            // （玩家箱子、熔炉、模组机器）当成 NPC 的工作箱。
+                            if (isAllowedJobContainer(te)
+                                    && ((IInventory) te).getSizeInventory() > 9
+                                    && !this.alreadyGotChest(ret, (IInventory) te)) {
                                 ret.add((IInventory) te);
                             }
                         }
@@ -392,6 +472,21 @@ public abstract class Job {
             ModSimLoader.log.error("job-inventoriesFindClosest出错了：" + e.getMessage() + "行数：" + element.getLineNumber());
             return ret;
         }
+    }
+
+    /** P10(S0): 工作箱白名单。原版箱子/陷阱箱都是 TileEntityChest。 */
+    private boolean isAllowedJobContainer(TileEntity te) {
+        return te instanceof net.minecraft.tileentity.TileEntityChest;
+    }
+
+    /** P10(S0): 缓存的箱位必须仍然存在、未被移除/替换。 */
+    private boolean isInventoryValid(IInventory inv) {
+        if (!(inv instanceof TileEntity)) {
+            return false;
+        }
+        TileEntity te = (TileEntity) inv;
+        World w = te.getWorld();
+        return w != null && !te.isInvalid() && w.getTileEntity(te.getPos()) == te;
     }
 
     /**
@@ -469,7 +564,8 @@ public abstract class Job {
      */
     public void onMinute() {
         try {
-
+            // P4: 定价/工资系统暂缓（先保证 NPC 能自己吃到饭）。
+            // 以后启用：在岗 NPC 每分钟 +WAGE_PER_MINUTE（玩家支付）。
         } catch (Exception e) {
             StackTraceElement element = e.getStackTrace()[0];
             ModSimLoader.log.error("job-onMinute出错了：" + e.getMessage() + "行数：" + element.getLineNumber());
@@ -534,54 +630,65 @@ public abstract class Job {
      * @return
      */
     public boolean placeInJobChest(IInventory chest, ItemStack item) {
-        boolean placedOK = false;
+        if (item == null || item.isEmpty()) {
+            return true;
+        }
+        return placeInJobChestPartial(chest, item) >= item.getCount();
+    }
+
+    /** P4: 返回实际放进去的件数（调用方按实结算，不再"布尔 + 整组扣款"）。 */
+    public int placeInJobChestPartial(IInventory chest, ItemStack item) {
+        if (chest == null || item == null || item.isEmpty()) {
+            return 0;
+        }
+        // P10(S0): 箱子被拆/被替换后，缓存的 IInventory 不能再写入。
+        if (!isInventoryValid(chest)) {
+            return 0;
+        }
         try {
-            if (item == null) {
-                ModSimLoader.log.info("试图放置空项");
-                return true;
-            } else {
-                for (int itemNumber = 1; itemNumber <= item.getCount(); ++itemNumber) {
-                    for (int chestSlot = 0; chestSlot < chest.getSizeInventory(); ++chestSlot) {
-                        ItemStack is = chest.getStackInSlot(chestSlot);
-                        String fs_name = is.getDisplayName();//空气
-                        if (is == null || fs_name.contentEquals(new TextComponentTranslation("tile.blockSpecial.name", new Object[0]).getUnformattedText())) {
-                            is = item.copy();
-                            is.setCount(1);
-                            chest.setInventorySlotContents(chestSlot, is);
-                            ItemStack isTest = chest.getStackInSlot(chestSlot);
-                            if (isTest != null) {
-                                placedOK = true;
-                                break;
-                            }
-
-                            placedOK = false;
-                        } else if (is.getItem().getUnlocalizedName().contentEquals(item.getItem().getUnlocalizedName()) && is.getCount() < is.getMaxStackSize()) {
-                            int isBefore = chest.getStackInSlot(chestSlot).getCount();
-                            is.setCount(is.getCount() + 1);
-//                        is.setCount(is.getCount() + 1);
-                            chest.setInventorySlotContents(chestSlot, is);
-                            int isAfter = chest.getStackInSlot(chestSlot).getCount();
-                            if (isAfter > isBefore) {
-                                placedOK = true;
-                                break;
-                            }
-
-                            placedOK = false;
-                        }
-                    }
-                }
-
-                if (!placedOK) {
-                    this.stuckItem = item.copy();
-                }
-
-                return placedOK;
-            }
+            IItemHandler handler = chest instanceof IItemHandler ? (IItemHandler) chest : new InvWrapper(chest);
+            ItemStack remaining = ItemHandlerHelper.insertItemStacked(handler, item.copy(), false);
+            int inserted = item.getCount() - (remaining == null ? 0 : remaining.getCount());
+            this.stuckItem = inserted < item.getCount() ? remaining : null;
+            return inserted;
         } catch (Exception e) {
-            placedOK = false;
             StackTraceElement element = e.getStackTrace()[0];
-            ModSimLoader.log.error("job-placeInJobChest出错了：" + e.getMessage() + "行数：" + element.getLineNumber());
-            return placedOK;
+            ModSimLoader.log.error("job-placeInJobChestPartial出错了：" + e.getMessage() + "行数：" + element.getLineNumber());
+            return 0;
+        }
+    }
+
+    /** P4: 依次尝试所有工作箱子，返回实际放入总数。 */
+    public int placeInJobChestPartial(ItemStack item) {
+        if (item == null || item.isEmpty()) {
+            return 0;
+        }
+        int total = 0;
+        try {
+            if (this.jobChests.size() > 0) {
+                this.jobChests.removeIf(chest -> !isInventoryValid(chest));
+            }
+            List<IInventory> targets = this.jobChests.size() > 0
+                    ? this.jobChests : this.inventoriesFindClosest(this.workPlace, 5);
+            ItemStack remaining = item.copy();
+            for (IInventory chest : targets) {
+                if (remaining.isEmpty()) {
+                    break;
+                }
+                int put = placeInJobChestPartial(chest, remaining);
+                if (put > 0) {
+                    remaining.setCount(remaining.getCount() - put);
+                    total += put;
+                }
+            }
+            if (!remaining.isEmpty()) {
+                this.stuckItem = remaining;
+            }
+            return total;
+        } catch (Exception e) {
+            StackTraceElement element = e.getStackTrace()[0];
+            ModSimLoader.log.error("job-placeInJobChestPartial(list)出错了：" + e.getMessage() + "行数：" + element.getLineNumber());
+            return total;
         }
     }
 
@@ -592,49 +699,63 @@ public abstract class Job {
      * @return
      */
     public boolean inventoriesTransferToFolk(ItemStack item) {
+        // P4: 只搬真正匹配的那一种，并用 Forge 物品能力的返回值判断是否搬动。
+        // 原实现 `chestStack.isItemEqual(item);` 的结果被丢弃，导致整箱搬空。
+        if (item == null || item.isEmpty()) {
+            return false;
+        }
         boolean ret = false;
         try {
-            int limit = 0;
-            ItemStack got = null;
-            do {
-                findJobChests(5);
-                for (int c = 0; c < this.jobChests.size(); ++c) {
-                    IInventory chest = this.jobChests.get(c);
-                    for (int g = 0; g < chest.getSizeInventory(); g++) {
-                        ItemStack chestStack = chest.getStackInSlot(g);
-                        chestStack.isItemEqual(item);
-                        this.folk.inventory.add(chestStack);
-                        chest.removeStackFromSlot(g);
+            findJobChests(5);
+            for (IInventory chest : this.jobChests) {
+                if (!isInventoryValid(chest)) {
+                    continue;
+                }
+                IItemHandler handler = chest instanceof IItemHandler ? (IItemHandler) chest : new InvWrapper(chest);
+                for (int slot = 0; slot < handler.getSlots(); slot++) {
+                    ItemStack inSlot = handler.getStackInSlot(slot);
+                    if (inSlot.isEmpty() || !ItemHandlerHelper.canItemStacksStack(inSlot, item)) {
+                        continue;
+                    }
+                    ItemStack extracted = handler.extractItem(slot, inSlot.getCount(), false);
+                    if (!extracted.isEmpty()) {
+                        this.folk.inventory.add(extracted);
                         ret = true;
                     }
                 }
-            } while (got != null && limit < 64);
+            }
         } catch (Exception e) {
             StackTraceElement element = e.getStackTrace()[0];
             ModSimLoader.log.error("将一些物品/任何物品从一组箱子中转移到人们的库存中出错了：" + e.getMessage() + "行数：" + element.getLineNumber());
-            e.printStackTrace();
         }
         return ret;
     }
     public boolean inventoriesTransferToFolks(List<IInventory> iInventories) {
         boolean ret = false;
+        if (iInventories == null) {
+            return false;
+        }
         try {
-            int limit = 0;
-            ItemStack got = null;
-            do {
-                for (int c = 0; c <iInventories.size(); ++c) {
-                    IInventory chest = iInventories.get(c);
-                    for (int g = 0; g < chest.getSizeInventory(); g++) {
-                        ItemStack chestStack = chest.getStackInSlot(g);
-                        this.folk.inventory.add(chestStack);
-                        chest.removeStackFromSlot(g);
+            for (IInventory chest : iInventories) {
+                if (!isInventoryValid(chest)) {
+                    continue;
+                }
+                IItemHandler handler = chest instanceof IItemHandler ? (IItemHandler) chest : new InvWrapper(chest);
+                for (int slot = 0; slot < handler.getSlots(); slot++) {
+                    ItemStack inSlot = handler.getStackInSlot(slot);
+                    if (inSlot.isEmpty()) {
+                        continue;
+                    }
+                    ItemStack extracted = handler.extractItem(slot, inSlot.getCount(), false);
+                    if (!extracted.isEmpty()) {
+                        this.folk.inventory.add(extracted);
+                        ret = true;
                     }
                 }
-            } while (got != null && limit < 64);
+            }
         } catch (Exception e) {
             StackTraceElement element = e.getStackTrace()[0];
             ModSimLoader.log.error("将一些物品/任何物品从一组箱子中转移到人们的库存中出错了：" + e.getMessage() + "行数：" + element.getLineNumber());
-            e.printStackTrace();
         }
         return ret;
     }
@@ -674,7 +795,7 @@ public abstract class Job {
                     for (int i = 0; i < chest.getSizeInventory() && needFood > 0; ++i) {
 
                         ItemStack is = chest.getStackInSlot(i);
-                        if (is == null) {
+                        if (is == null || is.isEmpty()) {
                             continue;
                         }
                         String itemName = is.getItem().getUnlocalizedName(is);
@@ -688,36 +809,42 @@ public abstract class Job {
                             if (healAmount <= 0) {
                                 continue;
                             }
-                            // 计算最大可喂数量（避免超过需求或堆叠上限）
-                            int maxCanFeed = Math.min(is.getMaxStackSize(), needFood / (healAmount / 2));
+                            // P10(S0): 恢复量按“实际消耗的件数”计算，且不超过箱子里的数量。
+                            // 原实现只按 needFood 算 maxCanFeed，1 个面包也能喂出多份饱食度（食物复制）。
+                            int healPerItem = Math.max(1, healAmount / 2);
+                            int maxByNeed = Math.max(1, (int) Math.ceil(needFood / (double) healPerItem));
+                            int maxCanFeed = Math.min(Math.min(is.getCount(), is.getMaxStackSize()), maxByNeed);
                             if (maxCanFeed <= 0) {
-                                ModSimLoader.log.debug("当前食物 {} 数量不足，跳过", itemFood.getUnlocalizedName());
                                 continue;
                             }
-                            //喂养 npc maxCanFeed 个食物
-                            fd.hunger += (healAmount / 2) * maxCanFeed;
-                            chest.decrStackSize(i, maxCanFeed);
+                            ItemStack removed = chest.decrStackSize(i, maxCanFeed);
+                            int actual = (removed == null || removed.isEmpty()) ? 0 : removed.getCount();
+                            if (actual <= 0) {
+                                continue;
+                            }
+                            // P4: 先不做定价系统，商店免费喂食，保证 NPC 不被饿死
+                            fd.hunger = Math.min(10.0D, fd.hunger + (double) healPerItem * actual);
                             fedFolks++;
                             needFood = 10 - (int) Math.ceil(fd.hunger); // 重新计算剩余需求
                             ModSimLoader.log.info("喂食{}个{}给NPC{}，当前饥饿值：{}",
-                                    maxCanFeed, itemFood.getUnlocalizedName(), fd.getName(), fd.hunger);
+                                    actual, itemFood.getUnlocalizedName(), fd.getName(), fd.hunger);
                         }// 2. 单独处理蛋糕（假设蛋糕物品类为ItemCake，根据实际类名修改）
                         else if (itemName.contains("cake") || itemName.contains("block.cake")) { // 替换为你的蛋糕物品类名
                             // 假设一块蛋糕提供4点饱食度（可根据需求调整）
                             int cakeHeal = 4;
-                            // 蛋糕每次喂食消耗1个（如果是可堆叠的蛋糕）
-                            int maxCanFeed = Math.min(is.getCount(), needFood / cakeHeal);
-                            if (maxCanFeed <= 0) {
-                                maxCanFeed = 1; // 即使只剩1点需求，也消耗1个蛋糕
+                            int maxByNeed = Math.max(1, (int) Math.ceil(needFood / (double) cakeHeal));
+                            int maxCanFeed = Math.min(is.getCount(), maxByNeed);
+                            ItemStack removed = chest.decrStackSize(i, maxCanFeed);
+                            int actual = (removed == null || removed.isEmpty()) ? 0 : removed.getCount();
+                            if (actual <= 0) {
+                                continue;
                             }
-                            // 计算实际增加的饱食度（不超过需求）
-                            float actualAdd = Math.min(cakeHeal * maxCanFeed, needFood);
-                            fd.hunger += actualAdd;
-                            chest.decrStackSize(i, maxCanFeed);
+                            // P4: 先不做定价系统，商店免费喂食
+                            fd.hunger = Math.min(10.0D, fd.hunger + (double) cakeHeal * actual);
                             fedFolks++;
                             needFood = 10 - (int) Math.ceil(fd.hunger);
                             ModSimLoader.log.info("喂食{}个蛋糕给NPC{}，当前饥饿值：{}",
-                                    maxCanFeed, fd.getName(), fd.hunger);
+                                    actual, fd.getName(), fd.hunger);
                         }
 
 
@@ -864,32 +991,33 @@ public abstract class Job {
      */
     public void sellStuff() {
         try {
-            ItemStack stack = null;
-            int quant = 0;
-            Block block = null;
-            boolean ok = false;
-            Float stackPrice = 0.0F;
-            int stackCount = 0;
             List<IInventory> chests = inventoriesFindClosest(this.workPlace, 5);
-            if (chests == null | chests.size() == 0) {
+            // P10(S0): 原来的 `|` 是位或，chests 为 null 时仍会调用 size()。
+            if (chests == null || chests.size() == 0) {
                 ModSimLoader.sendChat(new TextComponentTranslation("container.sim.Merchant13", new Object[0]).getUnformattedText());//商人：请在这里放一个箱子,然后在里面放64个物品。
                 return;
             }
             float total = 0.0F;
             IInventory iInventory = chests.get(0);
+            if (!isInventoryValid(iInventory)) {
+                return;
+            }
             for (int g = 0; g < iInventory.getSizeInventory(); g++) {
 
                 ItemStack is = iInventory.getStackInSlot(g);
-                if (is != null) {
-                    if (is.getCount() == 64) {
-                        stackPrice = PricesForBlocks.getPrice(Block.getBlockFromItem(is.getItem()), false);
-                        if (stackPrice > 0.0F) {
-                            //64 * 基本价格
-                            ModSimLoader.money += stackPrice;
-                            PricesForBlocks.adjustPrice((Block) block, false);
-                            total += stackPrice;
-                            (chests.get(0)).setInventorySlotContents(g, ItemStack.EMPTY);
+                if (is != null && !is.isEmpty()) {
+                    // P10(S0): 支持零散数量，按 64 个的单价折算；不再只收整组。
+                    Block soldBlock = Block.getBlockFromItem(is.getItem());
+                    float stackPrice = PricesForBlocks.getPrice(soldBlock, false);
+                    if (stackPrice > 0.0F) {
+                        float value = stackPrice * ((float) is.getCount() / 64.0F);
+                        if (value <= 0.0F) {
+                            continue;
                         }
+                        ModSimLoader.money += value;
+                        PricesForBlocks.adjustPrice(soldBlock, false);
+                        total += value;
+                        iInventory.setInventorySlotContents(g, ItemStack.EMPTY);
                     }
                 }
             }
@@ -922,50 +1050,80 @@ public abstract class Job {
     public void buyStuff(List<Integer> quantities) {
         try {
             ModSimLoader.log.info("准备买东西");
-            ItemStack stack = null;
-            int quant = 0;
-            Block block = null;
-            boolean ok = false;
-            Float stackPrice = 0.0F;
+            // P10(S0): 客户端传来的数量必须做边界检查，不能直接 get(i)。
+            if (quantities == null || quantities.isEmpty()) {
+                return;
+            }
             //找到箱子
             List<IInventory> chests = inventoriesFindClosest(this.workPlace, 5);
-            if (chests != null && chests.size() != 0) {
-                for (int i = 0; i < 9; i++) {
-                    quant = quantities.get(i);
-                    //ModSimLoader.log.info(String.valueOf(quant));
-                    if (quant > 0) {
-                        if (i == 0) {
-                            block = Blocks.PLANKS;
-                        } else if (i == 1) {
-                            block = Blocks.LOG;
-                        } else if (i == 2) {
-                            block = Blocks.COBBLESTONE;
-                        } else if (i == 3) {
-                            block = Blocks.STONE;
-                        } else if (i == 4) {
-                            block = Blocks.GLASS;
-                        } else if (i == 5) {
-                            block = Blocks.WOOL;
-                        } else if (i == 6) {
-                            block = Blocks.BRICK_BLOCK;
-                        } else if (i == 7) {
-                            block = Blocks.STONEBRICK;
-                        } else if (i == 8) {
-                            block = Blocks.OAK_FENCE;
-                        }
+            if (chests == null || chests.isEmpty()) {
+                ModSimLoader.sendChat(new TextComponentTranslation("container.sim.Merchant12", new Object[0]).getUnformattedText());
+                return;
+            }
+            if (!isInventoryValid(chests.get(0))) {
+                return;
+            }
+            for (int i = 0; i < 9; i++) {
+                Integer qObj = i < quantities.size() ? quantities.get(i) : null;
+                int quant = qObj == null ? 0 : qObj;
+                // P10(S0): 单次最多购买 64 组，防止恶意包导致主线程长循环。
+                quant = Math.max(0, Math.min(64, quant));
+                if (quant <= 0) {
+                    continue;
+                }
+                Block block = null;
+                if (i == 0) {
+                    block = Blocks.PLANKS;
+                } else if (i == 1) {
+                    block = Blocks.LOG;
+                } else if (i == 2) {
+                    block = Blocks.COBBLESTONE;
+                } else if (i == 3) {
+                    block = Blocks.STONE;
+                } else if (i == 4) {
+                    block = Blocks.GLASS;
+                } else if (i == 5) {
+                    block = Blocks.WOOL;
+                } else if (i == 6) {
+                    block = Blocks.BRICK_BLOCK;
+                } else if (i == 7) {
+                    block = Blocks.STONEBRICK;
+                } else if (i == 8) {
+                    block = Blocks.OAK_FENCE;
+                }
+                if (block == null) {
+                    continue;
+                }
 
-                        for (int c = 1; c <= quant; c++) {
-                            stack = new ItemStack(block, 64);
-//                            this.placeIntoChest(chests.get(0), stack, stack.getMetadata(), 64);
-                            this.placeInJobChest(stack);
-                            stackPrice = PricesForBlocks.getPrice(block, true);
-                            //64 * 基本价格 + 25% 加价
-                            ModSimLoader.money -= stackPrice;
-                        }
-
-                        PricesForBlocks.adjustPrice(block, true);
+                // P4: 按实际放进去的件数结算。原来 placeInJobChest 的返回值被丢弃、
+                // 钱无条件扣 —— 箱子满时钱货两空。
+                int paid = 0;
+                float unitPrice = PricesForBlocks.getPrice(block, true);
+                if (unitPrice <= 0.0F) {
+                    continue;
+                }
+                for (int c = 0; c < quant; c++) {
+                    // P10(S0): 先查余额，再放货；钱不够就停，绝不出现负余额。
+                    if (ModSimLoader.gamemode != 1 && ModSimLoader.money < unitPrice) {
+                        break;
+                    }
+                    ItemStack stack = new ItemStack(block, 64);
+                    int put = this.placeInJobChestPartial(chests.get(0), stack);
+                    if (put <= 0) {
+                        break;
+                    }
+                    paid += put;
+                    ModSimLoader.money -= unitPrice * ((float) put / 64.0F);
+                    if (ModSimLoader.money < 0.0F) {
+                        ModSimLoader.money = 0.0F;
                     }
                 }
+                if (paid == 0) {
+                    ModSimLoader.sendChat(new TextComponentTranslation("container.sim.Merchant12", new Object[0]).getUnformattedText());
+                    continue;
+                }
+                PricesForBlocks.adjustPrice(block, true);
+            }
                 SoundEvent cash = SoundRegistry.CASH;
                 if (cash == null || cash.getRegistryName() == null) {
                     ModSimLoader.log.error("播放失败：sim:cash 声音事件未注册");
@@ -973,10 +1131,8 @@ public abstract class Job {
                 for (EntityPlayer entityPlayer : this.jobWorld.playerEntities) {
                     this.jobWorld.playSound(entityPlayer, entityPlayer.posX, entityPlayer.posY, entityPlayer.posZ, cash, SoundCategory.BLOCKS, 1.0F, 1.0F);
                 }}
-                try {
-                    Thread.sleep(1000L);
-                } catch (Exception e) {
-                }
+                // P4: 删除 Thread.sleep(1000L)。buyStuff 经 addScheduledTask 在世界线程
+                // 执行，睡觉 1 秒会把整个世界冻住（多人下所有玩家一起卡）。
                 SoundEvent merchm = SoundRegistry.MERCHM;
                 if (merchm == null || merchm.getRegistryName() == null) {
                     ModSimLoader.log.error("播放失败：sim:merchm 声音事件未注册");
@@ -984,10 +1140,6 @@ public abstract class Job {
                 for (EntityPlayer entityPlayer :this.jobWorld.playerEntities) {
                     this.jobWorld.playSound(entityPlayer, entityPlayer.posX, entityPlayer.posY, entityPlayer.posZ, merchm, SoundCategory.BLOCKS, 1.0F, 1.0F);
                 }}
-            } else {
-                ModSimLoader.sendChat(new TextComponentTranslation("container.sim.Merchant12", new Object[0]).getUnformattedText());
-                return;
-            }
         } catch (Exception e) {
             StackTraceElement element = e.getStackTrace()[0];
             ModSimLoader.log.error("job-buyStuff出错了：" + e.getMessage() + "行数：" + element.getLineNumber());
@@ -1009,8 +1161,20 @@ public abstract class Job {
             }
 
             if (this.jobTasks.size() > 0) {
-                this.currentTask = this.jobTasks.get(this.stage);
+                // P10(S0): 读档后 jobTasks 可能是空的/旧的 stage 可能越界。
+                int index = this.stage;
+                if (index < 0) {
+                    index = 0;
+                }
+                if (index >= this.jobTasks.size()) {
+                    index = this.jobTasks.size() - 1;
+                }
+                this.stage = index;
+                this.currentTask = this.jobTasks.get(index);
                 this.currentTask.begin();
+            } else {
+                // 让职业在下一 tick 重建任务队列。
+                this.stage = -1;
             }
         } catch (Exception e) {
             StackTraceElement element = e.getStackTrace()[0];

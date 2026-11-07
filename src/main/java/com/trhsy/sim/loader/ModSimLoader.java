@@ -5,6 +5,7 @@ import com.trhsy.sim.network.client.PacketUpdateMoney;
 import com.trhsy.sim.npcCode.DynamicSkin;
 import com.trhsy.sim.npcCode.NpcData;
 import com.trhsy.sim.npcCode.NpcSkin;
+import com.trhsy.sim.npcCode.SimIds;
 import com.trhsy.sim.npcCode.V3;
 import com.trhsy.sim.npcCode.block.FarmBox;
 import com.trhsy.sim.npcCode.block.MineBox;
@@ -102,7 +103,11 @@ public class ModSimLoader {
             strmc = strmc.substring(0, strmc.length() - 1);
             File checks = new File(strmc + File.separator + "resources" + File.separator + "sim");
             if (!checks.exists() && !checks.isDirectory()) {
-                ModSimLoader.log.warn("SimCity error - Mod未正确安装, ./minecraft/resources/sim/ 文件夹丢失了 - 重新创建此文件夹");
+                // P0: 只警告一次（原来每次调用都刷一条，专服启动能刷十几条）
+                if (!simFolderWarned) {
+                    simFolderWarned = true;
+                    ModSimLoader.log.warn("SimCity: 资源目录不存在，已创建: " + checks.getAbsolutePath());
+                }
                 checks.mkdir();
             }
             return (checks).getAbsolutePath();
@@ -110,6 +115,8 @@ public class ModSimLoader {
             return "";
         }
     }
+
+    private static boolean simFolderWarned = false;
 
     /**
      * @return void
@@ -401,9 +408,13 @@ public class ModSimLoader {
         return npcDatas;
     }
     public static EntityNpc getEntityFolkByUID(UUID uid) {
-        EntityNpc entityFolk=null;
+        EntityNpc entityFolk = null;
+        if (uid == null) {
+            return null;
+        }
         for (NpcData npcData : ModSimLoader.folks) {
-            if (npcData.ID==uid) {
+            // P9: UUID 必须用 equals（原来 == 几乎恒为 false，只碰巧同对象时成立）
+            if (uid.equals(npcData.ID)) {
                 entityFolk = npcData.entity;
                 return entityFolk;
             }
@@ -423,18 +434,18 @@ public class ModSimLoader {
      **/
     public static List<BuildingBlueprint> getBlueprintsByType(String type, String searchText) {
         List<BuildingBlueprint> typedBlues = new CopyOnWriteArrayList<BuildingBlueprint>();
+        // P9: 类型可能是稳定 ID，也可能是显示名，统一归一化后再比较；
+        // 搜索串判空用 isEmpty（原来 `searchText != ""` 是引用比较）。
+        String wantId = SimIds.buildingTypeId(type);
         for (BuildingBlueprint bb : buildingBlueprints) {
-
-            if (searchText != "" && searchText != null) {
-                if (bb.name.contains(searchText)) {
-                    if (bb.buildingType.contentEquals(type)) {
-                        typedBlues.add(bb);
-                    }
-                }
-            } else {
-                if (bb.buildingType.contentEquals(type)) {
-                    typedBlues.add(bb);
-                }
+            boolean typeMatch = (wantId != null && wantId.equals(bb.buildingType))
+                    || (bb.buildingType != null && bb.buildingType.equals(type));
+            if (!typeMatch) {
+                continue;
+            }
+            if (searchText == null || searchText.isEmpty()
+                    || (bb.name != null && bb.name.contains(searchText))) {
+                typedBlues.add(bb);
             }
         }
         return typedBlues;
@@ -492,29 +503,25 @@ public class ModSimLoader {
      **/
     public static List<FarmBox> getClosestFarm(final V3 pos, String fType) {
         List<FarmBox> fs = new CopyOnWriteArrayList<FarmBox>();
-        for (int i = 0; i < farms.size(); i++) {
-            FarmBox f=farms.get(i);
-            UUID ID=f.ID;
-            FarmBox f1=new FarmBox(ID);
-            if (f1.farmType.toString().equals(fType) && f1.employee != null) {
-                fs.add(f1);
-
+        // P4: 供货用——不再要求农场必须有雇员（有库存就该能取货）；
+        // 只读内存对象，按距离排序后返回。
+        for (FarmBox f : farms) {
+            if (f == null || f.farmType == null) {
+                continue;
             }
-            farms.remove(i);
-            farms.add(f1);
+            if (fType == null || f.farmType.toString().equals(fType)) {
+                fs.add(f);
+            }
+        }
+        if (pos != null) {
+            fs.sort((a, b) -> {
+                if (a.loc == null || b.loc == null) {
+                    return 0;
+                }
+                return Double.compare(a.loc.distanceSq(pos), b.loc.distanceSq(pos));
+            });
         }
         return fs;
-//        Collections.sort(fs, new Comparator<FarmBox>() {
-//            @Override
-//            public int compare(FarmBox f1, FarmBox f2) {
-//                if (f1.loc.getDistanceTo(pos) > f2.loc.getDistanceTo(pos)) {
-//                    return 1;
-//                } else {
-//                    return f1.loc.getDistanceTo(pos) < f2.loc.getDistanceTo(pos) ? -1 : 0;
-//                }
-//            }
-//        });
-//        return (List) (fs.size() > 3 ? fs.subList(0, 2) : fs);
     }
 
     /**
@@ -569,26 +576,29 @@ public class ModSimLoader {
      **/
     public static List<Building> getClosestBuildingByJob(String jobType, final V3 pos) {
         List<Building> bs = new CopyOnWriteArrayList<Building>();
-        Iterator var3 = buildings.iterator();
-
-        while (var3.hasNext()) {
-            Building b = (Building) var3.next();
-            if (b.jobType.contentEquals(jobType) && b.occupants != null&&b.occupants.size()>0) {
+        // P4: 用稳定职业 ID 匹配（不再用本地化字符串逐字比较，换语言/翻译改动都能对上），
+        // 且不再强制要求生产建筑有住户（有库存就该能取货），按距离排序。
+        String wantId = SimIds.jobIdFromDisplay(jobType);
+        for (Building b : buildings) {
+            if (b == null || b.jobType == null || b.jobType.isEmpty()) {
+                continue;
+            }
+            String bid = SimIds.jobIdFromDisplay(b.jobType);
+            boolean match = (!wantId.isEmpty() && wantId.equals(bid))
+                    || (wantId.isEmpty() && b.jobType.contentEquals(jobType));
+            if (match) {
                 bs.add(b);
-                ModSimLoader.log.info("找到建筑： " + b.buildingName);
+                ModSimLoader.log.info("找到供货建筑： " + b.buildingName + " (" + b.jobType + ")");
             }
         }
-
-        /*Collections.sort(bs, new Comparator<Building>() {
-            @Override
-            public int compare(Building b1, Building b2) {
-                if (b1.controlXYZ.getDistanceTo(pos) > b2.controlXYZ.getDistanceTo(pos)) {
-                    return 1;
-                } else {
-                    return b1.controlXYZ.getDistanceTo(pos) < b2.controlXYZ.getDistanceTo(pos) ? -1 : 0;
+        if (pos != null) {
+            bs.sort((a, b2) -> {
+                if (a.controlXYZ == null || b2.controlXYZ == null) {
+                    return 0;
                 }
-            }
-        });*/
+                return Double.compare(a.controlXYZ.distanceSq(pos), b2.controlXYZ.distanceSq(pos));
+            });
+        }
         return bs;
     }
 
@@ -631,9 +641,16 @@ public class ModSimLoader {
      * @Param [pos]
      **/
     public static Building getBuildingByV3(V3 pos) {
+        if (pos == null) {
+            return null;
+        }
         for (int i = 0; i < buildings.size(); ++i) {
             Building building=buildings.get(i);
-            if (building.controlXYZ.toString().contentEquals(pos.toString())||building.livingXYZ.toString().contentEquals(pos.toString())) {
+            if (building == null || building.controlXYZ == null) {
+                continue;
+            }
+            if (building.controlXYZ.toString().contentEquals(pos.toString())
+                    || (building.livingXYZ != null && building.livingXYZ.toString().contentEquals(pos.toString()))) {
                 return building;
             }
         }

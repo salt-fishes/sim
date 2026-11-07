@@ -46,7 +46,7 @@ public class JobTaskUnloadItems extends JobTask {
                 return;
             }
 
-            if (System.currentTimeMillis() - this.timeToUnload < 10000L) {
+            if (System.currentTimeMillis() - this.timeToUnload < 3000L) {
                 return;
             }
 

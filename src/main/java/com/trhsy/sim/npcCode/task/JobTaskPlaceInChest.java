@@ -48,7 +48,7 @@ public class JobTaskPlaceInChest extends JobTask {
                 return;
             }
 
-            if (System.currentTimeMillis() - this.timeToPlace < 10000L) {
+            if (System.currentTimeMillis() - this.timeToPlace < 2000L) {
                 return;
             }
 

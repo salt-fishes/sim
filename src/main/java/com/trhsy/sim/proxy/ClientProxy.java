@@ -1,12 +1,14 @@
 package com.trhsy.sim.proxy;
 
 import com.trhsy.sim.gui.GuiHud;
+import com.trhsy.sim.key.KeyboardManager;
 import com.trhsy.sim.loader.*;
 import com.trhsy.sim.loader.render.ItemRenderLoader;
 import com.trhsy.sim.util.BuildingsExtractor;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.util.text.TextComponentTranslation;
+import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.fml.common.event.FMLInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLPostInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
@@ -26,6 +28,10 @@ public class ClientProxy extends CommonProxy {
     @Override
     public void preInit(FMLPreInitializationEvent event) {
         super.preInit(event);
+        /**P0: 按键注册只在客户端执行（原来在 CommonProxy，专用服务器会加载 KeyBinding 而崩溃）*/
+        KeyboardManager.init();
+        /**P0: 客户端世界事件（重置模拟状态镜像），不再由服务端事件触碰客户端类*/
+        MinecraftForge.EVENT_BUS.register(new ClientWorldEvents());
         /**解压建筑蓝图*/
         new BuildingsExtractor();
         /**创造模式物品栏**/

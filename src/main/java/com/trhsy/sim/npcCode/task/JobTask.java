@@ -35,6 +35,13 @@ public abstract class JobTask {
     }
 
     public void failTask(String message) {
+        // P3/P8: 原来 message 被直接丢弃，失败和成功对 update() 完全同义，
+        // 玩家既看不到失败也诊断不出原因。现在真正把消息送出去（调用点都在
+        // onTaskBegin，每个任务一次，不会刷屏）。
+        if (message != null && !message.isEmpty()) {
+            ModSimLoader.sendChat(message);
+            ModSimLoader.log.warn("[任务失败] " + this.job.jobName + ": " + message);
+        }
         this.onTaskComplete();
         this.completed = true;
     }

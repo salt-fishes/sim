@@ -59,6 +59,11 @@ public class JobTaskSearchForBlock extends JobTask {
             for (double x = this.startPoint.x - (double) this.radius; x < this.startPoint.x + (double) this.radius; ++x) {
                 for (double z = this.startPoint.z - (double) this.radius; z < this.startPoint.z + (double) this.radius; ++z) {
                     BlockPos bp = new BlockPos(x, y, z);
+                    // P10(S0): 不扫描未加载区块，避免伐木工扫描半径 60 时
+                    // 用 getBlockState 把周围几百个区块全部加载出来。
+                    if (!this.folk.entity.world.isBlockLoaded(bp)) {
+                        continue;
+                    }
                     Block b = this.folk.entity.world.getBlockState(bp).getBlock();
                     boolean foundSimilar = false;
 
@@ -96,11 +101,18 @@ public class JobTaskSearchForBlock extends JobTask {
             V3 v3 = new V3(p.getX(), p.getY(), p.getZ());
             this.folk.forceMoveToXYZ(v3);
             if (this.toMine.size() > 0) {
+                if (!this.folk.entity.world.isBlockLoaded((BlockPos) this.toMine.get(0))) {
+                    this.toMine.remove(0);
+                    return;
+                }
                 if (this.folk.entity.motionX == 0.0D && this.folk.entity.motionZ == 0.0D) {
                     for (double x = this.folk.entity.posX - 1.0D; x <= this.folk.entity.posX + 1.0D; ++x) {
                         for (double y = this.folk.entity.posY; y <= this.folk.entity.posY + 1.0D; ++y) {
                             for (double z = this.folk.entity.posZ - 1.0D; z <= this.folk.entity.posZ + 1.0D; ++z) {
                                 BlockPos bp = new BlockPos(x, y, z);
+                                if (!this.folk.entity.world.isBlockLoaded(bp)) {
+                                    continue;
+                                }
                                 if (this.folk.entity.world.getBlockState(bp).getBlock().isLeaves(this.folk.entity.world.getBlockState(bp), this.folk.entity.world, bp)) {
                                     this.folk.entity.world.setBlockToAir(bp);
                                     this.fs_ge++;

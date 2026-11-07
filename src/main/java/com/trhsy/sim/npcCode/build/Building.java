@@ -12,6 +12,7 @@ import net.minecraft.world.World;
 import net.minecraftforge.common.DimensionManager;
 
 import java.io.*;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -263,15 +264,18 @@ public class Building {
      **/
     public void demolish(World world, boolean removeStructure) {
         this.markedForDeletion = true;
-        //移除租户
-        for (int i = 0; i < this.occupants.size(); i++) {
-            NpcData npcData = this.occupants.get(i);
-            if(npcData!=null){
+        // P10(S0): 先复制住户列表再 evict。evict 会从 occupants 里 remove，
+        // 直接在原列表上用下标递增会跳过一半住户。
+        List<NpcData> occupantsCopy = new ArrayList<>(this.occupants);
+        for (NpcData npcData : occupantsCopy) {
+            if (npcData != null) {
                 npcData.evict();
             }
         }
-        for (NpcData fd:ModSimLoader.folks){
-            if (fd.job != null && fd.job.workPlace == this.controlXYZ) {
+        // P10(S0): V3 必须用 equals 比较（原来 == 永远不成立，工人不会被解雇）。
+        for (NpcData fd : new ArrayList<>(ModSimLoader.folks)) {
+            if (fd != null && fd.job != null && fd.job.workPlace != null
+                    && fd.job.workPlace.equals(this.controlXYZ)) {
                 fd.fire();
             }
         }
@@ -280,6 +284,10 @@ public class Building {
                 //播放拆除音效
 //                world.playSound(v3.x,v3.y,v3.z, SoundEvents.ENTITY_GENERIC_EXPLODE, SoundCategory.BLOCKS, 1, 1,false);
                 BlockPos block=v3.toBlockPos();
+                // P10(S0): 未加载区块不拆除，避免隐式加载。
+                if (!world.isBlockLoaded(block)) {
+                    continue;
+                }
                 world.destroyBlock(block,false);
 //                world.setBlockToAir(block);
             }

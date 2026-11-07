@@ -133,18 +133,24 @@ public class JobTaskUseFurnace extends JobTask {
                 if (!currentSand.isEmpty()) {
                     //将锻造物放入仓库
                     this.folk.status = new TextComponentTranslation("container.sim.job.glass.farmer.Putting",new Object[0]).getUnformattedText();
-                    //this.factoryFurnace.getStackInSlot(2).shrink(1);
-                    this.job.placeInJobChest(currentSand);//将获得的锻造物放入箱子
-                    if(ModSimLoader.gamemode!=1){
-                        ModSimLoader.addMoney(-0.02F * (float)currentSand.getCount());
+                    // P4: 按实际放进去的件数结算；放不下的留在产物槽里，下一轮继续。
+                    // 原实现无条件清空产物槽并按整组扣钱 —— 箱子满时产物凭空消失、钱照扣。
+                    int put = this.job.placeInJobChestPartial(currentSand);
+                    if (put > 0) {
+                        currentSand.setCount(currentSand.getCount() - put);
+                        this.factoryFurnace.setInventorySlotContents(2, currentSand.isEmpty() ? ItemStack.EMPTY : currentSand);
+                        if (ModSimLoader.gamemode != 1) {
+                            ModSimLoader.addMoney(-0.02F * (float) put);
+                        }
                     }
-                    this.factoryFurnace.setInventorySlotContents(2, ItemStack.EMPTY);
+                    // 收完这一炉回到 step 1 继续下一炉（原来产物槽空就结束，
+                    // 而 step 2 刚放料时产物槽必然是空的 —— 一炉都烧不完）。
+                    this.step = 1;
+                    return;
                 } else {
-                    //没有制造物品
+                    //没有制造物品：还在烧，等待（由 deadline 收尾），不再直接结束任务
                     this.folk.status = new TextComponentTranslation("container.sim.job.glass.farmer.glass",new Object[0]).getUnformattedText();
-                    this.onTaskComplete();
-//                    this.step = 1;
-//                    return;
+                    return;
                 }
             }
         }

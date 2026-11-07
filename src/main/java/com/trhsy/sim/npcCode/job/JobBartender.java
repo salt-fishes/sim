@@ -4,7 +4,6 @@ import com.trhsy.sim.loader.ItemLoader;
 import com.trhsy.sim.loader.ModSimLoader;
 import com.trhsy.sim.npcCode.NpcData;
 import com.trhsy.sim.npcCode.task.*;
-import net.minecraft.init.Blocks;
 import net.minecraft.init.Items;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.math.BlockPos;
@@ -16,11 +15,15 @@ import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 /**
- * @author Trhsy
- * @Package: com.trhsy.sim.npc.job
- * @ClassName: JobBartender
- * @Description: 酒保
- * @date 2023/08/04 上午 10:01
+ * 酒保（P9 修复）。
+ *
+ * <p>原实现的问题：
+ * <ul>
+ *   <li>配方列表 {@code cakes} 是空的，材料却 `colItems.add(...)` 加进了采集清单，
+ *       每天还重复添加 → 清单无限膨胀；</li>
+ *   <li>产物写成不存在的"啤酒"（ItemLoader 里没有该物品），实际什么都做不出来。</li>
+ * </ul>
+ * 现在：采购小麦 → 卸货 → 烤面包（3 小麦/个）→ 售卖；不再采购玻璃（无用途、无映射）。
  */
 public class JobBartender extends Job{
     //工作阶段
@@ -34,11 +37,9 @@ public class JobBartender extends Job{
             this.jobName = new TextComponentTranslation("container.sim.Vocation37",new Object[0]).getUnformattedText();
             //小麦
             this.colItems.add(new ItemStack(Items.WHEAT, 16));
-            //玻璃
-            colItems.add(new ItemStack(Blocks.GLASS, 16));
         }catch (Exception e){
             StackTraceElement element = e.getStackTrace()[0];
-            ModSimLoader.log.error("JobButcher出错了：" + e.getMessage() + "行数：" + element.getLineNumber());
+            ModSimLoader.log.error("JobBartender出错了：" + e.getMessage() + "行数：" + element.getLineNumber());
         }
     }
     @Override
@@ -62,24 +63,14 @@ public class JobBartender extends Job{
                     this.addJobTask(new JobTaskUnloadItems(this, -1L, colItems));
                     this.bartenderStage = 3;
                 } else if (this.bartenderStage == 3) {
-                    List<ItemStack> cakes = new CopyOnWriteArrayList<ItemStack>();
-                    //小麦
-                    this.colItems.add(new ItemStack(Items.WHEAT, 3));
-                    //玻璃
-                    colItems.add(new ItemStack(Blocks.GLASS, 3));
-                    //制作啤酒
-                    this.addJobTask(new JobTaskProduceItem(this, 60000L, Items.CAKE, cakes, new TextComponentTranslation("container.sim.job.Baker_Baking_per",new Object[0]).getUnformattedText()));
+                    // P9: 烤面包（3 小麦/个）。需求必须放进独立的列表，不能再往 colItems 里塞。
+                    List<ItemStack> breadReq = new CopyOnWriteArrayList<ItemStack>();
+                    breadReq.add(new ItemStack(Items.WHEAT, 3));
+                    this.addJobTask(new JobTaskProduceItem(this, 60000L, Items.BREAD, breadReq, new TextComponentTranslation("container.sim.job.Baker_Baking",new Object[0]).getUnformattedText()));
                     this.bartenderStage = 4;
                 }else if(this.bartenderStage == 4){
-
-                    /**
-                     * @Author fan
-                     * @Description //TODO 卖酒
-                     * @Date 16:44 2023/4/9
-                     * @Param [folk, pos, world]
-                     * @return
-                     **/
-                    this.addJobTask(new JobTaskShopkeep(this, -1L, new TextComponentTranslation("item.drinkBeer.name",new Object[0]).getUnformattedText(),true));
+                    //售卖/关店（下酒面包）
+                    this.addJobTask(new JobTaskShopkeep(this, -1L, new TextComponentTranslation("container.sim.job.Baker_bread",new Object[0]).getUnformattedText(),true));
                     this.bartenderStage = 5;
                 }else{
                     if (this.jobTasks.size() > 0&&this.currentTask==null) {
@@ -90,7 +81,7 @@ public class JobBartender extends Job{
             }
         }catch (Exception e){
             StackTraceElement element = e.getStackTrace()[0];
-            ModSimLoader.log.error("JobButcher-onUpdate出错了：" + e.getMessage() + "行数：" + element.getLineNumber());
+            ModSimLoader.log.error("JobBartender-onUpdate出错了：" + e.getMessage() + "行数：" + element.getLineNumber());
         }
     }
     @Override

@@ -54,7 +54,7 @@ apply plugin: 'net.minecraftforge.gradle.forge'
 //Only edit below this line, the above code adds and enables the necessary things for Forge to be setup.
 
 
-version = "1.12.2-1.0.9 Beta"
+version = "1.12.2-1.0.9 Beta3"
 group = "com.trhsy.sim" 
 archivesBaseName = "simulated"
 
@@ -122,5 +122,10 @@ processResources {
     }
 }
 [compileJava, compileTestJava]*.options*.encoding = 'UTF-8'
+// 可选：.\gradlew.bat compileJava --rerun-tasks -PlintAll
+// 用于发布前收集所有 javac 警告（普通构建不启用，避免刷屏）。
+if (project.hasProperty("lintAll")) {
+    compileJava.options.compilerArgs.add('-Xlint:all')
+}
 compileJava.options.fork = true
 compileJava.options.forkOptions.executable = "D:\\java\\jdk1.8.0_271\\bin\\javac.exe"

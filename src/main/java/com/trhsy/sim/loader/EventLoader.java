@@ -23,6 +23,7 @@ import net.minecraftforge.fml.common.FMLCommonHandler;
 import net.minecraftforge.fml.common.eventhandler.EventBus;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.PlayerEvent;
+import net.minecraftforge.fml.common.gameevent.TickEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent.RenderTickEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent.WorldTickEvent;
 import net.minecraftforge.fml.common.network.FMLNetworkEvent;
@@ -46,7 +47,9 @@ import java.util.concurrent.Executors;
  **/
 public class EventLoader {
     // 用于NPC加载的临时缓存（避免重复查询）
-    private static final Set<UUID> LOADING_NPC_UUIDS = new HashSet<>();
+    // P0: 主线程 add()、NPC-Load-Thread 里 contains()/remove()，HashSet 并发扩容
+    // 可能把结构损坏成死循环；换成并发集合。
+    private static final Set<UUID> LOADING_NPC_UUIDS = java.util.concurrent.ConcurrentHashMap.newKeySet();
     // 单线程池用于NPC加载任务（替代直接创建线程）
     private static final ExecutorService NPC_LOAD_EXECUTOR = Executors.newSingleThreadExecutor(runnable -> {
         Thread thread = new Thread(runnable, "NPC-Load-Thread");
@@ -63,9 +66,10 @@ public class EventLoader {
 
     public EventLoader() {
         try {
+            // P0: 只注册一次。FMLCommonHandler.instance().bus() 与 MinecraftForge.EVENT_BUS
+            // 在 1.12.2 是同一个对象，自建 EVENT_BUS 从无 post()，重复注册会让每个事件
+            // 回调执行多次（C3）。单入口是后续所有节拍/性能修复的前提。
             MinecraftForge.EVENT_BUS.register(this);
-            EventLoader.EVENT_BUS.register(this);
-            FMLCommonHandler.instance().bus().register(this);
         } catch (Exception e) {
             StackTraceElement element = e.getStackTrace()[0];
             ModSimLoader.log.error("EventLoader出错了：" + e.getMessage() + "行数：" + element.getLineNumber());
@@ -201,11 +205,13 @@ public class EventLoader {
      */
     @SubscribeEvent
     public void worldSave(WorldEvent.Save event) {
-        World world=event.getWorld();
-//        if (!world.isRemote && world instanceof WorldServer) {
-            SimmodeStart.simModSave(world);
-//        }
-
+        World world = event.getWorld();
+        // P0: 只在服务端主世界保存一次。原来客户端/地狱/末地也会触发，单机下
+        // 两份静态字段指向同一份数据，会出现"客户端覆盖服务端"的存档事故（C2）。
+        if (world == null || world.isRemote || world.provider.getDimension() != 0) {
+            return;
+        }
+        SimmodeStart.simModSave(world);
     }
 
     /**
@@ -230,7 +236,10 @@ public class EventLoader {
         ModSimLoader.gamemode = 999;
         ModSimLoader.money = 10.0F;
         ModSimLoader.sim_is_running = false;
-        ModSimClientLoader.sim_is_running =false;
+        // P0: 允许同一进程内重进世界时重新加载（原来只清数据不重置加载标志）
+        SimmodeStart.hasLoadedWorld = false;
+        // P0: 不再在这里碰 ModSimClientLoader（客户端类）。客户端镜像的重置移到
+        // ClientWorldEvents，由 ClientProxy 注册（D13）。
         SimmodeStart.timeSinceLastClientUpdates=System.currentTimeMillis();
         NetWorkLoader.net.sendToAll(new PacketUpdateMoney());
         ModSimLoader.log.info("-----------------------------重制时间，开始计时，准备加载模拟大都市------------------------");
@@ -248,25 +257,21 @@ public class EventLoader {
      */
     @SubscribeEvent
     public void worldTick(WorldTickEvent event) {
-        World world=event.world;
-// World world=Minecraft.getMinecraft().world;
-        if(world==null){
+        World world = event.world;
+        if (world == null) {
             return;
         }
-//
-        if(world.isRemote){
-            // 客户端：执行客户端专属逻辑（渲染、动画、本地状态更新）
-//            SimmodeStart.clientSimModupdate(world);
-//            System.out.println("客户端");
-        }else{
-//            SimmodeStart.clientSimModupdate(world);
-//            System.out.println("客户端-服务端");
-            // 服务器：执行服务器专属逻辑（实体创建、数据同步、AI逻辑）
-//            SimmodeStart.serverSimModupdate(world);
-//            System.out.println("服务端");
-            SimmodeStart.simModupdate(world);
+        // P0: 唯一模拟入口。
+        //  - 只在 END 相位执行（START/END 各触发一次，否则所有 NPC 跑两遍）；
+        //  - 只处理服务端维度 0（地狱/末地各自触发一次，且没有模拟意义）；
+        //  - 客户端不跑模拟（客户端只接收同步包）。
+        if (event.phase != TickEvent.Phase.END) {
+            return;
         }
-
+        if (world.isRemote || world.provider.getDimension() != 0) {
+            return;
+        }
+        SimmodeStart.simModupdate(world);
     }
 
     /**
@@ -326,6 +331,7 @@ public class EventLoader {
      *
      * @param event
      */
+    @SideOnly(Side.CLIENT)
     @SubscribeEvent
     public void clientDisconnected(FMLNetworkEvent.ClientDisconnectionFromServerEvent event) {
 //        dedWorld = false;
@@ -453,6 +459,7 @@ public class EventLoader {
      * @Date 17:19 2022/10/31
      * @Param [player, posA, posB, smooth, width, event]
      **/
+    @SideOnly(Side.CLIENT)
     public static void drawBoundingBox(EntityPlayer player, Vec3d posA, Vec3d posB, boolean smooth, float width, RenderWorldLastEvent event) {
         GL11.glPushAttrib(8192);
         GL11.glDisable(2884);

@@ -70,7 +70,7 @@ public class JobMcDonald extends Job{
                     //生鱼
                     colItems.add(new ItemStack(Items.FISH, 16));
                     //收集
-                    this.addJobTask(new JobTaskCollectItems(this, -1L, colItems));
+                    this.addJobTask(new JobTaskCollectItems(this, -1L, colItems, 1));
                     this.mcDonaldStage = 3;
                 } else if (this.mcDonaldStage == 3) {
                     List<ItemStack> colItems = new ArrayList();
@@ -103,29 +103,29 @@ public class JobMcDonald extends Job{
                         //熟猪排
                         this.addJobTask(new JobTaskProduceItem(this, 60000L, Items.COOKED_PORKCHOP, new ItemStack(Items.PORKCHOP, 1), new TextComponentTranslation("container.sim.job.Baker_Baking",new Object[0]).getUnformattedText()));
                     }
-                    if (this.mutton > 1) {
+                    if (this.mutton > 0) {
                         //烘烤 羊排
                         this.addJobTask(new JobTaskProduceItem(this, 60000L, Items.COOKED_MUTTON, new ItemStack(Items.MUTTON, 1), new TextComponentTranslation("container.sim.job.Baker_Baking",new Object[0]).getUnformattedText()));
                     }
 
-                    if (this.rabbit > 1) {
+                    if (this.rabbit > 0) {
                         //烘烤 熟兔肉
                         this.addJobTask(new JobTaskProduceItem(this, 60000L, Items.COOKED_RABBIT, new ItemStack(Items.RABBIT, 1), new TextComponentTranslation("container.sim.job.Baker_Baking",new Object[0]).getUnformattedText()));
                     }
 
-                    if (this.chicken > 1) {
+                    if (this.chicken > 0) {
                         //烘烤 鸡肉
                         this.addJobTask(new JobTaskProduceItem(this, 60000L, Items.COOKED_CHICKEN, new ItemStack(Items.CHICKEN, 1), new TextComponentTranslation("container.sim.job.Baker_Baking",new Object[0]).getUnformattedText()));
                     }
 
-                    if (this.salmon > 1) {
-                        //烘烤 鲑鱼
-                        this.addJobTask(new JobTaskProduceItem(this, 60000L, new ItemStack(Items.COOKED_FISH, 1,1).getItem(), new ItemStack(Items.FISH, 16,1), new TextComponentTranslation("container.sim.job.Baker_Baking",new Object[0]).getUnformattedText()));
+                    if (this.salmon > 0) {
+                        //烘烤 鲑鱼（1 条生鲑鱼 → 1 条熟鲑鱼，meta 1）
+                        this.addJobTask(new JobTaskProduceItem(this, 60000L, Items.COOKED_FISH, 1, new ItemStack(Items.FISH, 1, 1), new TextComponentTranslation("container.sim.job.Baker_Baking",new Object[0]).getUnformattedText()));
                     }
 
-                    if (this.fish > 1) {
-                        //烘烤 鲑鱼
-                        this.addJobTask(new JobTaskProduceItem(this, 60000L, Items.COOKED_FISH, new ItemStack(Items.FISH, 16), new TextComponentTranslation("container.sim.job.Baker_Baking",new Object[0]).getUnformattedText()));
+                    if (this.fish > 0) {
+                        //烘烤 生鱼（1 条 → 1 条熟鱼）
+                        this.addJobTask(new JobTaskProduceItem(this, 60000L, Items.COOKED_FISH, 0, new ItemStack(Items.FISH, 1), new TextComponentTranslation("container.sim.job.Baker_Baking",new Object[0]).getUnformattedText()));
                     }
                     this.mcDonaldStage = 5;
                 } else if (this.mcDonaldStage == 5) {
@@ -220,9 +220,9 @@ public class JobMcDonald extends Job{
                         this.rabbit += slot.getCount();
                     }else if (slot.isItemEqual(new ItemStack(Items.CHICKEN))) {
                         this.chicken += slot.getCount();
-                    }else if (slot.isItemEqual(new ItemStack(Items.COOKED_FISH,1,1))) {
+                    }else if (slot.isItemEqual(new ItemStack(Items.FISH,1,1))) {
                         this.salmon += slot.getCount();
-                    }else if (slot.isItemEqual(new ItemStack(Items.COOKED_FISH))) {
+                    }else if (slot.isItemEqual(new ItemStack(Items.FISH))) {
                         this.fish += slot.getCount();
                     }
                 }

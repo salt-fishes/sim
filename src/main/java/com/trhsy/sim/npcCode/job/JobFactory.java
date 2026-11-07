@@ -1,293 +1,187 @@
 package com.trhsy.sim.npcCode.job;
 
+import com.trhsy.sim.loader.ModSimLoader;
 import com.trhsy.sim.npcCode.NpcData;
+import com.trhsy.sim.npcCode.SimIds;
 import com.trhsy.sim.npcCode.V3;
 import com.trhsy.sim.npcCode.build.BuildingBlueprint;
-import com.trhsy.sim.npcCode.block.FarmBox;
-import com.trhsy.sim.npcCode.block.MineBox;
-import com.trhsy.sim.loader.ModSimLoader;
 import com.trhsy.sim.npcCode.build.TerrainType;
-import net.minecraft.util.text.TextComponentTranslation;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.function.Function;
 
 /**
- * 职业工厂类：封装职业创建逻辑，消除冗长 if-else，符合开闭原则
+ * 职业工厂（P1/P3 重写）。
+ *
+ * <p>旧实现用"当前语言的显示名"做注册键（JobFactory:176-179），换语言后读档
+ * 全部找不到职业。现在注册键是稳定 ID（{@code vocationN}），显示名只用于 GUI。
+ * 存档只写稳定 ID，读档按 ID 重建。
  */
 public class JobFactory {
-    // 常量：职业翻译键前缀
-    private static final String TRANSLATION_PREFIX = "container.sim.";
-    // 职业类型 -> 职业创建器映射（函数式接口存储创建逻辑）
-    private static final Map<String, JobCreator> JOB_CREATOR_MAP = new HashMap<>();
 
-    // 静态初始化：注册所有职业的创建逻辑
+    @FunctionalInterface
+    public interface JobCreator {
+        Job create(NpcData data, BlockPos pos, World world, BuildingBlueprint blueprint,
+                   int direction, TerrainType terrain);
+    }
+
+    private static final Map<String, JobCreator> JOBS = new HashMap<>();
+
+    private static void register(String id, JobCreator creator) {
+        JOBS.put(id, creator);
+    }
+
     static {
-        // 1. 建筑工（Vocation1）
-        registerJob("Vocation1", (data, pos, world, extraData) -> {
-            BuildingBlueprint blueprint = extraData.getBlueprint();
-            int direction = extraData.getDirection();
-            return blueprint != null
-                    ? new JobBuilder(data, blueprint, pos, direction, world)
-                    : new JobBuilder(data, pos, direction, world);
-        });
-
-        // 2. 面包师（Vocation6）
-        registerJob("Vocation6", (data, pos, world, extraData) ->
-                new JobBaker(data, pos, world));
-
-        // 3. 规划师（Vocation16）
-        registerJob("Vocation16", (data, pos, world, extraData) -> {
-            TerrainType terrainType = extraData.getTerrainType();
-            return terrainType != null
-                    ? new JobTerrainFormer(data, terrainType, pos, world)
-                    : null;
-        });
-
-        // 4. 农民（Vocation5）
-        registerJob("Vocation5", (data, pos, world, extraData) -> {
-            FarmBox farm = ModSimLoader.getFarm(new V3(pos.getX(),pos.getY(),pos.getZ()));
-            return new JobFarmer(data, pos, world, farm);
-        });
-
-        // 5. 养猪户（Vocation13）
-        registerJob("Vocation13", (data, pos, world, extraData) ->
-                new JobLivestockFarmer(data, pos, "container.sim.job_Livestock_pig", world));
-
-        // 6. 养牛户（Vocation12）
-        registerJob("Vocation12", (data, pos, world, extraData) ->
-                new JobLivestockFarmer(data, pos, "container.sim.job_Livestock_cow", world));
-
-        // 7. 养鸡户（Vocation14）
-        registerJob("Vocation14", (data, pos, world, extraData) ->
-                new JobLivestockFarmer(data, pos, "container.sim.job_Livestock_chicken", world));
-
-        // 8. 养羊户（Vocation27）
-        registerJob("Vocation27", (data, pos, world, extraData) ->
-                new JobLivestockFarmer(data, pos, "container.sim.job_Livestock_sheep", world));
-
-        // 9. 养兔户（Vocation29）
-        registerJob("Vocation29", (data, pos, world, extraData) ->
-                new JobLivestockFarmer(data, pos, "container.sim.job_Livestock_rabbit", world));
-
-        // 10. 牛奶农（Vocation20）
-        registerJob("Vocation20", (data, pos, world, extraData) ->
-                new JobDairyFarmer(data, pos, world));
-
-        // 11. 牧羊人（Vocation8）
-        registerJob("Vocation8", (data, pos, world, extraData) ->
-                new JobShepherd(data, pos, world));
-
-        // 12. 鸡蛋农（Vocation3）
-        registerJob("Vocation3", (data, pos, world, extraData) ->
-                new JobEggFarmer(data, pos, world));
-
-        // 13. 屠夫（Vocation15）
-        registerJob("Vocation15", (data, pos, world, extraData) ->
-                new JobButcher(data, pos, world));
-
-        // 14. 渔夫（Vocation18）
-        registerJob("Vocation18", (data, pos, world, extraData) ->
-                new JobFisherman(data, pos, world));
-
-        // 15. 食品商（Vocation26）
-        registerJob("Vocation26", (data, pos, world, extraData) ->
-                new JobGrocer(data, pos, world));
-
-        // 16. 士兵（Vocation7）
-        registerJob("Vocation7", (data, pos, world, extraData) ->
-                new JobSoldier(data, pos, world));
-
-        // 17. 伐木工（Vocation2）
-        registerJob("Vocation2", (data, pos, world, extraData) ->
-                new JobLumberjack(data, pos, world));
-
-        // 18. 制糖师（Vocation30）
-        registerJob("Vocation30", (data, pos, world, extraData) ->
-                new JobSugar(data, pos, world));
-
-        // 19. 矿工（Vocation4）
-        registerJob("Vocation4", (data, pos, world, extraData) -> {
-            MineBox mine = ModSimLoader.getMine(new V3(pos.getX(),pos.getY(),pos.getZ()));
-            return new JobMiner(data, pos, world, mine);
-        });
-
-        // 20. 板砖工（Vocation25）
-        registerJob("Vocation25", (data, pos, world, extraData) ->
-                new JobBrickMaker(data, pos, world));
-
-        // 21. 玻璃制造商（Vocation17）
-        registerJob("Vocation17", (data, pos, world, extraData) ->
-                new JobGlassMaker(data, pos, world));
-
-        // 22. 建筑商（Vocation11）
-        registerJob("Vocation11", (data, pos, world, extraData) ->
-                new JobBuildersMerchant(data, pos, world));
-
-        // 23. 行长（Vocation31）
-        registerJob("Vocation31", (data, pos, world, extraData) ->
-                new JobATM(data, pos, world));
-
-        // 24. 杂货商（Vocation9）
-        registerJob("Vocation9", (data, pos, world, extraData) ->
-                new JobMerchant(data, pos, world));
-
-        // 25. 插花师（Vocation32）
-        registerJob("Vocation32", (data, pos, world, extraData) ->
-                new JobFlower(data, pos, world));
-
-        // 26. 赤脚大夫（Vocation33）
-        registerJob("Vocation33", (data, pos, world, extraData) ->
-                new JobBarefootDoctor(data, pos, world));
-
-        // 27. 妇产科医生（Vocation34）
-        registerJob("Vocation34", (data, pos, world, extraData) ->
-                new JobAccoucheur(data, pos, world));
-
-        // 28. 汉堡店经理（Vocation36）
-        registerJob("Vocation36", (data, pos, world, extraData) ->
-                new JobBurgers(data, pos, world));
-
-        // 29. 奶酪匠（Vocation21）
-        registerJob("Vocation21", (data, pos, world, extraData) ->
-                new JobCheesemaker(data, pos, world));
-
-        // 30. 麦当劳（Vocation35）
-        registerJob("Vocation35", (data, pos, world, extraData) ->
-                new JobMcDonald(data, pos, world));
-
-        // 31. 酒馆（Vocation28）
-        registerJob("Vocation28", (data, pos, world, extraData) ->
-                new JobBartender(data, pos, world));
-
-        // 32. 快递员（Vocation10）
-        registerJob("Vocation10", (data, pos, world, extraData) ->
-                new JobCourier(data, pos, world));
+        // 建筑工
+        register(SimIds.vocation(1), (d, p, w, bp, dir, tt) ->
+                bp != null ? new JobBuilder(d, bp, p, dir, w) : new JobBuilder(d, p, dir, w));
+        // 伐木工
+        register(SimIds.vocation(2), (d, p, w, bp, dir, tt) -> new JobLumberjack(d, p, w));
+        // 鸡蛋农
+        register(SimIds.vocation(3), (d, p, w, bp, dir, tt) -> new JobEggFarmer(d, p, w));
+        // 矿工
+        register(SimIds.vocation(4), (d, p, w, bp, dir, tt) ->
+                new JobMiner(d, p, w, ModSimLoader.getMine(new V3(p.getX(), p.getY(), p.getZ()))));
+        // 农民
+        register(SimIds.vocation(5), (d, p, w, bp, dir, tt) ->
+                new JobFarmer(d, p, w, ModSimLoader.getFarm(new V3(p.getX(), p.getY(), p.getZ()))));
+        // 面包师
+        register(SimIds.vocation(6), (d, p, w, bp, dir, tt) -> new JobBaker(d, p, w));
+        // 士兵
+        register(SimIds.vocation(7), (d, p, w, bp, dir, tt) -> new JobSoldier(d, p, w));
+        // 牧羊人
+        register(SimIds.vocation(8), (d, p, w, bp, dir, tt) -> new JobShepherd(d, p, w));
+        // 杂货商
+        register(SimIds.vocation(9), (d, p, w, bp, dir, tt) -> new JobMerchant(d, p, w));
+        // 快递员
+        register(SimIds.vocation(10), (d, p, w, bp, dir, tt) -> new JobCourier(d, p, w));
+        // 建筑商
+        register(SimIds.vocation(11), (d, p, w, bp, dir, tt) -> new JobBuildersMerchant(d, p, w));
+        // 养牛户
+        register(SimIds.vocation(12), (d, p, w, bp, dir, tt) ->
+                new JobLivestockFarmer(d, p, SimIds.translate("container.sim.job_Livestock_cow"), w));
+        // 养猪户
+        register(SimIds.vocation(13), (d, p, w, bp, dir, tt) ->
+                new JobLivestockFarmer(d, p, SimIds.translate("container.sim.job_Livestock_pig"), w));
+        // 养鸡户
+        register(SimIds.vocation(14), (d, p, w, bp, dir, tt) ->
+                new JobLivestockFarmer(d, p, SimIds.translate("container.sim.job_Livestock_chicken"), w));
+        // 屠夫
+        register(SimIds.vocation(15), (d, p, w, bp, dir, tt) -> new JobButcher(d, p, w));
+        // 规划师
+        register(SimIds.vocation(16), (d, p, w, bp, dir, tt) ->
+                tt != null ? new JobTerrainFormer(d, tt, p, w) : null);
+        // 玻璃制造商
+        register(SimIds.vocation(17), (d, p, w, bp, dir, tt) -> new JobGlassMaker(d, p, w));
+        // 渔夫
+        register(SimIds.vocation(18), (d, p, w, bp, dir, tt) -> new JobFisherman(d, p, w));
+        // 牛奶农
+        register(SimIds.vocation(20), (d, p, w, bp, dir, tt) -> new JobDairyFarmer(d, p, w));
+        // 奶酪匠
+        register(SimIds.vocation(21), (d, p, w, bp, dir, tt) -> new JobCheesemaker(d, p, w));
+        // 板砖工匠
+        register(SimIds.vocation(25), (d, p, w, bp, dir, tt) -> new JobBrickMaker(d, p, w));
+        // 食品商
+        register(SimIds.vocation(26), (d, p, w, bp, dir, tt) -> new JobGrocer(d, p, w));
+        // 养羊户（历史上有 27/28 两个键，都接受）
+        JobCreator sheep = (d, p, w, bp, dir, tt) ->
+                new JobLivestockFarmer(d, p, SimIds.translate("container.sim.job_Livestock_sheep"), w);
+        register(SimIds.vocation(27), sheep);
+        register(SimIds.vocation(28), sheep);
+        // 养兔户
+        register(SimIds.vocation(29), (d, p, w, bp, dir, tt) ->
+                new JobLivestockFarmer(d, p, SimIds.translate("container.sim.job_Livestock_rabbit"), w));
+        // 制糖师
+        register(SimIds.vocation(30), (d, p, w, bp, dir, tt) -> new JobSugar(d, p, w));
+        // 行长
+        register(SimIds.vocation(31), (d, p, w, bp, dir, tt) -> new JobATM(d, p, w));
+        // 插花师
+        register(SimIds.vocation(32), (d, p, w, bp, dir, tt) -> new JobFlower(d, p, w));
+        // 赤脚大夫
+        register(SimIds.vocation(33), (d, p, w, bp, dir, tt) -> new JobBarefootDoctor(d, p, w));
+        // 妇产科医生
+        register(SimIds.vocation(34), (d, p, w, bp, dir, tt) -> new JobAccoucheur(d, p, w));
+        // 麦当劳老板
+        register(SimIds.vocation(35), (d, p, w, bp, dir, tt) -> new JobMcDonald(d, p, w));
+        // 汉堡店老板
+        register(SimIds.vocation(36), (d, p, w, bp, dir, tt) -> new JobBurgers(d, p, w));
+        // 酒保
+        register(SimIds.vocation(37), (d, p, w, bp, dir, tt) -> new JobBartender(d, p, w));
     }
 
     /**
-     * 注册职业创建器
-     * @param translationKeySuffix 翻译键后缀（如 "Vocation1"）
-     * @param creator 职业创建逻辑
+     * 按稳定 ID 创建职业。
+     *
+     * @param jobId     vocationN（也兼容旧的显示名，会先转换）
+     * @param site      工作地点；为 null 时退回 data.tempEmployLoc
+     * @param blueprint 建筑工蓝图（可为 null）
+     * @param direction 建筑工方向
+     * @param terrain   规划师地形（可为 null）
      */
-    private static void registerJob(String translationKeySuffix, JobCreator creator) {
-        String fullKey = new TextComponentTranslation(TRANSLATION_PREFIX + translationKeySuffix).getUnformattedText();
-        JOB_CREATOR_MAP.put(fullKey, creator);
+    public static Job createJobAt(NpcData data, String jobId, V3 site, BuildingBlueprint blueprint,
+                                  int direction, TerrainType terrain, World world) {
+        if (data == null || jobId == null || jobId.isEmpty()) {
+            return null;
+        }
+        String stableId = jobId;
+        JobCreator creator = JOBS.get(stableId);
+        if (creator == null) {
+            stableId = SimIds.jobIdFromDisplay(jobId);
+            creator = JOBS.get(stableId);
+        }
+        if (creator == null) {
+            ModSimLoader.log.warn("未知职业ID: {} (NPC {})", jobId, data.ID);
+            return null;
+        }
+        if (site == null) {
+            site = data.tempEmployLoc;
+        }
+        if (site == null) {
+            ModSimLoader.log.warn("职业 {} 缺少工作地点，NPC {}", jobId, data.ID);
+            return null;
+        }
+        try {
+            Job job = creator.create(data, site.toBlockPos(), world, blueprint, direction, terrain);
+            if (job != null && job.workPlace == null) {
+                job.workPlace = site;
+            }
+            return job;
+        } catch (Exception e) {
+            StackTraceElement element = e.getStackTrace()[0];
+            ModSimLoader.log.error("JobFactory创建职业失败 {}: {} 行数:{}", jobId, e.getMessage(), element.getLineNumber());
+            return null;
+        }
     }
 
-    /**
-     * 创建职业实例
-     * @param npcData NPC数据
-     * @param jobValue 存档中的职业字符串（如 "建筑工;x,y,z;0"）
-     * @param blueprint 建筑蓝图（仅建筑工需要）
-     * @param world 游戏世界
-     * @return 职业实例，失败返回null
-     */
+    /** 兼容旧调用：解析 "jobId;x,y,z;..." 字符串。 */
     public static Job createJob(NpcData npcData, String jobValue, BuildingBlueprint blueprint, World world) {
         if (jobValue == null || jobValue.isEmpty()) {
             return null;
         }
-
-        // 分割职业数据（格式：职业名;额外参数1;额外参数2...）
-        String[] jobParts = jobValue.split(";");
-        if (jobParts.length == 0) {
-            ModSimLoader.log.warn("NPC[{}] 职业数据格式错误：{}", npcData.ID, jobValue);
-            return null;
-        }
-
-        String jobKey = jobParts[0];
-        JobCreator creator = JOB_CREATOR_MAP.get(jobKey);
-        if (creator == null) {
-            ModSimLoader.log.warn("NPC[{}] 未知职业：{}", npcData.ID, jobKey);
-            return null;
-        }
-
-        // 解析职业额外参数（位置、方向、地形类型等）
-        JobExtraData extraData = parseJobExtraData(jobParts, blueprint, npcData, world);
-        BlockPos jobPos = extraData.getJobPos();
-        if (jobPos == null) {
-            ModSimLoader.log.warn("NPC[{}] 职业位置无效：{}", npcData.ID, jobValue);
-            return null;
-        }
-
-        // 创建职业实例
-        return creator.create(npcData, jobPos, world, extraData);
-    }
-
-    /**
-     * 解析职业额外数据（位置、方向、地形类型等）
-     */
-    private static JobExtraData parseJobExtraData(String[] jobParts, BuildingBlueprint blueprint, NpcData npcData, World world) {
-        JobExtraData extraData = new JobExtraData();
-        extraData.setBlueprint(blueprint);
-
-        // 解析职业位置（优先从职业参数取，其次从tempEmployLoc取）
-        BlockPos jobPos = null;
-        if (jobParts.length >= 2) {
+        String[] parts = jobValue.split(";");
+        String jobId = parts[0];
+        V3 site = npcData == null ? null : npcData.tempEmployLoc;
+        int direction = 0;
+        TerrainType terrain = null;
+        if (parts.length >= 2) {
             try {
-
-                jobPos = V3.fromString(jobParts[1]).toBlockPos();
-            } catch (Exception e) {
-                ModSimLoader.log.debug("NPC[{}] 解析职业位置失败，使用雇佣位置", npcData.ID);
+                site = V3.fromString(parts[1]);
+            } catch (Exception ignored) {
             }
         }
-        if (jobPos == null && npcData.tempEmployLoc != null) {
-            jobPos = npcData.tempEmployLoc.toBlockPos();
-        }
-        extraData.setJobPos(jobPos);
-
-        // 解析建筑工方向（仅建筑工需要）
-        if (jobParts.length >= 3 && "container.sim.Vocation1".equals(new TextComponentTranslation(jobParts[0]).getUnformattedText())) {
+        if (parts.length >= 4) {
             try {
-                extraData.setDirection(Integer.parseInt(jobParts[2]));
-            } catch (NumberFormatException e) {
-                ModSimLoader.log.warn("NPC[{}] 建筑工方向解析失败：{}", npcData.ID, jobParts[2]);
-                extraData.setDirection(0); // 默认方向
+                terrain = new TerrainType(parts[2], parts[3]);
+            } catch (Exception ignored) {
+            }
+        } else if (parts.length >= 3) {
+            try {
+                direction = Integer.parseInt(parts[2]);
+            } catch (Exception ignored) {
             }
         }
-
-        // 解析规划师地形类型（仅规划师需要）
-        if (jobParts.length >= 4 && "container.sim.Vocation16".equals(new TextComponentTranslation(jobParts[0]).getUnformattedText())) {
-            try {
-                String terrainName = jobParts[2];
-                String terrainType = jobParts[3];
-                extraData.setTerrainType(new TerrainType(terrainName, terrainType));
-            } catch (Exception e) {
-                ModSimLoader.log.warn("NPC[{}] 规划师地形类型解析失败", npcData.ID, e);
-            }
-        }
-
-        return extraData;
-    }
-
-    /**
-     * 职业创建器函数式接口
-     */
-    @FunctionalInterface
-    private interface JobCreator {
-        Job create(NpcData data, BlockPos pos, World world, JobExtraData extraData);
-    }
-
-    /**
-     * 职业额外数据封装类（存储位置、方向、蓝图等非通用参数）
-     */
-    public static class JobExtraData {
-        private BlockPos jobPos;
-        private int direction;
-        private BuildingBlueprint blueprint;
-        private TerrainType terrainType;
-
-        // Getter & Setter
-        public BlockPos getJobPos() { return jobPos; }
-        public void setJobPos(BlockPos jobPos) { this.jobPos = jobPos; }
-        public int getDirection() { return direction; }
-        public void setDirection(int direction) { this.direction = direction; }
-        public BuildingBlueprint getBlueprint() { return blueprint; }
-        public void setBlueprint(BuildingBlueprint blueprint) { this.blueprint = blueprint; }
-        public TerrainType getTerrainType() { return terrainType; }
-        public void setTerrainType(TerrainType terrainType) { this.terrainType = terrainType; }
+        return createJobAt(npcData, jobId, site, blueprint, direction, terrain, world);
     }
 }

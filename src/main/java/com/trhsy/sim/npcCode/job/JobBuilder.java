@@ -484,8 +484,19 @@ public class JobBuilder extends Job {
                 buildV3 = this.placedBlocks.get(this.blockNumber);
             }
             if (buildV3 != null || !buildV3.equals(new V3(newBP))) {
-                Block fs_block = this.folk.entity.world.getBlockState(newBP).getBlock();
+                World buildWorld = this.folk.entity.world;
+                // P10(S0): 未加载区块不施工，避免 setBlockState 隐式加载区块。
+                if (!buildWorld.isBlockLoaded(newBP)) {
+                    this.folk.setStatus(new TextComponentTranslation("container.sim.JobBuilder4", new Object[0]).getUnformattedText());
+                    return;
+                }
+                Block fs_block = buildWorld.getBlockState(newBP).getBlock();
                 Block fs_st_block = st.getBlock();
+                // P10(S0): 蓝图里的命令方块/结构方块/屏障/TNT/岩浆/火一律跳过。
+                boolean skipPlacement = isDangerousBlueprintBlock(fs_st_block);
+                if (skipPlacement) {
+                    ModSimLoader.log.warn("蓝图包含危险方块，已跳过: {} @ {}", fs_st_block.getRegistryName(), newBP);
+                }
                 //控制箱
                 if (fs_st_block == BlockLoader.blockControlBox) {
                     this.controllerPos = newBP;
@@ -498,7 +509,7 @@ public class JobBuilder extends Job {
                     fs_st_block = BlockLoader.blockLiving.getStateFromMeta(fs_structure.getMeta()).getBlock();
                 }
                 //特除方块
-                if (fs_st_block == BlockLoader.blockSpecial) {
+                if (!skipPlacement && fs_st_block == BlockLoader.blockSpecial) {
                     int  meta=fs_structure.getMeta();
                     // 1. 校验meta有效性（示例：假设有效范围是0~5）
                     if (meta < 0 || meta > 8) {
@@ -519,10 +530,18 @@ public class JobBuilder extends Job {
                         ModSimLoader.log.debug("已放置特殊方块到世界，状态：" + specialState);
                     }
                 }
-                if (fs_block != fs_st_block) {
+                if (!skipPlacement && fs_block != fs_st_block && buildWorld.getTileEntity(newBP) == null) {
                     if (fs_block != Blocks.AIR) {
-                        this.folk.entity.world.setBlockState(newBP, Blocks.AIR.getDefaultState());
-                        this.placeInJobChest(new ItemStack(fs_block));
+                        // P10(S0): 用 Block.getDrops 保留 metadata/NBT；
+                        // 箱子/熔炉/模组机器等 tile entity 已在条件里跳过，不会吞库存。
+                        IBlockState oldState = buildWorld.getBlockState(newBP);
+                        List<ItemStack> drops = fs_block.getDrops(buildWorld, newBP, oldState, 0);
+                        buildWorld.setBlockState(newBP, Blocks.AIR.getDefaultState(), 3);
+                        for (ItemStack drop : drops) {
+                            if (drop != null && !drop.isEmpty()) {
+                                this.placeInJobChest(drop);
+                            }
+                        }
                     }
                     Block newBlock = this.folk.entity.world.getBlockState(newBP.down()).getBlock();
                     //门
@@ -918,6 +937,23 @@ public class JobBuilder extends Job {
     }
 
     /**
+     * P10(S0): 蓝图安全白名单。
+     * 这些方块要么能绕过玩家权限（命令方块/结构方块），
+     * 要么会在城镇里制造不可控破坏（TNT/岩浆/火）。
+     */
+    private boolean isDangerousBlueprintBlock(Block block) {
+        return block == Blocks.COMMAND_BLOCK
+                || block == Blocks.CHAIN_COMMAND_BLOCK
+                || block == Blocks.REPEATING_COMMAND_BLOCK
+                || block == Blocks.STRUCTURE_BLOCK
+                || block == Blocks.BARRIER
+                || block == Blocks.TNT
+                || block == Blocks.LAVA
+                || block == Blocks.FLOWING_LAVA
+                || block == Blocks.FIRE;
+    }
+
+    /**
      * @return void
      * @Author fan
      * @Description //TODO 当建筑完成时创建建筑物
@@ -928,6 +964,7 @@ public class JobBuilder extends Job {
         try {
             if (this.livingPos == null) {
                 this.livingPos = this.controllerPos;
+                ModSimLoader.log.warn("建筑 {} 没有居住标记(block_living)，居住点退化为控制箱位置，NPC 睡觉位置可能异常", this.blueprint.name);
             }
             V3 v3 = new V3(this.controllerPos);
             Building build = null;

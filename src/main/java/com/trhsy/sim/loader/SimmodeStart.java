@@ -5,11 +5,11 @@ import com.trhsy.sim.network.client.PacketUpdateMoney;
 import com.trhsy.sim.network.client.PacketUpdateNPC;
 import com.trhsy.sim.network.server.PacketSyncNpcData;
 import com.trhsy.sim.npcCode.NpcData;
+import com.trhsy.sim.npcCode.store.SimStore;
 import com.trhsy.sim.npcCode.block.FarmBox;
 import com.trhsy.sim.npcCode.block.MineBox;
 import com.trhsy.sim.npcCode.build.Building;
 import com.trhsy.sim.util.Courier;
-import net.minecraft.client.Minecraft;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.util.DamageSource;
@@ -117,131 +117,196 @@ public class SimmodeStart {
      */
     public static void simModLoad(World world) {
         ModSimLoader.log.info("检查是否应该加载人员");
-        if (world != null) {
-//            if (world.isRemote) {
-//                ModSimLoader.log.info("世界遥远(客户端)，正在取消");
-//            }else
+        if (world == null || world.isRemote || world.provider.getDimension() != 0) {
+            return;
+        }
+        if (hasLoadedWorld) {
+            ModSimLoader.log.info("sim世界已加载");
+            return;
+        }
+        ModSimLoader.log.info("世界尚未加载，开始加载");
+        newDay = true;
+        timeSinceLastClientUpdate = 0L;
 
-            if (hasLoadedWorld) {
-                ModSimLoader.log.info(hasLoadedWorld + "sim世界尚已加载");
-            } else {
-                ModSimLoader.log.info(hasLoadedWorld + "世界尚已加载");
-                newDay = true;
-                timeSinceLastClientUpdate = 0L;
-                File[] buildingSaves;
+        // P1: 旧存档直接删除（本版本不兼容旧档）。只删旧 NPC 与旧 settings，
+        // 其他目录（建筑/农场/矿场/快递点）保留并继续用各自格式。
+        deleteLegacySaves();
 
-                ModSimLoader.log.info("加载世界...");
-                ModSimLoader.loadStates();
+        // P1: 经济与日历来自 SimStore（NBT，不再用 settings.sk2）
+        SimStore store = SimStore.get(world);
+        if (store != null) {
+            ModSimLoader.money = store.money;
+            ModSimLoader.dayOfWeek = store.dayOfWeek;
+            ModSimLoader.gameDay = store.gameDay;
+            ModSimLoader.gamemode = store.gamemode;
+        }
 
+        // 农场 / 矿场 / 建筑 / 快递点：每个文件独立 try，字面量后缀截断
+        loadFarmFiles();
+        loadMineFiles();
+        loadBuildingFiles(world);
+        loadCourierFiles();
 
+        // P1: NPC 从 SimStore 加载
+        if (store != null) {
+            int loaded = 0;
+            for (UUID uid : new ArrayList<>(store.getNpcs().keySet())) {
                 try {
-                    ModSimLoader.log.info("加载农场");
-                    new DimensionManager();
-                    File farmsFolder = new File(ModSimLoader.getSavesDataFolder() + File.separator + "farms");
-                    if (!farmsFolder.exists()) {
-                        farmsFolder.mkdirs();
-                    }
-                    buildingSaves = farmsFolder.listFiles();
-                    for (int i = 0; i < buildingSaves.length; i++) {
-                        File buildingFile = buildingSaves[i];
-                        //ModSimLoader.log.info("打开农场文件: " + buildingFile.getName());
-                        ModSimLoader.farms.add(new FarmBox(UUID.fromString(buildingFile.getName().split(".sk2")[0])));
-                    }
-                } catch (Exception var10) {
-                    StackTraceElement element = var10.getStackTrace()[0];
-                    ModSimLoader.log.error("加载农场文件出错了：" + var10.getMessage() + "行数：" + element.getLineNumber());
-                }
-
-                try {
-                    ModSimLoader.log.info("加载矿场");
-                    new DimensionManager();
-                    File minesFolder = new File(ModSimLoader.getSavesDataFolder() + File.separator + "mines");
-                    if (!minesFolder.exists()) {
-                        minesFolder.mkdirs();
-                    }
-                    buildingSaves = minesFolder.listFiles();
-                    for (int i = 0; i < buildingSaves.length; i++) {
-                        File buildingFile = buildingSaves[i];
-                        ModSimLoader.log.info("打开矿场文件: " + buildingFile.getName());
-                        ModSimLoader.mines.add(new MineBox(UUID.fromString(buildingFile.getName().split(".sk2")[0])));
-                    }
-                } catch (Exception var9) {
-                    StackTraceElement element = var9.getStackTrace()[0];
-                    ModSimLoader.log.error("加载矿场文件出错了：" + var9.getMessage() + "行数：" + element.getLineNumber());
-                }
-                try {
-                    ModSimLoader.log.info("获得保存的NPC，开始加载");
-                    new DimensionManager();
-                    File npcFolder = new File(ModSimLoader.getSavesDataFolder() + File.separator + "npc");
-                    if (!npcFolder.exists()) {
-                        npcFolder.mkdirs();
-                    }
-                    buildingSaves = npcFolder.listFiles();
-                    for (int i = 0; i < buildingSaves.length; i++) {
-                        File buildingFile = buildingSaves[i];
-                        //ModSimLoader.log.info("得到Npc " + buildingFile.getName());
-                        String uid = buildingFile.getName().split(".sk2")[0];
-                        NpcData npcData = new NpcData(world, UUID.fromString(uid));
-                        if (!npcData.isDead&&npcData.entity != null && !npcData.entity.isDead) {
-                            ModSimLoader.folks.add(npcData);
-                            NetWorkLoader.net.sendToAll(new PacketUpdateNPC());
-                        } else {
-                            try {
-                                String worldPath = DimensionManager.getCurrentSaveRootDirectory().getAbsolutePath() + File.separator + "sim";
-                                Files.deleteIfExists((new File(worldPath + File.separator + "npc" + File.separator + uid + ".sk2")).toPath());
-                                ModSimLoader.log.warn("npc已死不加载，重新，已删除[" + uid + "]");
-                            } catch (Exception var5) {
-                                StackTraceElement element = var5.getStackTrace()[0];
-                                ModSimLoader.log.error("npcDeath-onDeath出错了：" + var5.getMessage() + "行数：" + element.getLineNumber());
-                            }
-                        }
-
-//                    ModSimLoader.log.info(npcData.race.skinName);
+                    NpcData npcData = new NpcData(world, uid);
+                    // P10(S0): 区块未加载的 NPC 也保留在数据列表里（实体延迟生成），
+                    // 不能因为 entity==null 就把存档里的 NPC 丢掉。
+                    if (npcData.isLoaded && !npcData.isDead) {
+                        ModSimLoader.folks.add(npcData);
+                        loaded++;
                     }
                 } catch (Exception e) {
-                    StackTraceElement element = e.getStackTrace()[0];
-                    ModSimLoader.log.error("获得保存的NPC出错了：" + e.getMessage() + "行数：" + element.getLineNumber());
+                    ModSimLoader.log.error("NPC加载失败 " + uid + ": " + e.getMessage());
                 }
-
-                try {
-                    ModSimLoader.log.info("加载建筑物");
-                    new DimensionManager();
-                    File buildingFolder = new File(ModSimLoader.getSavesDataFolder() + File.separator + "buildings");
-                    if (!buildingFolder.exists()) {
-                        buildingFolder.mkdirs();
-                    }
-                    buildingSaves = buildingFolder.listFiles();
-                    for (int i = 0; i < buildingSaves.length; i++) {
-                        File buildingFile = buildingSaves[i];
-                        //ModSimLoader.log.info("打开建筑文件: " + buildingFile.getName());
-                        ModSimLoader.buildings.add(new Building(world, UUID.fromString(buildingFile.getName().split(".sk2")[0])));
-                    }
-
-                } catch (Exception var7) {
-                    StackTraceElement element = var7.getStackTrace()[0];
-                    ModSimLoader.log.error("加载建筑文件出错了：" + var7.getMessage() + "行数：" + element.getLineNumber());
-                }
-                try {
-                    ModSimLoader.log.info("加载快递点");
-                    new DimensionManager();
-                    File buildingFolder = new File(ModSimLoader.getSavesDataFolder() + File.separator + "CourierPoints");
-                    if (!buildingFolder.exists()) {
-                        buildingFolder.mkdirs();
-                    }
-                    buildingSaves = buildingFolder.listFiles();
-                    for (int i = 0; i < buildingSaves.length; i++) {
-                        File buildingFile = buildingSaves[i];
-                        ModSimLoader.theCourierPoints.add(new Courier(buildingFile.getName().split(".sk2")[0]));
-                    }
-                } catch (Exception var7) {
-                    StackTraceElement element = var7.getStackTrace()[0];
-                    ModSimLoader.log.error("加载快递点文件出错了：" + var7.getMessage() + "行数：" + element.getLineNumber());
-                }
-                NetWorkLoader.net.sendToAll(new PacketUpdateMoney());
-                hasLoadedWorld = true;
             }
+            ModSimLoader.log.info("NPC加载完成: " + loaded);
+            // 建筑加载完成后关联住宅
+            for (NpcData npc : ModSimLoader.folks) {
+                npc.linkHome();
+            }
+        }
+        NetWorkLoader.net.sendToAll(new PacketUpdateNPC());
+        NetWorkLoader.net.sendToAll(new PacketUpdateMoney());
+        hasLoadedWorld = true;
+    }
 
+    /** P1: 删除旧 NPC 与旧 settings 存档（不解析、不迁移）。 */
+    private static void deleteLegacySaves() {
+        try {
+            File sim = new File(ModSimLoader.getSavesDataFolder());
+            deleteRecursively(new File(sim, "npc"));
+            File settings = new File(sim, "settings.sk2");
+            if (settings.exists() && !settings.delete()) {
+                ModSimLoader.log.warn("旧 settings.sk2 删除失败: " + settings.getAbsolutePath());
+            }
+            ModSimLoader.log.info("旧存档（sim/npc、sim/settings.sk2）已删除");
+        } catch (Exception e) {
+            ModSimLoader.log.error("删除旧存档失败: " + e.getMessage());
+        }
+    }
 
+    private static void deleteRecursively(File f) {
+        if (f == null || !f.exists()) {
+            return;
+        }
+        if (f.isDirectory()) {
+            File[] children = f.listFiles();
+            if (children != null) {
+                for (File c : children) {
+                    deleteRecursively(c);
+                }
+            }
+        }
+        if (!f.delete()) {
+            ModSimLoader.log.warn("无法删除: " + f.getAbsolutePath());
+        }
+    }
+
+    /** 只接受 "<UUID>.sk2" 且按字面量截断（原实现 split(".sk2") 是正则）。 */
+    private static UUID uidOf(File f) {
+        if (f == null || !f.isFile()) {
+            return null;
+        }
+        String name = f.getName();
+        if (!name.endsWith(".sk2")) {
+            return null;
+        }
+        try {
+            return UUID.fromString(name.substring(0, name.length() - 4));
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+    private static void loadFarmFiles() {
+        File folder = new File(ModSimLoader.getSavesDataFolder(), "farms");
+        if (!folder.exists() && !folder.mkdirs()) {
+            return;
+        }
+        File[] files = folder.listFiles();
+        if (files == null) {
+            return;
+        }
+        for (File f : files) {
+            UUID uid = uidOf(f);
+            if (uid == null) {
+                continue;
+            }
+            try {
+                ModSimLoader.farms.add(new FarmBox(uid));
+            } catch (Exception e) {
+                ModSimLoader.log.error("农场加载失败 " + f.getName() + ": " + e.getMessage());
+            }
+        }
+    }
+
+    private static void loadMineFiles() {
+        File folder = new File(ModSimLoader.getSavesDataFolder(), "mines");
+        if (!folder.exists() && !folder.mkdirs()) {
+            return;
+        }
+        File[] files = folder.listFiles();
+        if (files == null) {
+            return;
+        }
+        for (File f : files) {
+            UUID uid = uidOf(f);
+            if (uid == null) {
+                continue;
+            }
+            try {
+                ModSimLoader.mines.add(new MineBox(uid));
+            } catch (Exception e) {
+                ModSimLoader.log.error("矿场加载失败 " + f.getName() + ": " + e.getMessage());
+            }
+        }
+    }
+
+    private static void loadBuildingFiles(World world) {
+        File folder = new File(ModSimLoader.getSavesDataFolder(), "buildings");
+        if (!folder.exists() && !folder.mkdirs()) {
+            return;
+        }
+        File[] files = folder.listFiles();
+        if (files == null) {
+            return;
+        }
+        for (File f : files) {
+            UUID uid = uidOf(f);
+            if (uid == null) {
+                continue;
+            }
+            try {
+                ModSimLoader.buildings.add(new Building(world, uid));
+            } catch (Exception e) {
+                ModSimLoader.log.error("建筑加载失败 " + f.getName() + ": " + e.getMessage());
+            }
+        }
+    }
+
+    private static void loadCourierFiles() {
+        File folder = new File(ModSimLoader.getSavesDataFolder(), "CourierPoints");
+        if (!folder.exists() && !folder.mkdirs()) {
+            return;
+        }
+        File[] files = folder.listFiles();
+        if (files == null) {
+            return;
+        }
+        for (File f : files) {
+            String name = f.getName();
+            if (!f.isFile() || !name.endsWith(".sk2")) {
+                continue;
+            }
+            try {
+                ModSimLoader.theCourierPoints.add(new Courier(name.substring(0, name.length() - 4)));
+            } catch (Exception e) {
+                ModSimLoader.log.error("快递点加载失败 " + name + ": " + e.getMessage());
+            }
         }
     }
 
@@ -249,32 +314,33 @@ public class SimmodeStart {
      * 保存
      */
     public static void simModSave(World world) {
-        if (world != null) {
-            if (hasLoadedWorld&&ModSimLoader.sim_is_running) {
-                //配置文件保存
-//                ModSimLoader.log.info("时间数据保存，准备保存模组信息");
-                ModSimLoader.saveStates();
-                //农场保存
-//                ModSimLoader.log.info("农场保存，准备保存模组信息");
-                for (FarmBox farmBox : ModSimLoader.farms) {
-                    farmBox.saveFarm();
-                }
-                //矿场保存
-//                ModSimLoader.log.info("农场保存，准备保存模组信息");
-                for (MineBox mineBox : ModSimLoader.mines) {
-                    mineBox.saveMine();
-                }
-                //NPC保存
-//                ModSimLoader.log.info("NPC保存，准备保存模组信息");
-                for (NpcData folks : ModSimLoader.folks) {
-                    folks.saveFolk();
-                }
-                //建筑保存
-//                ModSimLoader.log.info("建筑保存，准备保存模组信息");
-                for (Building b : ModSimLoader.buildings) {
-                    b.saveBuilding();
-                }
-            }
+        if (world == null || world.isRemote || world.provider.getDimension() != 0) {
+            return;
+        }
+        if (!hasLoadedWorld || !ModSimLoader.sim_is_running) {
+            return;
+        }
+        // P1: 经济/日历写入 SimStore（NBT）
+        SimStore store = SimStore.get(world);
+        if (store != null) {
+            store.money = ModSimLoader.money;
+            store.dayOfWeek = ModSimLoader.dayOfWeek;
+            store.gameDay = ModSimLoader.gameDay;
+            store.gamemode = ModSimLoader.gamemode;
+            store.markDirty();
+        }
+        // 农场/矿场/NPC/建筑保存（NPC 现在是 NBT）
+        for (FarmBox farmBox : ModSimLoader.farms) {
+            farmBox.saveFarm();
+        }
+        for (MineBox mineBox : ModSimLoader.mines) {
+            mineBox.saveMine();
+        }
+        for (NpcData folks : ModSimLoader.folks) {
+            folks.saveFolk();
+        }
+        for (Building b : ModSimLoader.buildings) {
+            b.saveBuilding();
         }
     }
 
@@ -405,6 +471,8 @@ public class SimmodeStart {
 
                     //实时更新人的状态
                     for (NpcData f : ModSimLoader.folks) {
+                        // P10(S0): 玩家靠近、区块加载后才补生成实体；未加载则不推进任务。
+                        f.trySpawnIfLoaded(world);
                         f.onUpdate();
                     }
                     //每1秒更新一次检查
@@ -424,7 +492,9 @@ public class SimmodeStart {
                                     boolean spawnNew = true;
                                     for (NpcData starve : ModSimLoader.folks) {
                                         //判断是否已死亡
-                                        if (starve.isDead || starve.entity == null) {
+                                        // P10(S0): 不能把“区块未加载导致 entity==null”当成死亡，
+                                        // 否则玩家一离开城镇，NPC 的住宅关系就被清空。
+                                        if (starve.isDead) {
                                             //若有房子异常房子
                                             if (starve.home != null) {
                                                 starve.home.occupants.remove(starve);
@@ -529,13 +599,17 @@ public class SimmodeStart {
                                     }
                                     String hungerName = "";
                                     for (NpcData f : ModSimLoader.folks) {
+                                        // P10(S0): 未加载区块的 NPC 暂停饥饿/年龄结算，
+                                        // 与“实体不 tick 就不模拟”保持一致。
+                                        if (!f.isActive()) {
+                                            continue;
+                                        }
                                         if (f.entity != null) {
                                             if (f.hunger > 0) {
                                                 --f.hunger;
-                                            } else if (f.hunger < 0) {
-                                                //设置死亡 饿死
-                                                f.entity.attackEntityFrom(DamageSource.STARVE, 1.0F);
                                             } else {
+                                                // P4: 先不做定价/饿死——饿到 0 也不死，只记录挨饿的人
+                                                f.hunger = 0;
                                                 hungerName += f.getName() + ",";
                                             }
 
@@ -662,11 +736,11 @@ public class SimmodeStart {
     }
     // 处理单个NPC
     private static void processSingleNpc(NpcData npc) {
-        // 处理饥饿度
+        // 处理饥饿度（P4：先不做定价/饿死；饿到 0 也不会死）
         if (npc.hunger > 0) {
             --npc.hunger;
-        } else if (npc.hunger < 0) {
-            npc.entity.attackEntityFrom(DamageSource.STARVE, 1.0F);
+        } else {
+            npc.hunger = 0;
         }
 
         // 繁殖相关
@@ -853,7 +927,8 @@ public class SimmodeStart {
         Iterator<NpcData> iterator = ModSimLoader.folks.iterator();
         while (iterator.hasNext()) {
             NpcData npc = iterator.next();
-            if (npc.entity == null || npc.entity.isDead) {
+            // P10(S0): entity==null 可能是“区块未加载、实体延迟生成”，不是死亡。
+            if (npc.isDead) {
                 // 清理住宅关联
                 if (npc.home != null) {
                     npc.home.occupants.remove(npc);
@@ -893,21 +968,13 @@ public class SimmodeStart {
         }
     }
 
-    // 安全调度主线程任务
+    // 安全调度主线程任务（P0：不再引用客户端 Minecraft）
     private static void scheduleMainThreadTask(Runnable task) {
-        // 1. 判断当前环境是客户端还是服务器
-        if (FMLCommonHandler.instance().getEffectiveSide() == Side.SERVER) {
-            // 服务器端：直接获取服务器实例
-            MinecraftServer server = FMLCommonHandler.instance().getMinecraftServerInstance();
-            if (server != null && !server.isCallingFromMinecraftThread()) {
-                server.addScheduledTask(task);
-            } else {
-                task.run(); // 已经在主线程
-            }
+        MinecraftServer server = FMLCommonHandler.instance().getMinecraftServerInstance();
+        if (server != null && !server.isCallingFromMinecraftThread()) {
+            server.addScheduledTask(task);
         } else {
-            // 客户端：使用 Minecraft 实例的主线程调度器
-            net.minecraft.client.Minecraft mc = net.minecraft.client.Minecraft.getMinecraft();
-            mc.addScheduledTask(task);
+            task.run(); // 已经在主线程（或没有服务器实例时直接执行）
         }
     }
 
@@ -934,7 +1001,8 @@ public class SimmodeStart {
         List<NpcData> folks = new ArrayList<>(ModSimLoader.folks);
         for (NpcData npc : folks) {
             // 处理已死亡的NPC（清理住宅关联，避免内存泄漏）
-            if (npc.isDead || npc.entity == null) {
+            // P10(S0): entity==null 可能是区块未加载，不能当死亡。
+            if (npc.isDead) {
                 if (npc.home != null) {
                     npc.home.occupants.remove(npc);
                     npc.home = null;
@@ -961,7 +1029,10 @@ public class SimmodeStart {
     }
 
     public static void simModDisconnected() {
-        World world = Minecraft.getMinecraft().world;
+        // P0: 断开连接可能发生在客户端。用服务端实例取主世界；纯客户端（无集成服务端）时
+        // world 为 null，simModSave 会直接返回，不会再引用 net.minecraft.client.Minecraft。
+        MinecraftServer server = FMLCommonHandler.instance().getMinecraftServerInstance();
+        World world = server != null ? server.getEntityWorld() : null;
         //保存一下数据
         simModSave(world);
         hasLoadedWorld = false;
@@ -1061,11 +1132,11 @@ public class SimmodeStart {
     private static void updateNpcStatus(NpcData npc, World world) {
         // 处理饥饿度、年龄、繁殖等核心逻辑
         // （与原代码逻辑一致，略）
-        // 处理饥饿度
+        // 处理饥饿度（P4：先不做定价/饿死；饿到 0 也不会死）
         if (npc.hunger > 0) {
             --npc.hunger;
-        } else if (npc.hunger < 0) {
-            npc.entity.attackEntityFrom(DamageSource.STARVE, 1.0F);
+        } else {
+            npc.hunger = 0;
         }
 
         // 繁殖相关

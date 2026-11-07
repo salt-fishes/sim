@@ -65,6 +65,10 @@ public class PacketBuyStuff implements IMessage {
 
         private void handle(PacketBuyStuff message, MessageContext ctx) {
             NpcData fd = ModSimLoader.getFolkDataByUID(message.uuid);
+            // P10(S0): 空指针/无职业时直接丢弃，不让服务端线程崩。
+            if (fd == null || fd.job == null) {
+                return;
+            }
             fd.job.buyStuff(message.quantities);
 //            fd.fire();
         }

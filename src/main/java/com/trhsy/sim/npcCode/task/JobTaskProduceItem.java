@@ -12,16 +12,25 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * @ClassName JobTaskProduceItem
- * @Description todo 制作任务
- * @Author TRHSY
- * @Date 2022/11/1521:15
- **/
+ * 制作任务（P9 重做结算）。
+ *
+ * <p>旧实现的致命问题：统计时把背包里所有匹配材料都记入 {@code indicesToRemove} 并在
+ * 计算后**无条件移除**——哪怕可生产数量是 0（材料不齐），材料也会凭空消失。
+ * 现在：<br>
+ *   - 原料统计 = 工作点 5 格内箱子 + NPC 背包；<br>
+ *   - 可生产数 = 各需求"总数 / 每份用量"的最小值；<br>
+ *   - 只有 maxProd &gt; 0 才消耗，且只消耗 maxProd × 每份用量（箱子优先，其次背包）。
+ */
 public class JobTaskProduceItem extends JobTask {
     Item produce;
     List<ItemStack> requirements;
     transient long timeToPlace = 0L;
     String status;
+    /** P9: 成品 meta（例如熟鲑鱼 = COOKED_FISH meta 1）。 */
+    private int produceMeta = 0;
+    /** P9: 制作准备时间（原 10 秒 → 3 秒），配合"回岗即制作"。 */
+    private static final long PREPARE_MS = 3000L;
+
     /**
      * @Author fan
      * @Description //TODO
@@ -43,11 +52,23 @@ public class JobTaskProduceItem extends JobTask {
         this.requirements.add(req);
         this.status = status;
     }
+
+    /** P9: 支持带 meta 的成品（例如熟鲑鱼 = COOKED_FISH meta 1）。 */
+    public JobTaskProduceItem(Job j, long ms, Item prod, int meta, ItemStack req, String status) {
+        super(j, ms);
+        this.produce = prod;
+        this.produceMeta = meta;
+        this.requirements = new ArrayList();
+        this.requirements.add(req);
+        this.status = status;
+    }
+
     @Override
     public void onTaskBegin() {
         //设置固定不动
         this.folk.stayPut = true;
     }
+
     @Override
     public void onUpdate() {
         //在工作期间
@@ -60,147 +81,39 @@ public class JobTaskProduceItem extends JobTask {
                 return;
             }
 
-            if (System.currentTimeMillis() - this.timeToPlace < 10000L) {
+            if (System.currentTimeMillis() - this.timeToPlace < PREPARE_MS) {
                 return;
             }
-            //箱子
-            List<IInventory> invs = this.job.inventoriesFindClosest(this.job.workPlace, 5);
-            //最大产量
-            int maxProd = -1;;
 
-            boolean flag =false;
-            for (IInventory inventory:invs){
-                // 遍历箱子中的每个物品槽位
-                for (int slot = 0; slot < inventory.getSizeInventory(); slot++) {
-                    ItemStack stackInSlot = inventory.getStackInSlot(slot);
+            // P9: 原料来源 = 工作点 5 格内的箱子 + NPC 背包
+            List<IInventory> chests = this.job.inventoriesFindClosest(this.job.workPlace, 5);
 
-                    // 更安全的空检查
-                    if (stackInSlot.isEmpty()) {
-                        continue;
-                    }
-
-                    // 遍历NPC的需求列表
-                    for (ItemStack requiredStack : this.requirements) {
-                        // 更全面的物品匹配逻辑（考虑元数据和NBT）
-                        if (ItemStack.areItemsEqual(stackInSlot, requiredStack) &&
-                                ItemStack.areItemStackTagsEqual(stackInSlot, requiredStack)) {
-
-                            // 检查数量是否足够
-                            if (stackInSlot.getCount() >= requiredStack.getCount()) {
-                                // 创建物品副本，避免修改原始需求
-                                ItemStack takenStack = stackInSlot.copy();
-                                takenStack.setCount(requiredStack.getCount());
-
-                                // 从箱子中移除相应数量的物品
-                                stackInSlot.shrink(requiredStack.getCount());
-
-                                // 如果箱子中物品被取空，清空该槽位
-                                if (stackInSlot.isEmpty()) {
-                                    inventory.setInventorySlotContents(slot, ItemStack.EMPTY);
-                                }
-
-                                // 将物品添加到NPC库存
-                                this.folk.addToInventory(takenStack);
-                                flag = true;
-                                break; // 跳出需求列表循环
-                            }
-                        }
-                    }
-
-                    if (flag) {
-                        break; // 跳出箱子槽位循环
-                    }
-                }
-
-                if (flag) {
-                    break; // 跳出箱子列表循环
+            // 可生产数 = 各需求 (总数 / 每份用量) 的最小值
+            int maxProd = -1;
+            for (ItemStack requiredStack : this.requirements) {
+                int avail = countInList(this.folk.inventory, requiredStack) + countInChests(chests, requiredStack);
+                int div = requiredStack.getCount() > 0 ? avail / requiredStack.getCount() : 0;
+                if (maxProd == -1 || div < maxProd) {
+                    maxProd = div;
                 }
             }
-//            for (int k = 0; k < invs.size(); k++) {
-//                //获取箱子
-//                IInventory iInventory=invs.get(k);
-//                for(int i = 0; i < iInventory.getSizeInventory(); ++i) {
-//                    //当前格子的物品
-//                    ItemStack itemStack= iInventory.getStackInSlot(i);
-//
-//                    for(int j = 0; j < this.requirements.size(); ++j) {
-//                        //需求的物品
-//                        ItemStack itemStacks=this.requirements.get(j);
-//                        if (!itemStack.isEmpty() && itemStack.getItem().equals(itemStacks.getItem())) {
-//                            if(itemStack.getCount()>=itemStacks.getCount()){
-//                                ItemStack newItemStacks=itemStack;
-//                                iInventory.removeStackFromSlot(i);
-//                                //NPC拿走所需物品
-//                                this.folk.addToInventory(newItemStacks);
-//                                flag =true;
-//                                break;
-//                            }
-//                        }
-//                    }
-//                    if(flag ){
-//                        break;
-//                    }
-//                }
-//                if(flag){
-//                    break;
-//                }
-//            }
-            maxProd = -1;
-// 创建一个列表记录需要移除的物品索引
-            List<Integer> indicesToRemove = new ArrayList<>();
-            // 遍历NPC的所有物品（使用安全的倒序遍历）
-            for (int i = this.folk.inventory.size() - 1; i >= 0; i--) {
-                ItemStack itemStack = this.folk.inventory.get(i);
-
-                // 遍历需求列表
-                for (ItemStack requiredStack : this.requirements) {
-                    // 更全面的物品匹配（考虑NBT标签）
-                    if (ItemStack.areItemsEqual(itemStack, requiredStack) &&
-                            ItemStack.areItemStackTagsEqual(itemStack, requiredStack)) {
-
-                        // 计算可生产次数
-                        int div = Math.floorDiv(itemStack.getCount(), requiredStack.getCount());
-
-                        // 更新最大生产次数
-                        if (maxProd == -1 || maxProd > div) {
-                            maxProd = div;
-                        }
-
-                        // 标记该物品需要移除（或消耗部分）
-                        indicesToRemove.add(i);
-
-                        // 找到匹配后跳出需求循环
-                        break;
-                    }
-                }
+            if (maxProd < 0) {
+                maxProd = 0;
             }
-            // 安全地移除需要处理的物品
-            for (int index : indicesToRemove) {
-                this.folk.inventory.remove(index);
-            }/*
-            //循环NPC的物品
-            for(int i = 0; i < this.folk.inventory.size(); ++i) {
-                //当前NPC的物品
-                ItemStack itemStack=this.folk.inventory.get(i);
-                //需求物品循环
-                for(int j = 0; j < this.requirements.size(); ++j) {
-                    //需求物品
-                    ItemStack requirementsStack=this.requirements.get(j);
-                    if (itemStack.isItemEqual(requirementsStack)) {
-
-                        int div = Math.floorDiv(itemStack.getCount(), requirementsStack.getCount());
-                        if (maxProd == -1 || maxProd > div) {
-                            maxProd = div;
-                        }
-                        this.folk.inventory.remove(i);
-                    }
-                }
-            }*/
             ModSimLoader.log.info("制作 " + maxProd + " " + this.produce.getUnlocalizedName());
+
             if (maxProd > 0) {
+                // P9: 只扣除"实际生产用量"（maxProd × 每份用量）；箱子优先，其次背包。
+                for (ItemStack requiredStack : this.requirements) {
+                    int need = maxProd * requiredStack.getCount();
+                    need = consumeFromChests(chests, requiredStack, need);
+                    if (need > 0) {
+                        consumeFromList(this.folk.inventory, requiredStack, need);
+                    }
+                }
                 //箱子里放入制作的物品
-                this.job.placeInJobChest(new ItemStack(this.produce, maxProd));
-                ModSimLoader.addMoney(-0.2F * (float)maxProd);
+                this.job.placeInJobChest(new ItemStack(this.produce, maxProd, this.produceMeta));
+                ModSimLoader.addMoney(-0.2F * (float) maxProd);
             }
             //完成任务
             this.completeTask();
@@ -215,6 +128,78 @@ public class JobTaskProduceItem extends JobTask {
         }
 
     }
+
+    /** 统计一组 ItemStack 中匹配原型的总数。 */
+    private int countInList(List<ItemStack> list, ItemStack proto) {
+        int total = 0;
+        if (list == null) {
+            return 0;
+        }
+        for (ItemStack st : list) {
+            if (st != null && !st.isEmpty() && ItemStack.areItemsEqual(st, proto)
+                    && ItemStack.areItemStackTagsEqual(st, proto)) {
+                total += st.getCount();
+            }
+        }
+        return total;
+    }
+
+    /** 统计一组箱子中匹配原型的总数。 */
+    private int countInChests(List<IInventory> chests, ItemStack proto) {
+        int total = 0;
+        for (IInventory inv : chests) {
+            for (int slot = 0; slot < inv.getSizeInventory(); slot++) {
+                ItemStack st = inv.getStackInSlot(slot);
+                if (st != null && !st.isEmpty() && ItemStack.areItemsEqual(st, proto)
+                        && ItemStack.areItemStackTagsEqual(st, proto)) {
+                    total += st.getCount();
+                }
+            }
+        }
+        return total;
+    }
+
+    /** 从箱子扣除最多 need 个匹配物品，返回还差多少。 */
+    private int consumeFromChests(List<IInventory> chests, ItemStack proto, int need) {
+        for (IInventory inv : chests) {
+            for (int slot = 0; slot < inv.getSizeInventory() && need > 0; slot++) {
+                ItemStack st = inv.getStackInSlot(slot);
+                if (st == null || st.isEmpty() || !ItemStack.areItemsEqual(st, proto)
+                        || !ItemStack.areItemStackTagsEqual(st, proto)) {
+                    continue;
+                }
+                int take = Math.min(need, st.getCount());
+                inv.decrStackSize(slot, take);
+                need -= take;
+            }
+            if (need <= 0) {
+                break;
+            }
+        }
+        return need;
+    }
+
+    /** 从 NPC 背包扣除最多 need 个匹配物品，返回还差多少。 */
+    private int consumeFromList(List<ItemStack> list, ItemStack proto, int need) {
+        if (list == null) {
+            return need;
+        }
+        for (int i = list.size() - 1; i >= 0 && need > 0; i--) {
+            ItemStack st = list.get(i);
+            if (st == null || st.isEmpty() || !ItemStack.areItemsEqual(st, proto)
+                    || !ItemStack.areItemStackTagsEqual(st, proto)) {
+                continue;
+            }
+            int take = Math.min(need, st.getCount());
+            st.shrink(take);
+            need -= take;
+            if (st.isEmpty()) {
+                list.remove(i);
+            }
+        }
+        return need;
+    }
+
     @Override
     public void onTaskComplete() {
     }

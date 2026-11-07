@@ -256,8 +256,9 @@ public class JobTaskFarmerHarvest extends JobTask {
                                 IBlockState iBlockState = this.folk.entity.world.getBlockState(bp);
                                 //获得方块
                                 Block b = iBlockState.getBlock();
-                                //是可可豆
-                                if (b == Blocks.COCOA && b.getMetaFromState(iBlockState) == 9) {
+                                //是可可豆（P9: 成熟度在 meta 低 2 位，age==2 即成熟；
+                                //原来写死 ==9 只匹配"朝北+未成熟"，永远收不到可可豆）
+                                if (b == Blocks.COCOA && (b.getMetaFromState(iBlockState) & 3) == 2) {
                                     //收获
                                     this.folk.setStatus(new TextComponentTranslation("container.sim.job.crop.farmer.Harvesting",new Object[0]).getUnformattedText());
                                     //获得方块

@@ -33,6 +33,13 @@ public class JobBaker extends Job {
     private static final long STATS_INTERVAL = 1000;
     // 单次最大制作份数（避免任务过多卡顿）
     private static final int MAX_BATCH_COUNT = 5;
+    /** P9: 补货循环——任一原料低于此数量就再收一轮。 */
+    private static final int RESTOCK_MIN = 16;
+    /** P9: 单日最多补货轮数（供货点没货时避免整天在外转）。 */
+    private static final int MAX_RESTOCK_ROUNDS = 4;
+    private int restockRounds = 0;
+    /** P9: 记录天数，每天重置补货轮数。 */
+    private long lastBakerDay = -1L;
     public JobBaker(NpcData folk, BlockPos pos, World world) {
         super(folk, pos, world);
         folk.holding = new ItemStack(ItemLoader.tinSpade);
@@ -46,7 +53,25 @@ public class JobBaker extends Job {
         try {
         if (this.atWork) {
             if (this.stage == -1) {
-                this.baker_stage = 0;
+                // P9: 队列耗尽——先决定"补货"还是"开卖"。
+                // 原料任一低于 RESTOCK_MIN 且白天还有时间：再收一轮（最多 4 轮）；
+                // 否则开卖；已过打烊时段就等待下班。
+                long day = this.jobWorld.getWorldTime() / 24000L;
+                long wt = this.jobWorld.getWorldTime() % 24000L;
+                if (day != this.lastBakerDay) {
+                    this.lastBakerDay = day;
+                    this.restockRounds = 0;
+                }
+                this.initInventory();
+                if (wt < 10000L && this.restockRounds < MAX_RESTOCK_ROUNDS && this.needMoreIngredients()) {
+                    this.restockRounds++;
+                    ModSimLoader.log.info("面包店原料不足，开始第 {} 轮补货", this.restockRounds);
+                    this.baker_stage = 1; // 1=加"到位"idle，之后 2=采货
+                } else if (wt < 11600L) {
+                    this.baker_stage = 5; // 5=开卖
+                } else {
+                    this.baker_stage = 6; // 已打烊：不接新任务，等下班
+                }
                 this.stage = 0;
             }else if (this.baker_stage == 0) {
                 this.baker_stage = 1;
@@ -69,7 +94,7 @@ public class JobBaker extends Job {
                 //糖
                 colItems.add(new ItemStack(Items.SUGAR, 16));
                 //可可豆
-                colItems.add(new ItemStack(Items.DYE, 16));
+                colItems.add(new ItemStack(Items.DYE, 16, 3));
                 //收集
                 this.addJobTask(new JobTaskCollectItems(this, -1L, colItems));
                 this.baker_stage = 3;
@@ -86,7 +111,7 @@ public class JobBaker extends Job {
                 //糖
                 colItems.add(new ItemStack(Items.SUGAR, 24));
                 //可可豆
-                colItems.add(new ItemStack(Items.DYE, 24));
+                colItems.add(new ItemStack(Items.DYE, 24, 3));
                 this.addJobTask(new JobTaskUnloadItems(this, -1L, colItems));
                 this.baker_stage = 4;
             } else if (this.baker_stage == 4) {
@@ -122,8 +147,8 @@ public class JobBaker extends Job {
                     if (this.dye >= 1 && this.wheat >= 2) {
                         //曲奇饼需要的食材
                         List<ItemStack> cookies = new CopyOnWriteArrayList<ItemStack>();
-                        //可可豆
-                        cookies.add(new ItemStack(Items.DYE, 1));
+                        //可可豆（DYE meta 3 = 可可豆，农民产出的正是这个）
+                        cookies.add(new ItemStack(Items.DYE, 1, 3));
                         //小麦
                         cookies.add(new ItemStack(Items.WHEAT, 2));
                         //曲奇
@@ -150,21 +175,8 @@ public class JobBaker extends Job {
                 this.baker_stage = 0;
                 this.jobTasks.clear();
             }*/
-            // ---------------------- 物品统计优化 ----------------------
-            long currentTime = this.jobWorld.getWorldTime(); // 获取当前游戏时间（ticks）
-            // 检查是否达到统计间隔（五分钟）
-            if (currentTime - lastItemStatsTime >= STATS_INTERVAL) {
-                initInventory();
-                // 如果还有原料且处于售卖阶段，重新进入制作阶段
-                if (hasEnoughMaterials() && this.baker_stage >= 5) {
-                    this.baker_stage = 4;
-                    this.jobTasks.clear(); // 清空现有任务，重新生成制作任务
-                    this.currentTask=null;
-                }
-                // 更新上次统计时间
-                this.lastItemStatsTime = currentTime;
-            }
-
+            // P9: 原"每 50 秒强制清队列重做"的统计块已删除——它会打断正在
+            // 执行的采货/卸货/制作任务。补货现在由 stage==-1 时的循环统一决策。
         }
         }catch (Exception e){
             StackTraceElement element = e.getStackTrace()[0];
@@ -263,7 +275,7 @@ public class JobBaker extends Job {
         );
         for (int i = 0; i < cookieCount; i++) {
             List<ItemStack> cookieMaterials = new CopyOnWriteArrayList<>();
-            cookieMaterials.add(new ItemStack(Items.DYE, 1));
+            cookieMaterials.add(new ItemStack(Items.DYE, 1, 3));
             cookieMaterials.add(new ItemStack(Items.WHEAT, 2));
             this.addJobTask(new JobTaskProduceItem(
                     this,
@@ -305,6 +317,12 @@ public class JobBaker extends Job {
      */
     private boolean hasEnoughMaterials() {
         return wheat >= 3 || (milk_bucket >= 3 && sugar >= 2 && egg >= 1) || (pumpkin >= 1 && sugar >= 1 && egg >= 1) || (dye >= 1 && wheat >= 2);
+    }
+
+    /** P9: 六种原料任一低于阈值就补货。 */
+    private boolean needMoreIngredients() {
+        return this.wheat < RESTOCK_MIN || this.egg < RESTOCK_MIN || this.pumpkin < RESTOCK_MIN
+                || this.milk_bucket < RESTOCK_MIN || this.sugar < RESTOCK_MIN || this.dye < RESTOCK_MIN;
     }
 
     @Override

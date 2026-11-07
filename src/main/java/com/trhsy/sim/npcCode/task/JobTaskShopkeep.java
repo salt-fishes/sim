@@ -50,7 +50,9 @@ public class JobTaskShopkeep extends JobTask {
                     ModSimLoader.sendChat(this.folk.getName() + "(" + this.job.toString() + ")  " + new TextComponentTranslation("container.sim.job.grocer.farmer.today",new Object[0]).getUnformattedText());
                 }
             }
-            this.onTaskComplete();
+            // P8: 原来调用的是 onTaskComplete()（空实现），completed 永不置位，
+            // 打烊后任务永不完成 → 第二天不会重新进货。必须用 completeTask()。
+            this.completeTask();
         }
 
     }

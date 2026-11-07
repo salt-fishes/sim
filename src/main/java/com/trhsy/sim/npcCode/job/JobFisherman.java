@@ -18,11 +18,17 @@ import java.util.Iterator;
 import java.util.Random;
 
 /**
- * @ClassName JobFisherman
- * @Description todo 渔夫
- * @Author TRHSY
- * @Date 2023/4/916:50
- **/
+ * 渔夫（P4 效率重做）。
+ *
+ * <p>原实现的问题：
+ * <ul>
+ *   <li>每次"下网"是 60 秒空等；收网还要再等 10 秒；</li>
+ *   <li>一轮只有 5 次下网，跑完就进入"卖鱼"任务直到傍晚，剩下大半天不生产；</li>
+ *   <li>结果约 10 条鱼 / 游戏日。</li>
+ * </ul>
+ * 现在：白天不断循环作业（下网 20 秒 → 收网 2 秒，五种鱼各一网，每网 2-4 条），
+ * 傍晚（≥11000）才收摊卖鱼；队列空时重建下一轮，产出约 60-75 条 / 游戏日。
+ */
 public class JobFisherman extends Job {
     /**
      * @Author fan
@@ -61,6 +67,7 @@ public class JobFisherman extends Job {
 
     }
     public void findWater(){
+        this.nearWater = false;
         try {
             //寻找附近水
             BlockPos corner1 = this.pos.north(5).east(5).down(3);
@@ -82,86 +89,55 @@ public class JobFisherman extends Job {
             ModSimLoader.log.error("JobFisherman-findWater寻找水出错了",e.getMessage());
         }
     }
+
+    /**
+     * P4：队列空时构建下一轮；白天持续作业，傍晚卖鱼。
+     */
     @Override
     public void onUpdate() {
         super.onUpdate();
         try {
-            if (this.atWork) {
-                if (this.stage == -1) {
-                    this.fishermanStage = 0;
-                    this.stage = 0;
-                } else if (this.fishermanStage == 0) {
-                    this.fishermanStage = 1;
-                    //去上班
-                    this.addJobTask(new JobTaskIdle(this, 200L, new TextComponentTranslation("container.sim.job.builder_Arrived",new Object[0]).getUnformattedText()));
-                } else if (this.nearWater) {
-                    /**
-                     * @Author fan
-                     * @Description //TODO 如果找到水
-                     * @Date 20:56 2023/4/9
-                     * @Param [folk, pos, world]
-                     * @return
-                     **/
-                    if (this.fishermanStage == 1) {
-                        this.fishermanStage = 2;
-                        //钓鱼
-                        this.addJobTask(new JobTaskIdle(this, 60000L, new TextComponentTranslation("container.sim.FISHING",new Object[0]).getUnformattedText()));
-                    } else if (this.fishermanStage == 2) {
-                        this.fishermanStage = 3;
-                        //把鱼放到箱子里 生鱼/鳕鱼
-                        this.addJobTask(new JobTaskPlaceInChest(this, 11000L, new ItemStack(Items.FISH, new Random().nextInt(3) + 1,0)));
-                    } else if (this.fishermanStage == 3) {
-                        this.fishermanStage = 4;
-                        //钓鱼
-                        this.addJobTask(new JobTaskIdle(this, 60000L, new TextComponentTranslation("container.sim.FISHING",new Object[0]).getUnformattedText()));
-                    } else if (this.fishermanStage == 4) {
-                        this.fishermanStage = 5;
-                        //把生鲑鱼放到箱子里 鲑鱼
-                        this.addJobTask(new JobTaskPlaceInChest(this, 11000L, new ItemStack(Items.FISH, new Random().nextInt(3) + 1,1)));
-                    } else if (this.fishermanStage == 5) {
-                        this.fishermanStage = 6;
-                        //钓鱼
-                        this.addJobTask(new JobTaskIdle(this, 60000L, new TextComponentTranslation("container.sim.FISHING",new Object[0]).getUnformattedText()));
-                    } else if (this.fishermanStage == 6) {
-                        this.fishermanStage = 7;
-                        //把鱼放到箱子里 小丑鱼
-                        this.addJobTask(new JobTaskPlaceInChest(this, 11000L, new ItemStack(Items.FISH, new Random().nextInt(3) + 1,2)));
-                    } else if (this.fishermanStage == 7) {
-                        this.fishermanStage = 8;
-                        //钓鱼
-                        this.addJobTask(new JobTaskIdle(this, 60000L, new TextComponentTranslation("container.sim.FISHING",new Object[0]).getUnformattedText()));
-                    } else if (this.fishermanStage == 8) {
-                        this.fishermanStage = 9;
-                        //把鱼放到箱子里 河豚
-                        this.addJobTask(new JobTaskPlaceInChest(this, 11000L, new ItemStack(Items.FISH, new Random().nextInt(2) + 1,3)));
-                    } else if (this.fishermanStage == 9) {
-                        this.fishermanStage = 10;
-                        //钓鱼
-                        this.addJobTask(new JobTaskIdle(this, 60000L, new TextComponentTranslation("container.sim.FISHING",new Object[0]).getUnformattedText()));
-                    } else if (this.fishermanStage == 10) {
-                        this.fishermanStage = 11;
-                        //把鱼放到箱子里 生鱼
-                        this.addJobTask(new JobTaskPlaceInChest(this, 11000L, new ItemStack(Items.FISH, new Random().nextInt(2) + 1)));
-                    } else if (this.fishermanStage == 11) {
-                        this.fishermanStage = 12;
-                        //卖鱼
-                        this.addJobTask(new JobTaskShopkeep(this, -1L, new TextComponentTranslation("container.sim.job.fisherman.farmer.fish",new Object[0]).getUnformattedText(),true));
-                    }
-                } else {
-                    //当前时间
-                    long now = System.currentTimeMillis();
-                    if(now-this.timeSinceLastBlockPlace>3000L){
-                        this.timeSinceLastBlockPlace = now;
-                        //找不到可以钓鱼的水。试着在离水更近的地方重建鱼场
-//                    ModSimLoader.sendChat(folk.getName() + " " + new TextComponentTranslation("container.sim.job_task_Fisherman1"));
-                        //this.addJobTask(new JobTaskIdle(this, -1L, new TextComponentTranslation("container.sim.job_task_Fisherman")));
-                        findWater();
-                    }
+            if (!this.atWork) {
+                return;
+            }
+            // 有任务在跑/排队时不推进（否则任务会每 tick 堆积）
+            if (this.currentTask != null || !this.jobTasks.isEmpty()) {
+                return;
+            }
+            if (!this.nearWater) {
+                long now = System.currentTimeMillis();
+                if (now - this.timeSinceLastBlockPlace > 3000L) {
+                    this.timeSinceLastBlockPlace = now;
+                    findWater();
                 }
-                if (this.jobTasks.size() > 0 && this.currentTask == null) {
-                    this.currentTask = (JobTask) this.jobTasks.get(0);
-                    this.currentTask.begin();
-                }
+                return;
+            }
+            String fishing = new TextComponentTranslation("container.sim.FISHING",new Object[0]).getUnformattedText();
+            long worldTime = this.jobWorld.getWorldTime() % 24000L;
+            if (worldTime >= 11000L) {
+                // 傍晚：售卖/关店（有限时长，跑完进入第二天）
+                this.addJobTask(new JobTaskShopkeep(this, 30000L,
+                        new TextComponentTranslation("container.sim.job.fisherman.farmer.fish",new Object[0]).getUnformattedText(), true));
+            } else {
+                // 白天：连续作业，一轮 = 五种鱼各一网
+                this.folk.stayPut = true;
+                this.addJobTask(new JobTaskIdle(this, 200L, new TextComponentTranslation("container.sim.job.builder_Arrived",new Object[0]).getUnformattedText()));
+                this.addJobTask(new JobTaskIdle(this, 20000L, fishing));
+                this.addJobTask(new JobTaskPlaceInChest(this, 4000L, new ItemStack(Items.FISH, new Random().nextInt(3) + 2, 0)));
+                this.addJobTask(new JobTaskIdle(this, 20000L, fishing));
+                this.addJobTask(new JobTaskPlaceInChest(this, 4000L, new ItemStack(Items.FISH, new Random().nextInt(3) + 2, 1)));
+                this.addJobTask(new JobTaskIdle(this, 20000L, fishing));
+                this.addJobTask(new JobTaskPlaceInChest(this, 4000L, new ItemStack(Items.FISH, new Random().nextInt(3) + 2, 2)));
+                this.addJobTask(new JobTaskIdle(this, 20000L, fishing));
+                this.addJobTask(new JobTaskPlaceInChest(this, 4000L, new ItemStack(Items.FISH, new Random().nextInt(3) + 2, 3)));
+                this.addJobTask(new JobTaskIdle(this, 20000L, fishing));
+                this.addJobTask(new JobTaskPlaceInChest(this, 4000L, new ItemStack(Items.FISH, new Random().nextInt(3) + 2)));
+                this.fishermanStage = 0;
+                this.stage = 0;
+            }
+            if (!this.jobTasks.isEmpty()) {
+                this.currentTask = (JobTask) this.jobTasks.get(0);
+                this.currentTask.begin();
             }
         }catch (Exception e){
             StackTraceElement element = e.getStackTrace()[0];

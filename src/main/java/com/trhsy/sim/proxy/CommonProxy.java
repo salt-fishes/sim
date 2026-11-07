@@ -1,8 +1,6 @@
 package com.trhsy.sim.proxy;
 
-import com.trhsy.sim.key.KeyboardManager;
 import com.trhsy.sim.loader.*;
-import com.trhsy.sim.loader.render.ItemRenderLoader;
 import com.trhsy.sim.npcCode.race.Race;
 import com.trhsy.sim.npcCode.traits.Traits;
 import net.minecraftforge.fml.common.event.FMLInitializationEvent;
@@ -36,8 +34,6 @@ public class CommonProxy {
         Traits.loadTraits();
         /**种族*/
         Race.loadRaces();
-
-        KeyboardManager.init();
     }
 
     public void init(FMLInitializationEvent event) {

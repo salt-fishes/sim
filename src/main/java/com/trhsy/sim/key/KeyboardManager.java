@@ -1,5 +1,6 @@
 package com.trhsy.sim.key;
 
+import com.trhsy.sim.ModSim;
 import com.trhsy.sim.loader.ModSimLoader;
 import net.minecraft.client.settings.KeyBinding;
 import net.minecraftforge.client.settings.KeyConflictContext;
@@ -22,7 +23,7 @@ import java.util.List;
  * @Description: 按键按下后
  * @date 2023.12.6 15:19
  */
-@Mod.EventBusSubscriber
+@Mod.EventBusSubscriber(modid = ModSim.MODID, value = Side.CLIENT)
 public class KeyboardManager {
     public static final List<KeyBinding> KEY_BINDINGS = new ArrayList<KeyBinding>();
 

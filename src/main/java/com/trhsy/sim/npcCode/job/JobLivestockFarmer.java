@@ -29,7 +29,7 @@ public class JobLivestockFarmer extends Job{
      * 牲畜等级
      */
     public Class livestockClass;
-    //工作阶段
+    //工作阶段（保留字段兼容存档/外部引用；新逻辑每轮重建任务，不再用它驱动状态机）
     public int livestockFarmerStage = 0;
     public JobLivestockFarmer(NpcData folk, BlockPos pos, String livestock, World world) {
         super(folk,pos,world);
@@ -50,7 +50,7 @@ public class JobLivestockFarmer extends Job{
                 //羊
             } else if (this.livestockName.equals(new TextComponentTranslation("container.sim.job_Livestock_sheep",new Object[0]).getUnformattedText())) {
                 this.livestockClass = EntitySheep.class;
-                //养羊户
+                //养羊户（与雇佣/采集使用的 Vocation28 对齐；中文下 27/28 同名，英文下才一致）
                 this.jobName = new TextComponentTranslation("container.sim.Vocation28",new Object[0]).getUnformattedText();
                 //鸡
             } else if (this.livestockName.equals(new TextComponentTranslation("container.sim.job_Livestock_chicken",new Object[0]).getUnformattedText())) {
@@ -68,57 +68,40 @@ public class JobLivestockFarmer extends Job{
             ModSimLoader.log.error("JobLivestockFarmer出错了：" + e.getMessage() + "行数：" + element.getLineNumber());
         }
     }
+
+    /**
+     * P3: 一次构建整轮任务，然后交给任务队列顺序执行。
+     * 旧实现每 tick 只推进一个阶段、只把任务塞进队列（永远不开始），
+     * 导致 NPC 到岗后一直停在"去工作"。现在队列空时重建一轮：
+     * 到达 → 补栏 → 照料/屠宰交替，队列跑完（stage=-1）后自动开始下一轮。
+     */
     @Override
     public void onUpdate() {
         super.onUpdate();
         try {
-            if (this.atWork) {
-                if (this.stage == -1) {
-                    this.livestockFarmerStage = 0;
-                    this.stage = 0;
-                } else if (this.livestockFarmerStage == 0) {
-                    this.livestockFarmerStage = 1;
-                    //去上班
-                    this.addJobTask(new JobTaskIdle(this, 200L, new TextComponentTranslation("container.sim.job.builder_Arrived",new Object[0]).getUnformattedText()));
-                } else if (this.livestockFarmerStage == 1) {
-                    //生成
-                    this.addJobTask(new JobTaskSpawnLivestock(this, this.livestockName, this.livestockClass, 5000L));
-                    this.livestockFarmerStage = 2;
-                }else if (this.livestockFarmerStage == 2) {
-                    //照料
-                    this.addJobTask(new JobTaskIdle(this, 5000L, new TextComponentTranslation("container.sim.job.crop.farmer.Tending1",new Object[0]).getUnformattedText()+" " + this.livestockName));
-                    this.livestockFarmerStage = 3;
-                }else if (this.livestockFarmerStage == 3) {
-                    //屠戮畜生
-                    this.addJobTask(new JobTaskButcherAnimal(this, 5000L));
-                    this.livestockFarmerStage = 4;
-                }else if (this.livestockFarmerStage == 4) {
-                    //照料
-                    this.addJobTask(new JobTaskIdle(this, 5000L, new TextComponentTranslation("container.sim.job.crop.farmer.Tending1",new Object[0]).getUnformattedText()+" " + this.livestockName ));
-                    this.livestockFarmerStage = 5;
-                }else if (this.livestockFarmerStage == 5) {
-                    //屠戮畜生
-                    this.addJobTask(new JobTaskButcherAnimal(this, 5000L));
-                    this.livestockFarmerStage = 6;
-                }else if (this.livestockFarmerStage == 6) {
-                    //照料
-                    this.addJobTask(new JobTaskIdle(this, 5000L, new TextComponentTranslation("container.sim.job.crop.farmer.Tending1",new Object[0]).getUnformattedText()+" " + this.livestockName ));
-                    this.livestockFarmerStage =7;
-                }else if (this.livestockFarmerStage == 7) {
-                    //屠戮畜生
-                    this.addJobTask(new JobTaskButcherAnimal(this, 5000L));
-                    this.livestockFarmerStage = 8;
-                }else if (this.livestockFarmerStage == 9) {
-                    //照料
-                    this.addJobTask(new JobTaskIdle(this, -1L, new TextComponentTranslation("container.sim.job.crop.farmer.Tending1",new Object[0]).getUnformattedText()+" " + this.livestockName ));
-                    this.livestockFarmerStage = 10;
-                }else{
-                    if (this.jobTasks.size() > 0&&this.currentTask==null) {
-                        this.currentTask = (JobTask) this.jobTasks.get(0);
-                        this.currentTask.begin();
-                    }
-                }
+            if (!this.atWork) {
+                return;
             }
+            if (this.currentTask != null || !this.jobTasks.isEmpty()) {
+                return; // 这一轮还没跑完
+            }
+            String tending = new TextComponentTranslation("container.sim.job.crop.farmer.Tending1",new Object[0]).getUnformattedText() + " " + this.livestockName;
+            //到达
+            this.addJobTask(new JobTaskIdle(this, 200L, new TextComponentTranslation("container.sim.job.builder_Arrived",new Object[0]).getUnformattedText()));
+            //补栏（保持 4-6 头）
+            this.addJobTask(new JobTaskSpawnLivestock(this, this.livestockName, this.livestockClass, 5000L));
+            //照料 / 屠宰交替（屠宰任务内部有数量下限，不会清空）
+            this.addJobTask(new JobTaskIdle(this, 5000L, tending));
+            this.addJobTask(new JobTaskButcherAnimal(this, 5000L));
+            this.addJobTask(new JobTaskIdle(this, 5000L, tending));
+            this.addJobTask(new JobTaskButcherAnimal(this, 5000L));
+            this.addJobTask(new JobTaskIdle(this, 5000L, tending));
+            this.addJobTask(new JobTaskButcherAnimal(this, 5000L));
+            this.addJobTask(new JobTaskIdle(this, 5000L, tending));
+            this.livestockFarmerStage = 0;
+            this.stage = 0;
+            this.currentTask = (JobTask) this.jobTasks.get(0);
+            this.currentTask.begin();
         }catch (Exception e){
             StackTraceElement element = e.getStackTrace()[0];
             ModSimLoader.log.error("JobLivestockFarmer-onUpdate出错了：" + e.getMessage() + "行数：" + element.getLineNumber());

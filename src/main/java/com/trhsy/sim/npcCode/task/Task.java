@@ -46,6 +46,10 @@ public abstract class Task {
      * @return void
      **/
     public void completeTask() {
+        // P9: 幂等——重复调用（例如 onUpdate 的 catch 里再调一次）不再二次移除任务。
+        if (this.completed) {
+            return;
+        }
         this.onTaskComplete();
         //任务完成
         this.completed = true;
@@ -60,6 +64,9 @@ public abstract class Task {
      * @return void
      **/
     public void failTask(String message) {
+        if (this.completed) {
+            return;
+        }
         this.onTaskComplete();
         //
         this.completed = true;

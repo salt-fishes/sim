@@ -149,8 +149,11 @@ public class JobTaskHarvestAnimal extends JobTask {
             }
         }
 
-        this.job.placeInJobChest(this.produce);
-        ModSimLoader.addMoney(-0.02F * (float)this.produce.getCount());
+        // P4: 按实际放进去的件数扣钱（箱子满时不吞货也不扣钱）。
+        int put = this.job.placeInJobChestPartial(this.produce);
+        if (put > 0 && ModSimLoader.gamemode != 1) {
+            ModSimLoader.addMoney(-0.02F * (float) put);
+        }
     }
     public List<EntityAnimal> getAnimalsInPen(V3 controlBox, Class animal) {
         List<EntityAnimal> list = this.folk.entity.world.getEntitiesWithinAABB(animal, new AxisAlignedBB(controlBox.x - 5.0D, controlBox.y, controlBox.z - 5.0D, controlBox.x + 5.0D, controlBox.y + 2.0D, controlBox.z + 5.0D));

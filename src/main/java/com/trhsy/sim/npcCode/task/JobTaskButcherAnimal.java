@@ -53,6 +53,11 @@ public class JobTaskButcherAnimal extends JobTask {
         //如果屠戮目标为空则下一个
         if (this.butcherTarget == null) {
             this.selectTarget();
+            if (this.butcherTarget == null) {
+                // P3: 数量已达下限（成年动物 <= 4），本轮不再屠宰，结束任务
+                this.folk.setStatus(new TextComponentTranslation("container.sim.job.crop.farmer.Tending1",new Object[0]).getUnformattedText() + " " + this.farmJob.livestockName);
+                this.completeTask();
+            }
         } else {
             V3 v3=new V3(this.butcherTarget.getPosition(),this.farmJob.folk.entity.dimension);
             this.folk.forceMoveToXYZ(v3);
@@ -89,6 +94,11 @@ public class JobTaskButcherAnimal extends JobTask {
             }
         }
         // 4. 安全选择目标（核心修复）
+        // P3: 保持 4-6 头：成年动物 <= 4 时不再屠宰，避免把动物杀光
+        if (grownAnimals.size() <= 4) {
+            this.butcherTarget = null;
+            return;
+        }
         if (!grownAnimals.isEmpty()) { // 只在有成年动物时执行
             // 使用 grownAnimals 的大小作为随机范围，避免索引越界
             int randomIndex = this.rand.nextInt(grownAnimals.size());
