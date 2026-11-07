@@ -12,7 +12,7 @@ import net.minecraft.world.World;
 import net.minecraftforge.common.DimensionManager;
 
 import java.io.*;
-import java.nio.charset.StandardCharsets;
+import java.nio.charset.Charset;
 import java.nio.file.AtomicMoveNotSupportedException;
 import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
@@ -133,7 +133,9 @@ public class Building {
                     sb.append(folk.ID).append(';');
                 }
             }
-            Files.write(tmp.toPath(), sb.toString().getBytes(StandardCharsets.UTF_8));
+            // 读取端仍使用平台默认编码（旧档也是默认编码），这里必须保持一致，
+            // 否则中文建筑名会乱码。原子写入只解决“写一半”的问题。
+            Files.write(tmp.toPath(), sb.toString().getBytes(Charset.defaultCharset()));
             try {
                 Files.move(tmp.toPath(), target.toPath(), StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.ATOMIC_MOVE);
             } catch (AtomicMoveNotSupportedException ex) {
