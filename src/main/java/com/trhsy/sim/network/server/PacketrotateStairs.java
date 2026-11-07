@@ -3,6 +3,7 @@ package com.trhsy.sim.network.server;
 import com.trhsy.sim.loader.ModSimLoader;
 import com.trhsy.sim.npcCode.build.Building;
 import io.netty.buffer.ByteBuf;
+import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraftforge.fml.common.FMLCommonHandler;
 import net.minecraftforge.fml.common.network.ByteBufUtils;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
@@ -53,11 +54,17 @@ public class PacketrotateStairs implements IMessage {
 
         private void handle(PacketrotateStairs message, MessageContext ctx) {
             Building b = ModSimLoader.getBuildingByUUID(message.uuid);
-            if (b != null) {
-                ModSimLoader.log.info("旋转建筑："+b.buildingName);
-                b.rotateStairs(ctx.getServerHandler().player.world);
+            EntityPlayerMP player = ctx.getServerHandler().player;
+            if (b != null && b.controlXYZ != null && player != null) {
+                // P15(S1): 与服务端拆楼一致，旋转楼梯也必须靠近控制箱。
+                if (b.dimension != player.world.provider.getDimension()
+                        || player.getDistance(b.controlXYZ.x, b.controlXYZ.y, b.controlXYZ.z) > 16.0D) {
+                    ModSimLoader.log.warn("玩家 {} 距离建筑过远，拒绝旋转楼梯 {}", player.getName(), b.buildingName);
+                    return;
+                }
+                ModSimLoader.log.info("旋转建筑：" + b.buildingName);
+                b.rotateStairs(player.world);
             }
-
         }
     }
 }

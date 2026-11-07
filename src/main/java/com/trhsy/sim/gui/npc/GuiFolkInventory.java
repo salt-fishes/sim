@@ -1,9 +1,9 @@
 package com.trhsy.sim.gui.npc;
 
 import com.trhsy.sim.ModSim;
+import com.trhsy.sim.entity.EntityNpc;
 import com.trhsy.sim.entity.container.ContainerNpc;
 import com.trhsy.sim.loader.ModSimLoader;
-import com.trhsy.sim.network.server.PacketOpenFolkInventoryGui;
 import com.trhsy.sim.npcCode.NpcData;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiButton;
@@ -17,8 +17,11 @@ import net.minecraft.client.renderer.OpenGlHelper;
 import net.minecraft.client.renderer.RenderHelper;
 import net.minecraft.client.renderer.entity.RenderManager;
 import net.minecraft.client.resources.I18n;
+import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLivingBase;
+import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.inventory.ClickType;
+import net.minecraft.inventory.Container;
 import net.minecraft.inventory.ContainerPlayer;
 import net.minecraft.inventory.Slot;
 import net.minecraft.util.ResourceLocation;
@@ -55,10 +58,34 @@ public class GuiFolkInventory extends InventoryEffectRenderer implements IRecipe
     private float oldMouseY;
     private boolean buttonClicked;
 
-    public GuiFolkInventory(PacketOpenFolkInventoryGui message) {
-        super(ModSimLoader.getEntityFolkByUID(message.uid).inventoryContainer);
-        npcData = ModSimLoader.getFolkDataByUID(message.uid);
+    public GuiFolkInventory(java.util.UUID uid) {
+        super(containerFor(uid));
+        npcData = ModSimLoader.getFolkDataByUID(uid);
 
+    }
+
+    /**
+     * P15(S1): 客户端不一定有 ModSimLoader.folks（多人游戏时那是服务端数据）。
+     * 优先找已加载的 EntityNpc；找不到再退回玩家容器，至少不会 NPE。
+     */
+    private static Container containerFor(java.util.UUID uid) {
+        EntityNpc npc = ModSimLoader.getEntityFolkByUID(uid);
+        if (npc == null) {
+            Minecraft mc = Minecraft.getMinecraft();
+            if (mc.world != null) {
+                for (Entity entity : mc.world.loadedEntityList) {
+                    if (entity instanceof EntityNpc && uid.equals(entity.getUniqueID())) {
+                        npc = (EntityNpc) entity;
+                        break;
+                    }
+                }
+            }
+        }
+        if (npc != null && npc.inventoryContainer != null) {
+            return npc.inventoryContainer;
+        }
+        EntityPlayer player = Minecraft.getMinecraft().player;
+        return new ContainerPlayer(player != null ? player.inventory : new net.minecraft.entity.player.InventoryPlayer(null), false, player);
     }
 
     @Override

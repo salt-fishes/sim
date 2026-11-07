@@ -3,12 +3,12 @@ package com.trhsy.sim.loader;
 import com.trhsy.sim.network.client.PacketReturnHireableFolks;
 import com.trhsy.sim.network.client.PacketUpdateMoney;
 import com.trhsy.sim.network.client.PacketUpdateNPC;
-import com.trhsy.sim.network.server.PacketSyncNpcData;
 import com.trhsy.sim.npcCode.NpcData;
 import com.trhsy.sim.npcCode.store.SimStore;
 import com.trhsy.sim.npcCode.block.FarmBox;
 import com.trhsy.sim.npcCode.block.MineBox;
 import com.trhsy.sim.npcCode.build.Building;
+import com.trhsy.sim.util.AsyncFileWriter;
 import com.trhsy.sim.util.Courier;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.server.MinecraftServer;
@@ -102,8 +102,6 @@ public class SimmodeStart {
     // 计时器和状态变量
     private static int tickCounter = 0;
     private static boolean isProcessing = false;
-    private static final Map<Integer, NpcData> pendingNpcUpdates = new ConcurrentHashMap<>();
-    private static final Map<String, Building> pendingBuildingUpdates = new ConcurrentHashMap<>();
 
     /*private static final ExecutorService asyncExecutor = Executors.newFixedThreadPool(
             MAX_CONCURRENT_TASKS,
@@ -339,6 +337,8 @@ public class SimmodeStart {
         for (Building b : ModSimLoader.buildings) {
             b.saveBuilding();
         }
+        // P15(S1): 世界保存是持久化边界，等异步队列写完再返回。
+        AsyncFileWriter.flush(5000L);
     }
 
     /**
@@ -663,7 +663,6 @@ public class SimmodeStart {
 
                 // 将更新后的NPC数据提交到主线程应用
 //                scheduleMainThreadTask(() -> {
-                    pendingNpcUpdates.putAll(updatedNpcs);
                     // 清理无效NPC
                     cleanupInvalidNpcs(world);
 //                });
@@ -743,7 +742,6 @@ public class SimmodeStart {
                 // 将结果提交到主线程
                 final float finalRent = totalRent;
 //                scheduleMainThreadTask(() -> {
-                    pendingBuildingUpdates.putAll(updatedBuildings);
 
                     // 处理租金收集逻辑
                     if (ModSimLoader.isDayTime(world) &&
@@ -887,36 +885,6 @@ public class SimmodeStart {
         }
     }
 
-    // 调度网络同步任务
-    private static void scheduleNetworkSync(World world) {
-        if (world instanceof WorldServer) {
-//            ((WorldServer) world).addScheduledTask(() -> {
-                try {
-                    // 发送NPC更新
-                    for (NpcData npc : pendingNpcUpdates.values()) {
-                        NetWorkLoader.net.sendToAll(new PacketSyncNpcData(npc));
-                    }
-                    pendingNpcUpdates.clear();
-
-                    // 发送建筑更新
-                    for (Building building : pendingBuildingUpdates.values()) {
-//                        NetWorkLoader.net.sendToAll(new PacketSyncBuilding(building));
-                    }
-                    pendingBuildingUpdates.clear();
-
-                    // 每1秒更新一次可雇佣的人和资金
-                    if (tickCounter % 20 == 0) {
-                        NetWorkLoader.net.sendToAll(new PacketReturnHireableFolks());
-                        NetWorkLoader.net.sendToAll(new PacketUpdateMoney());
-                    }
-
-                } catch (Exception e) {
-                    ModSimLoader.log.error("同步网络数据时出错", e);
-                }
-//            });
-        }
-    }
-
     // 安全调度主线程任务（P0：不再引用客户端 Minecraft）
     private static void scheduleMainThreadTask(Runnable task) {
         MinecraftServer server = FMLCommonHandler.instance().getMinecraftServerInstance();
@@ -1055,7 +1023,6 @@ public class SimmodeStart {
         }
 
         // 3. 同步NPC数据到客户端（通过网络包）
-        sendNpcDataToClients(world);
     }
 
     // 服务器端：分批更新NPC状态
@@ -1125,57 +1092,6 @@ public class SimmodeStart {
             ModSimLoader.sendChat(npc.getName() + message);
             npc.entity.attackEntityFrom(DamageSource.STARVE, 999.0F);
         }
-    }
-
-
-    // 服务器端：发送NPC数据到客户端
-    private static void sendNpcDataToClients(World world) {
-        // 1. 筛选需要同步的NPC（如在玩家视野内）
-        // 筛选需要同步的NPC（在玩家视野内）
-        /*List<NpcData> npcsToSync = new ArrayList<>();
-        double syncRange = 64.0; // 同步范围
-        for (EntityPlayer player : world.playerEntities) {
-            for (NpcData npc : ModSimLoader.folks) {
-                if (npc.entity != null && npc.entity.getDistance(player) <= syncRange) {
-                    npcsToSync.add(npc);
-                }
-            }
-        }
-        // 2. 通过网络包发送NPC数据到客户端
-        for (NpcData npc : npcsToSync) {
-            NetWorkLoader.net.sendToAll(new PacketSyncNpcData(npc));
-        }*/
-
-        if (world instanceof WorldServer && !((WorldServer) world).isCallingFromMinecraftThread()) {
-            ((WorldServer) world).addScheduledTask(() -> {
-                // 限流：只发送可见范围内的NPC
-                List<NpcData> visibleNpcs = getVisibleNpcs(world);
-                for (NpcData npc : visibleNpcs) {
-                    NetWorkLoader.net.sendToAll(new PacketSyncNpcData(npc));
-                }
-            });
-        } else {
-            // 直接执行（如果已经在主线程）
-            List<NpcData> visibleNpcs = getVisibleNpcs(world);
-            for (NpcData npc : visibleNpcs) {
-                NetWorkLoader.net.sendToAll(new PacketSyncNpcData(npc));
-            }
-        }
-    }
-    // 获取可见范围内的NPC（优化性能）
-    private static List<NpcData> getVisibleNpcs(World world) {
-        List<NpcData> visibleNpcs = new ArrayList<>();
-        double renderDistance = world.provider.getDimension() == 0 ? 32.0 : 16.0; // 根据维度调整
-
-        for (EntityPlayer player : world.playerEntities) {
-            for (NpcData npc : ModSimLoader.folks) {
-                if (npc.entity != null && npc.entity.getDistance(player) <= renderDistance) {
-                    visibleNpcs.add(npc);
-                }
-            }
-        }
-
-        return visibleNpcs;
     }
     // 服务器端：环境控制（停止下雨）
     private static void handleEnvironmentControl(World world) {

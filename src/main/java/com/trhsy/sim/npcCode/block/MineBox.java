@@ -3,11 +3,13 @@ package com.trhsy.sim.npcCode.block;
 import com.trhsy.sim.loader.ModSimLoader;
 import com.trhsy.sim.npcCode.NpcData;
 import com.trhsy.sim.npcCode.V3;
+import com.trhsy.sim.util.AsyncFileWriter;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.math.BlockPos;
 import net.minecraftforge.common.DimensionManager;
 
 import java.io.*;
+import java.nio.charset.Charset;
 import java.util.UUID;
 
 /**
@@ -52,38 +54,30 @@ public class MineBox {
     }
 
     public void saveMine() {
-        StringBuilder var10002 = new StringBuilder();
+        if (this.ID == null || this.loc == null) {
+            return;
+        }
         new DimensionManager();
         File mineFolder = new File(ModSimLoader.getSavesDataFolder() + File.separator + "mines");
-        if(!mineFolder.exists()){
+        if (!mineFolder.exists()) {
             mineFolder.mkdirs();
         }
-
-        BufferedWriter writer = null;
-
+        File target = new File(mineFolder + File.separator + this.ID + ".sk2");
         try {
-            File logFile = new File(mineFolder + File.separator + this.ID + ".sk2");
-            writer = new BufferedWriter(new FileWriter(logFile));
-            writer.write("id|" + this.ID.toString() + "\n");
-            writer.write("loc|" + this.loc.toString() + "\n");
-            writer.write("dimension|" + this.loc.dimension + "\n");
-            writer.write("facing|" + this.facing.toString() + "\n");
-            writer.write("x|" + this.x + "\n");
-            writer.write("z|" + this.z + "\n");
-            writer.write("level|" + this.level + "\n");
+            // P15(S1): 异步写盘。
+            StringBuilder sb = new StringBuilder();
+            sb.append("id|").append(this.ID.toString()).append('\n');
+            sb.append("loc|").append(this.loc.toString()).append('\n');
+            sb.append("dimension|").append(this.loc.dimension).append('\n');
+            sb.append("facing|").append(this.facing).append('\n');
+            sb.append("x|").append(this.x).append('\n');
+            sb.append("z|").append(this.z).append('\n');
+            sb.append("level|").append(this.level).append('\n');
+            AsyncFileWriter.write(target, sb.toString(), Charset.defaultCharset());
         } catch (Exception var12) {
             StackTraceElement element = var12.getStackTrace()[0];
             ModSimLoader.log.error("saveMine出错了：" + var12.getMessage() + "行数：" + element.getLineNumber());
-        } finally {
-            try {
-                writer.close();
-            } catch (Exception var11) {
-                StackTraceElement element = var11.getStackTrace()[0];
-                ModSimLoader.log.error("saveMine-writer出错了：" + var11.getMessage() + "行数：" + element.getLineNumber());
-            }
-
         }
-
     }
 
     public void loadMine(UUID loadID) {

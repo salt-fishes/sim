@@ -132,7 +132,8 @@ public class TaskSleep extends Task {
         }
         V3 base = home.livingXYZ;
         if (home.bed != null) {
-            V3 bedSpot = new V3(home.bed.getX() + 0.5D, home.bed.getY() + 0.55D, home.bed.getZ() + 0.5D);
+            int dim = base != null ? base.dimension : this.folk.pos.dimension;
+            V3 bedSpot = new V3(home.bed.getX() + 0.5D, home.bed.getY() + 0.55D, home.bed.getZ() + 0.5D, dim);
             if (!isSleepSpotOccupied(bedSpot, 1.5D)) {
                 return bedSpot;
             }

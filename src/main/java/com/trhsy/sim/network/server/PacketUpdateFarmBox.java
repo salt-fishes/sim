@@ -4,6 +4,7 @@ import com.trhsy.sim.loader.ModSimLoader;
 import com.trhsy.sim.npcCode.block.FarmBox;
 import com.trhsy.sim.npcCode.enums.FarmType;
 import io.netty.buffer.ByteBuf;
+import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.util.EnumFacing;
 import net.minecraftforge.fml.common.FMLCommonHandler;
 import net.minecraftforge.fml.common.network.ByteBufUtils;
@@ -72,8 +73,19 @@ public class PacketUpdateFarmBox implements IMessage {
         }
 
         private void handle(PacketUpdateFarmBox message, MessageContext ctx) {
-            for (FarmBox farm:ModSimLoader.farms){
+            EntityPlayerMP player = ctx.getServerHandler().player;
+            if (player == null || message.facing == null || message.farmType == null
+                    || message.x < 0 || message.x > 64 || message.z < 0 || message.z > 64) {
+                return;
+            }
+            for (FarmBox farm : ModSimLoader.farms) {
                 if (farm.ID.equals(message.id)) {
+                    // P15(S1): 服务端校验维度+距离，客户端不能远程改别人的农场。
+                    if (farm.loc == null || farm.loc.dimension != player.world.provider.getDimension()
+                            || player.getDistance(farm.loc.x, farm.loc.y, farm.loc.z) > 16.0D) {
+                        ModSimLoader.log.warn("玩家 {} 距离农场过远，拒绝修改", player.getName());
+                        return;
+                    }
                     farm.x = message.x;
                     farm.z = message.z;
                     farm.facing = message.facing;
@@ -82,7 +94,6 @@ public class PacketUpdateFarmBox implements IMessage {
                     break;
                 }
             }
-
         }
     }
 }

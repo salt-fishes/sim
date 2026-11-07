@@ -6,7 +6,6 @@ import com.trhsy.sim.gui.GuiRunMod;
 import com.trhsy.sim.gui.block.*;
 import com.trhsy.sim.gui.npc.*;
 import com.trhsy.sim.network.client.*;
-import com.trhsy.sim.network.server.PacketOpenFolkInventoryGui;
 import com.trhsy.sim.npcCode.NpcData;
 import com.trhsy.sim.npcCode.NpcIdentity;
 import com.trhsy.sim.npcCode.NpcSkin;
@@ -294,13 +293,5 @@ public class ModSimClientLoader {
 
     public static void openConstructorGui(BlockPos pos, int bDir, NpcIdentity folk, int dimension) {
         Minecraft.getMinecraft().displayGuiScreen(new GuiBlockConstructorBlock(pos, bDir, folk, dimension));
-    }
-
-    /**
-     * 打开
-     * @param message
-     */
-    public static void openFolkInventoryGui(PacketOpenFolkInventoryGui message) {
-        Minecraft.getMinecraft().displayGuiScreen(new GuiFolkInventory(message));
     }
 }

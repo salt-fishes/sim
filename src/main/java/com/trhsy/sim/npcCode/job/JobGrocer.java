@@ -4,6 +4,7 @@ import com.trhsy.sim.loader.ItemLoader;
 import com.trhsy.sim.loader.ModSimLoader;
 import com.trhsy.sim.npcCode.NpcData;
 import com.trhsy.sim.npcCode.task.*;
+import com.trhsy.sim.util.ModCropCompat;
 import net.minecraft.init.Blocks;
 import net.minecraft.init.Items;
 import net.minecraft.item.ItemStack;
@@ -42,6 +43,8 @@ public class JobGrocer extends Job{
             this.colItems.add(new ItemStack(Blocks.PUMPKIN, 8));
             //西瓜
             this.colItems.add(new ItemStack(Items.MELON, 16));
+            // P15(S1): 装了 Pam's HarvestCraft 时，补充少量模组食物，农民种出的作物可被杂货店收走。
+            ModCropCompat.addPamProduce(this.colItems, 6);
         }catch (Exception e){
             StackTraceElement element = e.getStackTrace()[0];
             ModSimLoader.log.error("JobGrocer出错了：" + e.getMessage() + "行数：" + element.getLineNumber());

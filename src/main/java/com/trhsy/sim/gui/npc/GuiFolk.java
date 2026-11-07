@@ -4,7 +4,6 @@ import com.trhsy.sim.ModSim;
 import com.trhsy.sim.loader.ModSimLoader;
 import com.trhsy.sim.loader.NetWorkLoader;
 import com.trhsy.sim.network.client.PacketOpenFolkGui;
-import com.trhsy.sim.network.server.PacketOpenFolkInventoryGui;
 import com.trhsy.sim.npcCode.NpcData;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiButton;
@@ -341,10 +340,12 @@ public class GuiFolk extends GuiScreen {
                 }
                 //库存
                 if (button.displayString.contentEquals(new TextComponentTranslation("container.sim.guiFolk.Inventory",new Object[0]).getUnformattedText())) {
-                    EntityPlayer player = Minecraft.getMinecraft().player;
-                    NpcData npcData= ModSimLoader.getFolkDataByUID(uid);
-                    NetWorkLoader.net.sendToServer(new PacketOpenFolkInventoryGui(npcData));
-                    //FMLNetworkHandler.openGui(player, ModSim.instance, References.GUI_FOLKINVENTORY, player.worldObj, (int)player.posX, (int)player.posY, (int)player.posZ);
+                    NpcData npcData = ModSimLoader.getFolkDataByUID(uid);
+                    // P15(S1): 原来把“打开客户端 GUI”的包发给服务端，服务端再调用
+                    // Minecraft.getMinecraft()，专服必崩。GUI 直接在客户端打开。
+                    if (npcData != null) {
+                        Minecraft.getMinecraft().displayGuiScreen(new GuiFolkInventory(uid));
+                    }
                 }
             } else if (this.page == 1) {
                 //情感分页  返回

@@ -3,6 +3,7 @@ package com.trhsy.sim.npcCode.build;
 import com.trhsy.sim.loader.ModSimLoader;
 import com.trhsy.sim.npcCode.NpcData;
 import com.trhsy.sim.npcCode.V3;
+import com.trhsy.sim.util.AsyncFileWriter;
 import net.minecraft.block.*;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.EnumFacing;
@@ -13,9 +14,6 @@ import net.minecraftforge.common.DimensionManager;
 
 import java.io.*;
 import java.nio.charset.Charset;
-import java.nio.file.AtomicMoveNotSupportedException;
-import java.nio.file.Files;
-import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -101,7 +99,6 @@ public class Building {
             buildingFolder.mkdirs();
         }
         File target = new File(buildingFolder + File.separator + this.ID + ".sk2");
-        File tmp = new File(target.getAbsolutePath() + ".tmp");
         try {
             // P13(S1): 先写临时文件，再原子替换，避免自动存档中途崩溃留下半个建筑文件。
             StringBuilder sb = new StringBuilder();
@@ -119,6 +116,9 @@ public class Building {
             if (this.livingXYZ != null) {
                 sb.append("lpos|").append(this.livingXYZ.toString()).append('\n');
             }
+            if (this.bed != null) {
+                sb.append("bed|").append(new V3(this.bed.getX(), this.bed.getY(), this.bed.getZ()).toString()).append('\n');
+            }
             sb.append("blockspecial|");
             for (V3 pos : this.blockSpecial) {
                 sb.append(pos.toStringByMeta()).append(';');
@@ -134,19 +134,11 @@ public class Building {
                 }
             }
             // 读取端仍使用平台默认编码（旧档也是默认编码），这里必须保持一致，
-            // 否则中文建筑名会乱码。原子写入只解决“写一半”的问题。
-            Files.write(tmp.toPath(), sb.toString().getBytes(Charset.defaultCharset()));
-            try {
-                Files.move(tmp.toPath(), target.toPath(), StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.ATOMIC_MOVE);
-            } catch (AtomicMoveNotSupportedException ex) {
-                Files.move(tmp.toPath(), target.toPath(), StandardCopyOption.REPLACE_EXISTING);
-            }
+            // 否则中文建筑名会乱码。文件 I/O 交给异步线程，避免卡服务端 tick。
+            AsyncFileWriter.write(target, sb.toString(), Charset.defaultCharset());
         } catch (Exception e) {
             StackTraceElement element = e.getStackTrace()[0];
             ModSimLoader.log.error("建筑保存，出错了：" + e.getMessage() + "行数：" + element.getLineNumber());
-            if (tmp.exists()) {
-                tmp.delete();
-            }
         }
     }
     /**
@@ -202,6 +194,8 @@ public class Building {
                         this.controlXYZ = V3.fromString(value);
                     } else if (line.contains("lpos")) {
                         this.livingXYZ = V3.fromString(value);
+                    } else if (line.contains("bed|")) {
+                        this.bed = V3.fromString(value).toBlockPos();
                     } else {
                         String[] folk;
                         //结构
@@ -448,9 +442,8 @@ public class Building {
         new DimensionManager();
         ModSimLoader.buildings.remove(this);
         File logFile = new File(ModSimLoader.getSavesDataFolder() + File.separator + "buildings" + File.separator + uid + ".sk2");
-        if(logFile.delete()){
-            logFile.deleteOnExit();
-        }
+        // P15(S1): 与异步保存共用队列，删除一定排在旧保存之后。
+        AsyncFileWriter.delete(logFile);
     }
 
     /**

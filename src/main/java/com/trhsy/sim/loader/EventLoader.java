@@ -4,6 +4,7 @@ import com.trhsy.sim.ModSim;
 import com.trhsy.sim.entity.EntityNpc;
 import com.trhsy.sim.network.client.PacketUpdateMoney;
 import com.trhsy.sim.npcCode.NpcData;
+import com.trhsy.sim.util.AsyncFileWriter;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.BufferBuilder;
 import net.minecraft.client.renderer.Tessellator;
@@ -20,6 +21,7 @@ import net.minecraftforge.client.event.RenderWorldLastEvent;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.world.WorldEvent;
 import net.minecraftforge.fml.common.FMLCommonHandler;
+import net.minecraftforge.fml.common.event.FMLServerStoppingEvent;
 import net.minecraftforge.fml.common.eventhandler.EventBus;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.PlayerEvent;
@@ -212,6 +214,12 @@ public class EventLoader {
             return;
         }
         SimmodeStart.simModSave(world);
+    }
+
+    /** P15(S1): 服务器关闭前等待异步保存队列落盘。 */
+    @SubscribeEvent
+    public void serverStopping(FMLServerStoppingEvent event) {
+        AsyncFileWriter.flush(10000L);
     }
 
     /**

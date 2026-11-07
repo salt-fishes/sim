@@ -102,6 +102,14 @@ public class JobTaskTerrain extends JobTask {
             }
             CopyOnWriteArrayList blockIDs;
             if (this.terrainType != null) {
+                // P15(S1): 同一位置所在区块卸载后不要继续写方块，直接跳过。
+                if (this.closestBlocks != null && !this.closestBlocks.isEmpty()) {
+                    V3 first = this.closestBlocks.get(0);
+                    if (!this.job.jobWorld.isBlockLoaded(new BlockPos(first.x, first.y, first.z))) {
+                        this.closestBlocks.remove(0);
+                        return;
+                    }
+                }
                 switch (this.terrainType.terrainType) {
                     case "1":
                         if (this.stage == 0) {
@@ -146,7 +154,7 @@ public class JobTaskTerrain extends JobTask {
 
                             //游戏模式是正常模式
                             if (ModSimLoader.gamemode != 1) {
-                                if ((float) (now - this.timeSinceLastBlockPlace) > 1000.0F - 100.0F * this.folk.skillBuilding) {
+                                if (this.placeDelayElapsed(now)) {
                                     now = System.currentTimeMillis();
                                     ////上次时间为当前时间
                                     this.timeSinceLastBlockPlace = now;
@@ -261,7 +269,7 @@ public class JobTaskTerrain extends JobTask {
                                         //this.completed = true;
                                         return;
                                     }
-                                    if ((float) (now - this.timeSinceLastBlockPlace) > 1000.0F - 100.0F * this.folk.skillBuilding) {
+                                    if (this.placeDelayElapsed(now)) {
                                         now = System.currentTimeMillis();
                                         ////上次时间为当前时间
                                         this.timeSinceLastBlockPlace = now;
@@ -354,7 +362,7 @@ public class JobTaskTerrain extends JobTask {
                             //是否是创造模式
                             if (ModSimLoader.gamemode != 1) {
 
-                                if ((float) (now - this.timeSinceLastBlockPlace) > 1000.0F - 100.0F * this.folk.skillBuilding) {
+                                if (this.placeDelayElapsed(now)) {
                                     now = System.currentTimeMillis();
                                     //上次时间为当前时间
                                     this.timeSinceLastBlockPlace = now;
@@ -461,7 +469,7 @@ public class JobTaskTerrain extends JobTask {
 //当前时间
                             Long now = System.currentTimeMillis();
                             if (ModSimLoader.gamemode != 1) {
-                                if ((float) (now - this.timeSinceLastBlockPlace) > 1000.0F - 100.0F * this.folk.skillBuilding) {
+                                if (this.placeDelayElapsed(now)) {
                                     now = System.currentTimeMillis();
                                     //上次时间为当前时间
                                     this.timeSinceLastBlockPlace = now;
@@ -551,7 +559,7 @@ public class JobTaskTerrain extends JobTask {
                             //当前时间
                             Long now = System.currentTimeMillis();
                             if (ModSimLoader.gamemode != 1) {
-                                if ((float) (now - this.timeSinceLastBlockPlace) > 1000.0F - 100.0F * this.folk.skillBuilding) {
+                                if (this.placeDelayElapsed(now)) {
                                     now = System.currentTimeMillis();
                                     //上次时间为当前时间
                                     this.timeSinceLastBlockPlace = now;
@@ -649,7 +657,7 @@ public class JobTaskTerrain extends JobTask {
                             //当前时间
                             Long now = System.currentTimeMillis();
                             if (ModSimLoader.gamemode != 1) {
-                                if ((float) (now - this.timeSinceLastBlockPlace) > 1000.0F - 100.0F * this.folk.skillBuilding) {
+                                if (this.placeDelayElapsed(now)) {
                                     now = System.currentTimeMillis();
                                     //上次时间为当前时间
                                     this.timeSinceLastBlockPlace = now;
@@ -666,7 +674,7 @@ public class JobTaskTerrain extends JobTask {
                                     } else {
                                         Block idBelow = this.job.jobWorld.getBlockState(new BlockPos(v6.x, v6.y - 1, v6.z)).getBlock();
                                         //方块不是空 不是冰 不是水 不是雪
-                                        if (idBelow != null && idBelow != Blocks.AIR && idBelow != Blocks.ICE && idBelow != Blocks.WATER && idBelow != Blocks.FLOWING_WATER && idBelow != Blocks.SNOW && this.job.jobWorld.isRemote) {
+                                        if (idBelow != null && idBelow != Blocks.AIR && idBelow != Blocks.ICE && idBelow != Blocks.WATER && idBelow != Blocks.FLOWING_WATER && idBelow != Blocks.SNOW && !this.job.jobWorld.isRemote) {
                                             BlockPos blockPos6_1 = new BlockPos(v6.x, v6.y, v6.z);
                                             //雪
                                             this.job.jobWorld.setBlockState(blockPos6_1, Blocks.SNOW.getDefaultState(), 3);
@@ -695,7 +703,7 @@ public class JobTaskTerrain extends JobTask {
                                     } else {
                                         Block idBelow = this.job.jobWorld.getBlockState(new BlockPos(v6.x, v6.y - 1, v6.z)).getBlock();
                                         //方块不是空 不是冰 不是水 不是雪
-                                        if (idBelow != null && idBelow != Blocks.AIR && idBelow != Blocks.ICE && idBelow != Blocks.WATER && idBelow != Blocks.FLOWING_WATER && idBelow != Blocks.SNOW && this.job.jobWorld.isRemote) {
+                                        if (idBelow != null && idBelow != Blocks.AIR && idBelow != Blocks.ICE && idBelow != Blocks.WATER && idBelow != Blocks.FLOWING_WATER && idBelow != Blocks.SNOW && !this.job.jobWorld.isRemote) {
                                             BlockPos blockPos6_1 = new BlockPos(v6.x, v6.y, v6.z);
                                             //雪
                                             this.job.jobWorld.setBlockState(blockPos6_1, Blocks.SNOW.getDefaultState(), 3);
@@ -721,7 +729,7 @@ public class JobTaskTerrain extends JobTask {
                             this.closestBlocks = null;
                             this.setClosestBlocksOfType(constructorPos, blockIDs, 30, false, false, false);
                             this.totalBlockCount = this.closestBlocks.size();
-                            this.stage = 0;
+                            this.stage = 1;
                         }
                         if (this.totalBlockCount == 0) {
                             //没有什么要地球化的！
@@ -740,7 +748,6 @@ public class JobTaskTerrain extends JobTask {
                             //开始地形规划
                             this.folk.status = new TextComponentTranslation("container.sim.job.terra.farmer.process",new Object[0]).getUnformattedText();
 
-
                             //for (int i = 0; i < this.closestBlocks.size(); i++) {
                             //计算规划的百分比
                             Double x7 = (double) this.totalBlockCount;
@@ -750,11 +757,13 @@ public class JobTaskTerrain extends JobTask {
                             //环境改造 10% 完成
                             this.folk.status = new TextComponentTranslation("container.sim.job.terra.farmer.Terraforming",new Object[0]).getUnformattedText() + "- " + percent7 + " % " + new TextComponentTranslation("container.sim.job.terra.farmer.complete",new Object[0]).getUnformattedText();
                             V3 v7 = (V3) this.closestBlocks.get(0);
-                            BlockPos blockPos = new BlockPos(v7.x, v7.y-1, v7.z);
+                            // P15(S1): 扫描到的是熔岩本身，湿润应把熔岩变成黑曜石；
+                            // 旧代码写到了 y-1，熔岩还在，白吞一个水桶。
+                            BlockPos blockPos = new BlockPos(v7.x, v7.y, v7.z);
                             //当前时间
                             Long now = System.currentTimeMillis();
                             if (ModSimLoader.gamemode != 1) {
-                                if ((float) (now - this.timeSinceLastBlockPlace) > 1000.0F - 100.0F * this.folk.skillBuilding) {
+                                if (this.placeDelayElapsed(now)) {
                                     now = System.currentTimeMillis();
                                     //上次时间为当前时间
                                     this.timeSinceLastBlockPlace = now;
@@ -785,6 +794,8 @@ public class JobTaskTerrain extends JobTask {
 //                        this.job.jobWorld.markBlockForUpdate(blockPos);
                                     if (ModSimLoader.gamemode != 1) {
                                         ModSimLoader.money = (float) ((double) ModSimLoader.money - 0.002D);
+                                        // P15(S1): 用完水桶把空桶还回工作箱，不能凭空吞掉。
+                                        this.job.placeInJobChest(new ItemStack(Items.BUCKET, 1));
                                     }
                                 } else {
                                     return;
@@ -843,11 +854,10 @@ public class JobTaskTerrain extends JobTask {
                             this.folk.status = new TextComponentTranslation("container.sim.job.terra.farmer.Terraforming",new Object[0]).getUnformattedText() + "- " + percent8 + " % " + new TextComponentTranslation("container.sim.job.terra.farmer.complete",new Object[0]).getUnformattedText();
                             V3 v8 = (V3) this.closestBlocks.get(0);
                             BlockPos blockPos8_1 = new BlockPos(v8.x, v8.y, v8.z);
-                            this.job.jobWorld.setBlockState(blockPos8_1, Blocks.AIR.getDefaultState(), 3);
                             //当前时间
                             Long now = System.currentTimeMillis();
                             if (ModSimLoader.gamemode != 1) {
-                                if ((float) (now - this.timeSinceLastBlockPlace) > 1000.0F - 100.0F * this.folk.skillBuilding) {
+                                if (this.placeDelayElapsed(now)) {
                                     now = System.currentTimeMillis();
                                     //上次时间为当前时间
                                     this.timeSinceLastBlockPlace = now;
@@ -874,6 +884,7 @@ public class JobTaskTerrain extends JobTask {
                                         return;
                                     }
                                     ModSimLoader.money = (float) ((double) ModSimLoader.money - 0.002D);
+                                    this.job.jobWorld.setBlockState(blockPos8_1, Blocks.AIR.getDefaultState(), 3);
                                     this.job.placeInJobChest(new ItemStack(Items.LAVA_BUCKET, 1));
                                 } else {
                                     return;
@@ -882,6 +893,7 @@ public class JobTaskTerrain extends JobTask {
                                     now = System.currentTimeMillis();
                                     //上次时间为当前时间
                                     this.timeSinceLastBlockPlace = now;
+                                    this.job.jobWorld.setBlockState(blockPos8_1, Blocks.AIR.getDefaultState(), 3);
                                     this.job.placeInJobChest(new ItemStack(Items.LAVA_BUCKET, 1));
 
                             }
@@ -931,7 +943,7 @@ public class JobTaskTerrain extends JobTask {
                             V3 v9 = (V3) this.closestBlocks.get(0);
                             BlockPos blockPo9_1 = new BlockPos(v9.x, v9.y, v9.z);
                             if (ModSimLoader.gamemode != 1) {
-                                if ((float) (now - this.timeSinceLastBlockPlace) > 1000.0F - 100.0F * this.folk.skillBuilding) {
+                                if (this.placeDelayElapsed(now)) {
                                     now = System.currentTimeMillis();
                                     //上次时间为当前时间
                                     this.timeSinceLastBlockPlace = now;
@@ -946,7 +958,7 @@ public class JobTaskTerrain extends JobTask {
                                     return;
                                 }
                             } else {
-                                if ((float) (now - this.timeSinceLastBlockPlace) > 1000.0F - 100.0F * 10) {
+                                if (this.placeDelayElapsed(now)) {
                                     now = System.currentTimeMillis();
                                     //上次时间为当前时间
                                     this.timeSinceLastBlockPlace = now;
@@ -1001,6 +1013,11 @@ public class JobTaskTerrain extends JobTask {
         }
     }
 
+    private boolean placeDelayElapsed(long now) {
+        long interval = Math.max(200L, 1000L - (long) (80L * Math.min(10.0F, Math.max(0.0F, this.folk.skillBuilding))));
+        return now - this.timeSinceLastBlockPlace > interval;
+    }
+
     /**
      * @return void
      * @Author fan
@@ -1010,73 +1027,36 @@ public class JobTaskTerrain extends JobTask {
      **/
     private void setClosestBlocksOfType(BlockPos constructorPos, List<Block> blockIDs, int distanceLimit, boolean needsToSeeSky, boolean scanDownwards, boolean oneLayerOnly) {
         try {
-            //创建集合
-            HashMap hm = new HashMap();
-            //是否跳过
-            boolean skip = false;
-            //赋值距离限制，半径
-            int fsDistanceLimit = distanceLimit;
-            if (oneLayerOnly) {
-                fsDistanceLimit = 1;
+            World world = this.job.jobWorld;
+            if (world == null || constructorPos == null) {
+                return;
             }
-            //循环上下半径 高
-            for (int i = 0; i < fsDistanceLimit; i++) {
-                //循环宽，平面的
-                for (int j = 1; j < distanceLimit; j++) {
-                    for (int xo = -j; xo <= j; xo++) {
-                        for (int zo = -j; zo <= j; zo++) {
-                            int sx = (int) (constructorPos.getX() + xo);
-                            int sy;
-                            //是否向下扫描
-                            if (scanDownwards) {
-                                sy = (int) (constructorPos.getY() - i);
-                            } else {
-                                sy = (int) (constructorPos.getY() + i);
-                            }
-                            int sz = (int) (constructorPos.getZ() + zo);
-                            skip = false;
-                            //获取方块
-                            for (int m = 0; m < blockIDs.size(); m++) {
-                                Block blockID = (Block) blockIDs.get(m);
-                                if (this.job.jobWorld == null) {
-                                    //this.completed = true;
-                                    return;
-                                }
-                                BlockPos pos = new BlockPos(sx, sy, sz);
-                                //获取当前世界的方块
-                                Block blockInWorld = this.job.jobWorld.getBlockState(pos).getBlock();
-                                if (blockInWorld == blockID) {
-                                    //如果向上扫描
-                                    if (needsToSeeSky) {
-                                        //方块是空的
-                                        boolean canSeeSky;
-                                        pos = new BlockPos(sx, sy + 1, sz);
-                                        Block block = this.job.jobWorld.getBlockState(pos).getBlock();
-                                        if (block == null || Blocks.AIR == block) {
-                                            canSeeSky = true;
-                                        } else {
-                                            canSeeSky = false;
-                                        }
-
-                                        if (canSeeSky) {
-                                            skip = false;
-                                        } else {
-                                            skip = true;
-                                        }
-                                    }
-                                    if (!skip) {
-                                        V3 v = new V3((double) sx, (double) sy, (double) sz);
-                                        if (!hm.containsKey(v.toString())) {
-                                            hm.put(v.toString(), v);
-                                        }
-                                    }
-                                }
-                            }
+            HashMap<String, V3> found = new HashMap<>();
+            int radius = Math.max(1, distanceLimit - 1);
+            int layers = oneLayerOnly ? 1 : Math.max(1, distanceLimit);
+            // P15(S1): 一次遍历整个方形区域，不再按 j 重复扫描内圈（旧实现约多扫 n 倍）；
+            // 同时跳过未加载区块，避免地形师把周围区块全部加载。
+            for (int layer = 0; layer < layers; layer++) {
+                int y = scanDownwards ? constructorPos.getY() - layer : constructorPos.getY() + layer;
+                for (int xo = -radius; xo <= radius; xo++) {
+                    for (int zo = -radius; zo <= radius; zo++) {
+                        BlockPos pos = new BlockPos(constructorPos.getX() + xo, y, constructorPos.getZ() + zo);
+                        if (!world.isBlockLoaded(pos)) {
+                            continue;
                         }
+                        Block block = world.getBlockState(pos).getBlock();
+                        if (!blockIDs.contains(block)) {
+                            continue;
+                        }
+                        if (needsToSeeSky && !world.isAirBlock(pos.up())) {
+                            continue;
+                        }
+                        V3 v = new V3(pos.getX(), pos.getY(), pos.getZ());
+                        found.put(v.toString(), v);
                     }
                 }
             }
-            this.closestBlocks = new CopyOnWriteArrayList<V3>(hm.values());
+            this.closestBlocks = new CopyOnWriteArrayList<>(found.values());
         } catch (Exception e) {
             StackTraceElement element = e.getStackTrace()[0];
             ModSimLoader.log.error("setClosestBlocksOfType出错了：" + e.getMessage() + "行数：" + element.getLineNumber());
@@ -1114,73 +1094,42 @@ public class JobTaskTerrain extends JobTask {
 
     private void getBlocksNoOfType(BlockPos constructorPos, List<Block> blockIDs, int distanceLimit, boolean needsToSeeSky, boolean scanDownwards, boolean oneLayerOnly) {
         try {
-            //创建集合
-            HashMap hm = new HashMap();
-            //是否跳过
-            boolean skip = false;
-            //赋值距离限制，半径
-            int fsDistanceLimit = distanceLimit;
-            if (oneLayerOnly) {
-                fsDistanceLimit = 1;
+            World world = this.job.jobWorld;
+            if (world == null || constructorPos == null) {
+                return;
             }
-            //循环上下半径 高
-            for (int i = 0; i < fsDistanceLimit; i++) {
-                //循环宽，平面的
-                for (int j = 1; j < distanceLimit; j++) {
-                    for (int xo = -j; xo <= j; xo++) {
-                        for (int zo = -j; zo <= j; zo++) {
-                            int sx = (int) (constructorPos.getX() + xo);
-                            int sy;
-                            //是否向下扫描
-                            if (scanDownwards) {
-                                sy = (int) (constructorPos.getY() - i);
-                            } else {
-                                sy = (int) (constructorPos.getY() + i);
-                            }
-                            int sz = (int) (constructorPos.getZ() + zo);
-                            skip = false;
-                            if (this.job.jobWorld == null) {
-                                //this.completed = true;
-                                return;
-                            }
-                            BlockPos pos = new BlockPos(sx, sy, sz);
-                            //获取当前世界的方块
-                            Block blockInWorld = this.job.jobWorld.getBlockState(pos).getBlock();
-                            //获取方块
-
-                            if (!blockIDs.contains(blockInWorld)) {
-                                //如果向上扫描
-                                if (needsToSeeSky) {
-                                    //方块是空的
-                                    boolean canSeeSky;
-                                    pos = new BlockPos(sx, sy + 1, sz);
-                                    Block block = this.job.jobWorld.getBlockState(pos).getBlock();
-                                    if (block == null || Blocks.AIR == block) {
-                                        canSeeSky = true;
-                                    } else {
-                                        canSeeSky = false;
-                                    }
-                                    if (canSeeSky) {
-                                        skip = false;
-                                    } else {
-                                        skip = true;
-                                    }
-                                }
-                                if (!skip) {
-                                    V3 v = new V3(sx, sy, sz);
-                                    if (!hm.containsKey(v.toString())) {
-                                        hm.put(v.toString(), v);
-                                    }
-                                }
-                            }
+            HashMap<String, V3> found = new HashMap<>();
+            int radius = Math.max(1, distanceLimit - 1);
+            int layers = oneLayerOnly ? 1 : Math.max(1, distanceLimit);
+            // P15(S1): 与 setClosestBlocksOfType 相同的单次方形遍历；
+            // 额外跳过 tile entity（箱子/机器等），避免平整地形时误删容器。
+            for (int layer = 0; layer < layers; layer++) {
+                int y = scanDownwards ? constructorPos.getY() - layer : constructorPos.getY() + layer;
+                for (int xo = -radius; xo <= radius; xo++) {
+                    for (int zo = -radius; zo <= radius; zo++) {
+                        BlockPos pos = new BlockPos(constructorPos.getX() + xo, y, constructorPos.getZ() + zo);
+                        if (!world.isBlockLoaded(pos)) {
+                            continue;
                         }
+                        Block block = world.getBlockState(pos).getBlock();
+                        if (blockIDs.contains(block)) {
+                            continue;
+                        }
+                        if (needsToSeeSky && !world.isAirBlock(pos.up())) {
+                            continue;
+                        }
+                        if (world.getTileEntity(pos) != null) {
+                            continue;
+                        }
+                        V3 v = new V3(pos.getX(), pos.getY(), pos.getZ());
+                        found.put(v.toString(), v);
                     }
                 }
             }
-            this.closestBlocks = new CopyOnWriteArrayList<V3>(hm.values());
+            this.closestBlocks = new CopyOnWriteArrayList<>(found.values());
         } catch (Exception e) {
             StackTraceElement element = e.getStackTrace()[0];
-            ModSimLoader.log.error("setClosestBlocksOfType出错了：" + e.getMessage() + "行数：" + element.getLineNumber());
+            ModSimLoader.log.error("getBlocksNoOfType出错了：" + e.getMessage() + "行数：" + element.getLineNumber());
         }
     }
 

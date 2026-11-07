@@ -108,6 +108,8 @@ public class JobBuilder extends Job {
     int missingCheck = 0;
     //特除的空气方块
     public List<V3> blockSpecial = new CopyOnWriteArrayList();
+    // P15(S1): 记录第一张床的位置，建筑完成后写入 Building.bed，供 TaskSleep 使用。
+    private BlockPos bedPos = null;
     private Boolean isOk= false;
     //工作阶段
     public int builder_stage = 0;
@@ -562,6 +564,9 @@ public class JobBuilder extends Job {
                             if (this.folk.entity.world.isBlockLoaded(headPos)) {
                                 this.folk.entity.world.setBlockState(headPos, iblockstate2, 11);
                             }
+                            if (this.bedPos == null) {
+                                this.bedPos = newBP.toImmutable();
+                            }
                         }
                     }
 
@@ -1002,6 +1007,10 @@ public class JobBuilder extends Job {
             build.buildingType = this.blueprint.buildingType;
             //建筑物的结构
             build.structure = new CopyOnWriteArrayList<V3>(this.placedBlocks);
+            // P15(S1): 床的位置要在结构完成后写入，TaskSleep 才能优先睡床。
+            if (this.bedPos != null) {
+                build.bed = this.bedPos;
+            }
             //工作类型
             build.jobType = this.blueprint.jobType;
             //建筑作者

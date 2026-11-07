@@ -5,6 +5,7 @@ import com.trhsy.sim.npcCode.NpcData;
 import com.trhsy.sim.npcCode.block.FarmBox;
 import com.trhsy.sim.npcCode.enums.FarmType;
 import com.trhsy.sim.npcCode.job.Job;
+import com.trhsy.sim.util.ModCropCompat;
 import net.minecraft.block.*;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.init.Blocks;
@@ -447,26 +448,19 @@ public class JobTaskFarmerHarvest extends JobTask {
                             this.harvestCheck = System.currentTimeMillis();
                             return;
                         }
-                    } else {
-                        BlockCrops crop = (BlockCrops) b;
-                        if (crop.isMaxAge(iBlockState)) {
-                            this.folk.setStatus(new TextComponentTranslation("container.sim.job.crop.farmer.Harvesting",new Object[0]).getUnformattedText());
-                            //获得方块
-                            Block bCrop = this.folk.entity.world.getBlockState(bp).getBlock();
-                            //摧毁方块
-                            drops = bCrop.getDrops(this.folk.entity.world, bp, this.folk.entity.world.getBlockState(bp), 1);
-                            drops.forEach((drop) -> {
-                                //放到工作箱
-                                this.job.placeInJobChest(drop);
-                            });
-                            this.folk.entity.setActiveHand(EnumHand.MAIN_HAND);
-                            this.folk.entity.swingArm(EnumHand.MAIN_HAND);
-                            this.folk.entity.world.destroyBlock(bp, false);
-                            //this.folk.entity.world.setBlockToAir(bp);
-                            this.addFarmingLevel();
-                            this.harvestCheck = System.currentTimeMillis();
-                            return;
-                        }
+                    } else if (ModCropCompat.isMature(this.folk.entity.world, bp, iBlockState)) {
+                        // P15(S1): 非 BlockCrops 的模组作物按 metadata 判断成熟；
+                        // Pam's 的 BlockPamCrop 继承 BlockCrops，会在上面的分支处理。
+                        this.folk.setStatus(new TextComponentTranslation("container.sim.job.crop.farmer.Harvesting", new Object[0]).getUnformattedText());
+                        Block bCrop = this.folk.entity.world.getBlockState(bp).getBlock();
+                        drops = bCrop.getDrops(this.folk.entity.world, bp, iBlockState, 1);
+                        drops.forEach((drop) -> this.job.placeInJobChest(drop));
+                        this.folk.entity.setActiveHand(EnumHand.MAIN_HAND);
+                        this.folk.entity.swingArm(EnumHand.MAIN_HAND);
+                        this.folk.entity.world.destroyBlock(bp, false);
+                        this.addFarmingLevel();
+                        this.harvestCheck = System.currentTimeMillis();
+                        return;
                     }
                 }
             }

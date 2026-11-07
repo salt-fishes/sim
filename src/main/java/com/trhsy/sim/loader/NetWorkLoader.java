@@ -58,11 +58,7 @@ public class NetWorkLoader {
         registerMessage(PacketSellStuff.Handler.class,PacketSellStuff.class,Side.SERVER);
         //生成npc
         registerMessage(PacketNewFolk.Handler.class,PacketNewFolk.class,Side.SERVER);
-        //npc 库存
-        registerMessage(PacketOpenFolkInventoryGui.Handler.class,PacketOpenFolkInventoryGui.class,Side.SERVER);
 
-        registerMessage(PacketSyncNpcData.Handler.class,PacketSyncNpcData.class,Side.SERVER);
-        registerMessage(PacketSyncBuilding.Handler.class,PacketSyncBuilding.class,Side.SERVER);
 
 
     }
@@ -91,8 +87,6 @@ public class NetWorkLoader {
         registerMessage(PacketOpenConstructorGui.Handler.class,PacketOpenConstructorGui.class,Side.CLIENT);
         //请求蓝图
         registerMessage(PacketSendBuildingRequirements.Handler.class,PacketSendBuildingRequirements.class,Side.CLIENT);
-        //请求规划
-        registerMessage(PacketSendTerrainType.Handler.class,PacketSendTerrainType.class,Side.CLIENT);
         //请求规划
         registerMessage(PacketSendTerrainTypeRequitrements.Handler.class,PacketSendTerrainTypeRequitrements.class,Side.CLIENT);
         //打开控制箱

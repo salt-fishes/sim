@@ -3,6 +3,7 @@ package com.trhsy.sim.network.server;
 import com.trhsy.sim.loader.ModSimLoader;
 import com.trhsy.sim.npcCode.block.MineBox;
 import io.netty.buffer.ByteBuf;
+import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.util.EnumFacing;
 import net.minecraftforge.fml.common.FMLCommonHandler;
 import net.minecraftforge.fml.common.network.ByteBufUtils;
@@ -68,18 +69,28 @@ public class PacketUpdateMineBox implements IMessage {
         }
 
         private void handle(PacketUpdateMineBox message, MessageContext ctx) {
-            Iterator var3 = ModSimLoader.mines.iterator();
-
-            while(var3.hasNext()) {
-                MineBox mine = (MineBox)var3.next();
+            EntityPlayerMP player = ctx.getServerHandler().player;
+            if (player == null || message.facing == null
+                    || message.x < 0 || message.x > 64 || message.z < 0 || message.z > 64) {
+                return;
+            }
+            Iterator iterator = ModSimLoader.mines.iterator();
+            while (iterator.hasNext()) {
+                MineBox mine = (MineBox) iterator.next();
                 if (mine.ID.equals(message.id)) {
+                    // P15(S1): 服务端校验维度+距离。
+                    if (mine.loc == null || mine.loc.dimension != player.world.provider.getDimension()
+                            || player.getDistance(mine.loc.x, mine.loc.y, mine.loc.z) > 16.0D) {
+                        ModSimLoader.log.warn("玩家 {} 距离矿场过远，拒绝修改", player.getName());
+                        return;
+                    }
                     mine.x = message.x;
                     mine.z = message.z;
                     mine.facing = message.facing;
+                    mine.saveMine();
                     break;
                 }
             }
-
         }
     }
 }

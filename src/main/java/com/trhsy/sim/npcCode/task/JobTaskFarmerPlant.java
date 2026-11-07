@@ -6,6 +6,7 @@ import com.trhsy.sim.npcCode.block.FarmBox;
 import com.trhsy.sim.npcCode.enums.FarmType;
 import com.trhsy.sim.npcCode.job.Job;
 import com.trhsy.sim.util.SeasonCompat;
+import com.trhsy.sim.util.ModCropCompat;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockBush;
 import net.minecraft.block.BlockCrops;
@@ -22,7 +23,6 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.text.TextComponentTranslation;
 import net.minecraftforge.common.IPlantable;
 
-import java.lang.reflect.Field;
 import java.util.List;
 
 /**
@@ -188,7 +188,8 @@ public class JobTaskFarmerPlant extends JobTask {
                                         if (slot != null) {
                                             Item item = slot.getItem();
                                             String unlocalizedName = item.getUnlocalizedName();
-                                            if (item instanceof IPlantable || unlocalizedName.contains("reeds")) {
+                                            if (item instanceof IPlantable || unlocalizedName.contains("reeds")
+                                            || unlocalizedName.contains("cactus") || unlocalizedName.contains("dye")) {
                                                 seed = slot;
                                                 break;
                                             }
@@ -476,7 +477,8 @@ public class JobTaskFarmerPlant extends JobTask {
                                 if (seeds == null) {
                                     Item item = slot.getItem();
                                     String unlocalizedName = item.getUnlocalizedName();
-                                    if (item instanceof IPlantable || unlocalizedName.contains("reeds")) {
+                                    if (item instanceof IPlantable || unlocalizedName.contains("reeds")
+                                            || unlocalizedName.contains("cactus") || unlocalizedName.contains("dye")) {
                                         seed = slot;
                                         break;
                                     }
@@ -503,44 +505,12 @@ public class JobTaskFarmerPlant extends JobTask {
                         return;
                     }
                     try {
-                        Block crop = null;
-                        //种子为可种植
+                        // P15(S1): 统一用 IPlantable/名称兜底解析作物方块，
+                        // 不再反射 ItemSeeds 的私有 crops 字段；Pam's 等模组种子也能种。
                         Item item = seed.getItem();
-                        String uName = item.getUnlocalizedName();
-                        //甘蔗 reeds
-                        if (uName.contains("reeds")) {
-                            crop = Blocks.REEDS;
-                            //小麦 seeds
-                        } else if (uName.equals("item.seeds")) {
-                            crop = Blocks.WHEAT;
-                            //西瓜
-                        } else if (uName.equals("item.seeds_melon")) {
-                            crop = Blocks.MELON_STEM;
-                            //南瓜
-                        } else if (uName.equals("item.seeds_pumpkin")) {
-                            crop = Blocks.PUMPKIN_STEM;
-                            //胡萝卜
-                        } else if (uName.equals("item.carrots")) {
-                            crop = Blocks.CARROTS;
-                            //土豆
-                        } else if (uName.equals("item.potato")) {
-                            crop = Blocks.POTATOES;
-                            //甜菜根
-                        } else if (uName.equals("item.beetroot_seeds")) {
-                            crop = Blocks.BEETROOTS;
-                            //仙人掌
-                        } else if (uName.equals("item.cactus")) {
-                            crop = Blocks.CACTUS;
-                            //可可豆
-                        } else if (uName.equals("item.dye")) {
-                            crop = Blocks.COCOA;
-                        } else {
-                            IPlantable plantable = (IPlantable) item;
-                            Field cropsField = plantable.getClass().getDeclaredField("crops");
-//                    //设置成可访问
-                            cropsField.setAccessible(true);
-//                    //获取作物方块
-                            crop = (Block) cropsField.get(plantable);
+                        Block crop = ModCropCompat.resolveCropBlock(seed, this.folk.entity.world, bp.down());
+                        if (crop == null) {
+                            continue;
                         }
 
 //                    //获取种植下方的物品是否是 农田等可种植区域
@@ -558,7 +528,8 @@ public class JobTaskFarmerPlant extends JobTask {
                         if (plantable == null) {
                             continue;
                         }
-                        boolean fs_canSustainPlant = soil.getBlock().canSustainPlant(soil, this.folk.entity.world, bp.down(), EnumFacing.UP, plantable);
+                        boolean fs_canSustainPlant = soil.getBlock().canSustainPlant(soil, this.folk.entity.world, bp.down(), EnumFacing.UP, plantable)
+                                || ModCropCompat.canPlantModCropOn(soil.getBlock(), crop);
                         // P11(S1): 普通作物需要 9 级光照；甘蔗/仙人掌/可可豆不受这条限制。
                         boolean lightOk = crop == Blocks.REEDS || crop == Blocks.CACTUS || crop == Blocks.COCOA
                                 || this.folk.entity.world.getLightFromNeighbors(bp) >= 9;

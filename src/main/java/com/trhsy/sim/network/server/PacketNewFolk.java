@@ -3,8 +3,8 @@ package com.trhsy.sim.network.server;
 import com.trhsy.sim.loader.ModSimLoader;
 import com.trhsy.sim.npcCode.NpcData;
 import io.netty.buffer.ByteBuf;
-import net.minecraft.client.Minecraft;
 import net.minecraft.entity.player.EntityPlayerMP;
+import net.minecraft.server.MinecraftServer;
 import net.minecraft.world.World;
 import net.minecraftforge.fml.common.FMLCommonHandler;
 import net.minecraftforge.fml.common.network.ByteBufUtils;
@@ -69,9 +69,18 @@ public class PacketNewFolk implements IMessage {
             }
 //            Minecraft mc = Minecraft.getMinecraft();
 //            World world = mc.world;
-            if(world.isRemote){
-                NpcData fd = new NpcData(world, message.fromCommand);
+            // P15(S1): 旧代码只在 world.isRemote 时生成，服务端永远不执行（逻辑反了）。
+            // 该包目前没有调用方，但保留时必须是服务端生成 + 权限校验。
+            if (world.isRemote) {
+                return;
             }
+            MinecraftServer server = FMLCommonHandler.instance().getMinecraftServerInstance();
+            boolean singleplayer = server != null && server.isSinglePlayer();
+            if (!singleplayer && !player.canUseCommand(2, "sim")) {
+                ModSimLoader.log.warn("非 OP 玩家尝试生成 NPC，已拒绝: {}", player.getName());
+                return;
+            }
+            NpcData fd = new NpcData(world, message.fromCommand);
         }
     }
 }

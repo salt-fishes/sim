@@ -3,6 +3,7 @@ package com.trhsy.sim.gui.block;
 import com.trhsy.sim.loader.ModSimClientLoader;
 import com.trhsy.sim.loader.ModSimLoader;
 import com.trhsy.sim.npcCode.V3;
+import com.trhsy.sim.util.AsyncFileWriter;
 import net.minecraft.block.Block;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.client.gui.GuiButton;
@@ -11,9 +12,8 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.text.TextComponentTranslation;
 import net.minecraftforge.fml.common.FMLCommonHandler;
 
-import java.io.BufferedWriter;
 import java.io.File;
-import java.io.FileWriter;
+import java.nio.charset.Charset;
 import java.util.HashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 
@@ -252,15 +252,15 @@ public class GuiBlockMarker extends GuiScreen {
                     String f = String.valueOf(System.currentTimeMillis());
                     ltr = f.length();
                     f = f.substring(ltr - 6);
-                    FileWriter fstream = new FileWriter(ModSimLoader.getSimFolder() +File.separator+ "buildings_"+lang+"/other/My Build" + f + ".txt");
-                    BufferedWriter out = new BufferedWriter(fstream);
-                    out.write(ltrCountx + "x" + ftbCountx + "x" + layerLines.size() + "\r\n");
-                    out.write(keyString + "\r\n");
-
+                    // P15(S1): 蓝图内容先在内存拼好，再异步落盘；不再卡客户端渲染线程。
+                    StringBuilder blueprintText = new StringBuilder();
+                    blueprintText.append(ltrCountx).append('x').append(ftbCountx).append('x').append(layerLines.size()).append("\r\n");
+                    blueprintText.append(keyString).append("\r\n");
                     for (zzz = 0; zzz < layerLines.size(); ++zzz) {
-                        out.write(layerLines.get(zzz).toString() + "\r\n");
+                        blueprintText.append(layerLines.get(zzz).toString()).append("\r\n");
                     }
-                    out.close();
+                    File outFile = new File(ModSimLoader.getSimFolder() + File.separator + "buildings_" + lang + "/other/My Build" + f + ".txt");
+                    AsyncFileWriter.write(outFile, blueprintText.toString(), Charset.defaultCharset());
                     // P12(S2): 删掉客户端 GUI 线程的 Thread.sleep(500)，避免保存蓝图时卡渲染半秒。
                     String fs_15=new TextComponentTranslation("container.sim.Markers15",new Object[0]).getUnformattedText();
                     String fs_16=new TextComponentTranslation("container.sim.Markers16",new Object[0]).getUnformattedText();
