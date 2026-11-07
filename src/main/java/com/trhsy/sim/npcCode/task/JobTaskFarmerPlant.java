@@ -5,6 +5,7 @@ import com.trhsy.sim.npcCode.NpcData;
 import com.trhsy.sim.npcCode.block.FarmBox;
 import com.trhsy.sim.npcCode.enums.FarmType;
 import com.trhsy.sim.npcCode.job.Job;
+import com.trhsy.sim.util.SeasonCompat;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockBush;
 import net.minecraft.block.BlockCrops;
@@ -161,6 +162,12 @@ public class JobTaskFarmerPlant extends JobTask {
                     for (int x = 0; x < this.farm.x; ++x) {
                         boolean hasBlock = false;
                         BlockPos bp = new BlockPos(this.farm.getCorner().offset(this.farm.facing, x).offset(this.farm.facing.rotateY(), z));
+                        if (!this.folk.entity.world.isBlockLoaded(bp)) {
+                            continue;
+                        }
+                        if (SeasonCompat.isWinter(this.folk.entity.world) && this.folk.entity.world.canSeeSky(bp)) {
+                            continue;
+                        }
                         Block b = this.folk.entity.world.getBlockState(bp).getBlock();
                         Block b1 = this.folk.entity.world.getBlockState(bp.down()).getBlock();
                         //包含灌木 不是庄家
@@ -452,6 +459,10 @@ public class JobTaskFarmerPlant extends JobTask {
                     //获得角落
                     BlockPos bp = new BlockPos(this.farm.getCorner().offset(this.farm.facing, x).offset(this.farm.facing.rotateY(), z));
                     if (!this.folk.entity.world.isBlockLoaded(bp)) {
+                        continue;
+                    }
+                    // P13(S2): 冬季露天不种植；温室/室内仍可种。
+                    if (SeasonCompat.isWinter(this.folk.entity.world) && this.folk.entity.world.canSeeSky(bp)) {
                         continue;
                     }
 //                ItemStack seed = ItemStack.EMPTY;

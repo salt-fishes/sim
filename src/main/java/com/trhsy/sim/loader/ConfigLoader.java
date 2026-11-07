@@ -57,7 +57,7 @@ public class ConfigLoader {
 
     public static void load(FMLPreInitializationEvent event) {
         try {
-            configFile = new Configuration(event.getSuggestedConfigurationFile(), "1.12.2-1.0.9 Beta5");
+            configFile = new Configuration(event.getSuggestedConfigurationFile(), "1.12.2-1.0.9 Beta6");
             syncConfig();
         } catch (Exception e) {
             StackTraceElement element=e.getStackTrace()[0];ModSimLoader.log.error("load出错了：" + e.getMessage()+"行数："+element.getLineNumber());

@@ -12,6 +12,10 @@ import net.minecraft.world.World;
 import net.minecraftforge.common.DimensionManager;
 
 import java.io.*;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.AtomicMoveNotSupportedException;
+import java.nio.file.Files;
+import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -88,55 +92,59 @@ public class Building {
      * @return void
      **/
     public void saveBuilding() {
-        if (!this.markedForDeletion) {
-            new DimensionManager();
-            File buildingFolder = new File(ModSimLoader.getSavesDataFolder() + File.separator + "buildings");
-            if(!buildingFolder.exists()){
-                buildingFolder.mkdirs();
+        if (this.markedForDeletion || this.ID == null) {
+            return;
+        }
+        new DimensionManager();
+        File buildingFolder = new File(ModSimLoader.getSavesDataFolder() + File.separator + "buildings");
+        if (!buildingFolder.exists()) {
+            buildingFolder.mkdirs();
+        }
+        File target = new File(buildingFolder + File.separator + this.ID + ".sk2");
+        File tmp = new File(target.getAbsolutePath() + ".tmp");
+        try {
+            // P13(S1): 先写临时文件，再原子替换，避免自动存档中途崩溃留下半个建筑文件。
+            StringBuilder sb = new StringBuilder();
+            sb.append("id|").append(this.ID.toString()).append('\n');
+            sb.append("name|").append(this.buildingName).append('\n');
+            sb.append("type|").append(this.buildingType).append('\n');
+            sb.append("desc|").append(this.desc).append('\n');
+            sb.append("dim|").append(this.length).append(',').append(this.width).append(',').append(this.height).append('\n');
+            sb.append("dimension|").append(this.dimension).append('\n');
+            sb.append("rent|").append(this.rent).append('\n');
+            sb.append("jobtypes|").append(this.jobType).append('\n');
+            if (this.controlXYZ != null) {
+                sb.append("cpos|").append(this.controlXYZ.toString()).append('\n');
             }
-            BufferedWriter writer = null;
-
+            if (this.livingXYZ != null) {
+                sb.append("lpos|").append(this.livingXYZ.toString()).append('\n');
+            }
+            sb.append("blockspecial|");
+            for (V3 pos : this.blockSpecial) {
+                sb.append(pos.toStringByMeta()).append(';');
+            }
+            sb.append("\nstructure|");
+            for (V3 pos : this.structure) {
+                sb.append(pos.toString()).append(';');
+            }
+            sb.append("\noccupants|");
+            for (NpcData folk : this.occupants) {
+                if (folk != null) {
+                    sb.append(folk.ID).append(';');
+                }
+            }
+            Files.write(tmp.toPath(), sb.toString().getBytes(StandardCharsets.UTF_8));
             try {
-                File logFile = new File(buildingFolder + File.separator + this.ID + ".sk2");
-                writer = new BufferedWriter(new FileWriter(logFile));
-                writer.write("id|" + this.ID.toString() + "\n");
-                writer.write("name|" + this.buildingName + "\n");
-                writer.write("type|" + this.buildingType + "\n");
-                writer.write("desc|" + this.desc + "\n");
-                writer.write("dim|" + this.length + "," + this.width + "," + this.height + "\n");
-                writer.write("dimension|" + this.dimension + "\n");
-                writer.write("rent|" + this.rent + "\n");
-                writer.write("jobtypes|" + this.jobType + "\n");
-                writer.write("cpos|" + this.controlXYZ.toString() + "\n");
-                writer.write("lpos|" + this.livingXYZ.toString() + "\n");
-                writer.write("blockspecial|");
-                for (V3 pos :this.blockSpecial){
-                    writer.write(pos.toStringByMeta() + ";");
-                }
-                writer.write("\nstructure|");
-                for (V3 pos :this.structure){
-                    writer.write(pos.toString() + ";");
-                }
-
-                writer.write("\noccupants|");
-                for (NpcData folk:this.occupants){
-                    if (folk != null) {
-                        writer.write(folk.ID + ";");
-                    }
-                }
-            } catch (Exception var14) {
-                StackTraceElement element = var14.getStackTrace()[0];
-                ModSimLoader.log.error("建筑保存，出错了：" + var14.getMessage() + "行数：" + element.getLineNumber());
-            } finally {
-                try {
-                    writer.close();
-                } catch (Exception var13) {
-                    StackTraceElement element = var13.getStackTrace()[0];
-                    ModSimLoader.log.error("建筑保存，关闭BufferedWriter出错了：" + var13.getMessage() + "行数：" + element.getLineNumber());
-                }
-
+                Files.move(tmp.toPath(), target.toPath(), StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.ATOMIC_MOVE);
+            } catch (AtomicMoveNotSupportedException ex) {
+                Files.move(tmp.toPath(), target.toPath(), StandardCopyOption.REPLACE_EXISTING);
             }
-
+        } catch (Exception e) {
+            StackTraceElement element = e.getStackTrace()[0];
+            ModSimLoader.log.error("建筑保存，出错了：" + e.getMessage() + "行数：" + element.getLineNumber());
+            if (tmp.exists()) {
+                tmp.delete();
+            }
         }
     }
     /**

@@ -24,6 +24,7 @@ import net.minecraftforge.fml.relauncher.Side;
 
 import java.io.File;
 import java.nio.file.Files;
+import java.nio.file.StandardCopyOption;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
@@ -176,35 +177,29 @@ public class SimmodeStart {
         hasLoadedWorld = true;
     }
 
-    /** P1: 删除旧 NPC 与旧 settings 存档（不解析、不迁移）。 */
+    /** P12(S1): 旧档不再直接删除，先移到 legacy_backup_<时间> 目录，保留回滚可能。 */
     private static void deleteLegacySaves() {
         try {
             File sim = new File(ModSimLoader.getSavesDataFolder());
-            deleteRecursively(new File(sim, "npc"));
+            File npc = new File(sim, "npc");
             File settings = new File(sim, "settings.sk2");
-            if (settings.exists() && !settings.delete()) {
-                ModSimLoader.log.warn("旧 settings.sk2 删除失败: " + settings.getAbsolutePath());
+            if (!npc.exists() && !settings.exists()) {
+                return;
             }
-            ModSimLoader.log.info("旧存档（sim/npc、sim/settings.sk2）已删除");
+            File backup = new File(sim, "legacy_backup_" + System.currentTimeMillis());
+            if (!backup.exists() && !backup.mkdirs()) {
+                ModSimLoader.log.warn("无法创建旧档备份目录: {}", backup.getAbsolutePath());
+                return;
+            }
+            if (npc.exists()) {
+                Files.move(npc.toPath(), new File(backup, "npc").toPath(), StandardCopyOption.REPLACE_EXISTING);
+            }
+            if (settings.exists()) {
+                Files.move(settings.toPath(), new File(backup, "settings.sk2").toPath(), StandardCopyOption.REPLACE_EXISTING);
+            }
+            ModSimLoader.log.info("旧存档已备份到: {}", backup.getAbsolutePath());
         } catch (Exception e) {
-            ModSimLoader.log.error("删除旧存档失败: " + e.getMessage());
-        }
-    }
-
-    private static void deleteRecursively(File f) {
-        if (f == null || !f.exists()) {
-            return;
-        }
-        if (f.isDirectory()) {
-            File[] children = f.listFiles();
-            if (children != null) {
-                for (File c : children) {
-                    deleteRecursively(c);
-                }
-            }
-        }
-        if (!f.delete()) {
-            ModSimLoader.log.warn("无法删除: " + f.getAbsolutePath());
+            ModSimLoader.log.error("备份旧存档失败: " + e.getMessage());
         }
     }
 
