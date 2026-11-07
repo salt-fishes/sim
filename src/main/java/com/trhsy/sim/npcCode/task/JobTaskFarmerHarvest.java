@@ -66,15 +66,15 @@ public class JobTaskFarmerHarvest extends JobTask {
                     this.folk.setStatus(new TextComponentTranslation("container.sim.WAITINGFORCHEST",new Object[0]).getUnformattedText());
                     return;
                 }
-                boolean falg = false;
+                // P11(S1): 技能 10 时 1000 - 100*skill = 0，旧实现会每 tick 扫描/收割。
+                // 改成固定下限的毫秒冷却；创造模式再快一些，但也不低于 200ms。
+                long now = System.currentTimeMillis();
+                long interval = Math.max(800L, 2500L - (long) (200L * Math.min(10.0F, this.folk.skillFarming)));
                 if (ModSimLoader.gamemode == 1) {
-                    falg =(System.currentTimeMillis() - this.harvestCheck) > 1000.0F - 10.0F * 9.9;
+                    interval = Math.min(interval, 200L);
                 }
-                // 等级 时间计算 工作效率
-                if (falg||(float) (System.currentTimeMillis() - this.harvestCheck) > 1000.0F - 100.0F * this.folk.skillFarming) {
-
-                        this.harvest();
-
+                if (now - this.harvestCheck >= interval) {
+                    this.harvest();
                 }
 
             } else {
@@ -127,6 +127,8 @@ public class JobTaskFarmerHarvest extends JobTask {
     public void harvest() {
 
         try {
+            // P11(S1): 每轮扫描后重新计时，避免没有成熟作物时每 tick 重复扫描。
+            this.harvestCheck = System.currentTimeMillis();
 
             if (this.farm != null) {
                 this.folk.setStatus(new TextComponentTranslation("container.sim.job.crop.farmer.Harvesting",new Object[0]).getUnformattedText());
@@ -309,16 +311,18 @@ public class JobTaskFarmerHarvest extends JobTask {
                     List<ItemStack> drops = new CopyOnWriteArrayList<ItemStack>();
                     //获取当前位置的物品
                     BlockPos bp = new BlockPos(this.farm.getCorner().offset(this.farm.facing, x).offset(this.farm.facing.rotateY(), z));
+                    if (!this.folk.entity.world.isBlockLoaded(bp)) {
+                        continue;
+                    }
                     IBlockState iBlockState = this.folk.entity.world.getBlockState(bp);
                     //获得方块
                     Block b = iBlockState.getBlock();
-                    //有根茎 不是作物 不是可种植 不是可生长
-                    if (!(b instanceof BlockCrops) && !(b instanceof IPlantable) && !(b instanceof IGrowable)) {
-                        //包含根茎
-                        if (!(b instanceof BlockPumpkin) && !(b instanceof BlockMelon) && !(b instanceof BlockCocoa) && !(b instanceof BlockCactus) && b != Blocks.AIR &&b instanceof BlockCrops) {
-                            //
-                            BlockCrops crop = (BlockCrops) b;
-                            if (crop.isMaxAge(iBlockState)) {
+                    // P11(S1): 只有成熟作物才收割。
+                    // 旧条件外层要求“不是作物”，内层又要求“是作物”，自相矛盾，
+                    // 导致胡萝卜/土豆等 BlockCrops 实际上永远不收割。
+                    if (b instanceof BlockCrops) {
+                        BlockCrops crop = (BlockCrops) b;
+                        if (crop.isMaxAge(iBlockState)) {
                                 this.folk.setStatus(new TextComponentTranslation("container.sim.job.crop.farmer.Harvesting",new Object[0]).getUnformattedText());
                                 //获得方块
                                 Block bCrop = this.folk.entity.world.getBlockState(bp).getBlock();
@@ -338,8 +342,7 @@ public class JobTaskFarmerHarvest extends JobTask {
                                 return;
                             }
                         }
-                        //甘蔗
-                    } else if (b == Blocks.REEDS) {
+                    else if (b == Blocks.REEDS) {
                         if (this.folk.entity.world.getBlockState(bp.up()).getBlock() == b) {
                             //收获
                             this.folk.setStatus(new TextComponentTranslation("container.sim.job.crop.farmer.Harvesting",new Object[0]).getUnformattedText());

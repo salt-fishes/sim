@@ -43,9 +43,12 @@ public class TaskSleep extends Task {
         this.folk.setStatus(this.statusText);
         this.fs_t=0l;
         this.isAtHome = checkIfAtHome();
+        // P11(S1): 只有真正到家才进入“睡眠”状态；在回家路上不标记为 sleeping。
+        this.folk.isSleeping = this.isAtHome;
         // P3: 睡在住宅的居住点上（原来停在哪睡哪，容易睡在门口/墙边）
         if (this.isAtHome && this.folk.home != null && this.folk.home.livingXYZ != null) {
             this.folk.snapTo(this.folk.home.livingXYZ);
+            this.folk.entity.getNavigator().clearPath();
         }
     }
 
@@ -63,14 +66,17 @@ public class TaskSleep extends Task {
         // 状态变化时处理
         if (!this.wasAtHome && this.isAtHome) {
             this.folk.stayPut = true;
+            this.folk.isSleeping = true;
             this.fs_t=System.currentTimeMillis();
             this.folk.setStatus(this.statusText);
             // P3: 到家的瞬间精确落到居住点再睡
             if (this.folk.home != null && this.folk.home.livingXYZ != null) {
                 this.folk.snapTo(this.folk.home.livingXYZ);
+                this.folk.entity.getNavigator().clearPath();
             }
             ModSimLoader.log.info("{} 已到家，开始睡觉", folk.getName());
         } else if ( !this.isAtHome) {
+            this.folk.isSleeping = false;
             if (this.folk.home == null) {
                 // P3: 无家可归时原地睡觉（原来直接 this.folk.home.livingXYZ 会 NPE，
                 // 异常被上层吞掉后任务永远结束不了，NPC 半夜乱走）
@@ -115,5 +121,7 @@ public class TaskSleep extends Task {
     @Override
     public void onTaskComplete() {
         this.folk.stayPut = false;
+        // P11(S1): 白天/任务结束必须清除睡眠状态，否则 NpcData.onSecond 会一直认为它在睡。
+        this.folk.isSleeping = false;
     }
 }

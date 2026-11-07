@@ -83,7 +83,19 @@ public class V3 {
 
     public static V3 fromString(String v3) {
         String[] values = v3.split(",");
-        return new V3(Double.valueOf(values[0]), Double.valueOf(values[1]), Double.valueOf(values[2]), Integer.valueOf(values[3]));
+        if (values.length < 3) {
+            throw new IllegalArgumentException("非法 V3: " + v3);
+        }
+        int dim = 0;
+        if (values.length >= 4) {
+            try {
+                dim = Integer.parseInt(values[3].trim());
+            } catch (NumberFormatException ignored) {
+                dim = 0;
+            }
+        }
+        return new V3(Double.parseDouble(values[0].trim()), Double.parseDouble(values[1].trim()),
+                Double.parseDouble(values[2].trim()), dim);
     }
 
     public static V3 fromBlockPos(BlockPos pos) {
@@ -104,6 +116,14 @@ public class V3 {
         }
 
         return false;
+    }
+
+    @Override
+    public int hashCode() {
+        // P11(S1): equals 用“方块坐标 + 维度”，hashCode 必须用同一组字段。
+        int result = this.toBlockPos().hashCode();
+        result = 31 * result + this.dimension;
+        return result;
     }
     /**
      * 计算当前 V3 与另一个 V3 的距离平方（避免开方运算）

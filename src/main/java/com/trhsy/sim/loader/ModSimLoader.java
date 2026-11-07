@@ -407,6 +407,16 @@ public class ModSimLoader {
         }
         return npcDatas;
     }
+
+    /**
+     * P11(S1): 人口上限检查。0 或负数表示不限制。
+     * 只用于自动增长/生育；命令生成不走这里（由玩家显式操作）。
+     */
+    public static boolean canGrowPopulation() {
+        int limit = ConfigLoader.configPopulationLimit;
+        return limit <= 0 || ModSimLoader.folks.size() < limit;
+    }
+
     public static EntityNpc getEntityFolkByUID(UUID uid) {
         EntityNpc entityFolk = null;
         if (uid == null) {

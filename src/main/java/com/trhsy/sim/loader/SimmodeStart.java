@@ -509,9 +509,11 @@ public class SimmodeStart {
                                             }
                                         }
                                     }
-                                    if (spawnNew) {
+                                    if (spawnNew && ModSimLoader.canGrowPopulation()) {
                                         ModSimLoader.log.info("所有人都有住宅，开始生成新的NPC");
                                         new NpcData(world, false);
+                                    } else if (spawnNew) {
+                                        ModSimLoader.log.info("已达到人口上限 {}，不生成新NPC", ConfigLoader.configPopulationLimit);
                                     }
                                     minuteTimer = System.currentTimeMillis();
                                 }
@@ -1022,9 +1024,11 @@ public class SimmodeStart {
         }
 
         // 只有所有成年NPC都有住宅时，才生成新NPC
-        if (spawnNew) {
+        if (spawnNew && ModSimLoader.canGrowPopulation()) {
             ModSimLoader.log.info("所有成年NPC均有住宅，生成新NPC");
             new NpcData(world, false); // 生成新NPC
+        } else if (spawnNew) {
+            ModSimLoader.log.info("已达到人口上限 {}，不生成新NPC", ConfigLoader.configPopulationLimit);
         }
     }
 

@@ -3,6 +3,7 @@ package com.trhsy.sim.npcCode.job;
 import com.trhsy.sim.block.BlockConstructorBox;
 import com.trhsy.sim.entity.EntityConBox;
 import com.trhsy.sim.loader.BlockLoader;
+import com.trhsy.sim.loader.ConfigLoader;
 import com.trhsy.sim.loader.ModSimLoader;
 import com.trhsy.sim.loader.SoundRegistry;
 import com.trhsy.sim.npcCode.NpcData;
@@ -607,7 +608,9 @@ public class JobBuilder extends Job {
                                 this.folk.setStatus(new TextComponentTranslation("container.sim.JobBuilder4", new Object[0]).getUnformattedText() + fs_st_block.getLocalizedName());
                                 this.missingBlock = fs_st_block;
                                 long now = System.currentTimeMillis();
-                                if (now - this.timeTx > 1000 * 30) {
+                                // P11(S1): 使用配置的材料提醒间隔（分钟）；0 表示不再提醒。
+                                int reminderMinutes = ConfigLoader.configMaterialReminderInterval;
+                                if (reminderMinutes > 0 && now - this.timeTx > reminderMinutes * 60000L) {
                                     this.timeTx = now;
                                     //谁在建造
                                     String s1 = new TextComponentTranslation("container.sim.job.builder_constructor_started_who's", new Object[0]).getUnformattedText();

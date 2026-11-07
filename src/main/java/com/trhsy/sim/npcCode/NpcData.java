@@ -2882,7 +2882,12 @@ public class NpcData {
                             this.forceMoveToXYZ(v3);
 
                             this.pregnancyStage = 0.0F;
-                            new NpcData(this.world, this.getSpouse(), this);
+                            // P11(S1): 人口上限检查；达到上限时不生成婴儿。
+                            if (ModSimLoader.canGrowPopulation()) {
+                                new NpcData(this.world, this.getSpouse(), this);
+                            } else {
+                                ModSimLoader.log.info("已达到人口上限 {}，跳过本次生育", ConfigLoader.configPopulationLimit);
+                            }
                             //这里要播放那个宝宝笑的音频 找到了 音频文件 叫 birth
 //                            SoundEvent soundEvent = new SoundEvent(new ResourceLocation(ModSim.MODID + ":birth"));
                             SoundEvent birth = SoundRegistry.BIRTH;

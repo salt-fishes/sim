@@ -74,12 +74,13 @@ public class JobTaskFarmerPlant extends JobTask {
                     this.folk.setStatus(new TextComponentTranslation("container.sim.WAITINGFORCHEST",new Object[0]).getUnformattedText());
                     return;
                 }
-                boolean falg = false;
+                // P11(S1): 技能 10 时旧公式会变成 0，导致每 tick 扫描/种植。
+                long now = System.currentTimeMillis();
+                long interval = Math.max(800L, 2500L - (long) (200L * Math.min(10.0F, this.folk.skillFarming)));
                 if (ModSimLoader.gamemode == 1) {
-                    falg =(System.currentTimeMillis() - this.harvestCheck) > 1000.0F - 10.0F * 9.9;
+                    interval = Math.min(interval, 200L);
                 }
-                // 等级 时间计算 工作效率
-                if (falg||(float) (System.currentTimeMillis() - this.harvestCheck) > 1000.0F - 100.0F * this.folk.skillFarming) {
+                if (now - this.harvestCheck >= interval) {
                     this.plant();
                 }
 
@@ -129,6 +130,8 @@ public class JobTaskFarmerPlant extends JobTask {
      **/
     public void plant() {
         try {
+            // P11(S1): 每轮扫描后重新计时，避免没有种子/空地时每 tick 重复扫描。
+            this.harvestCheck = System.currentTimeMillis();
             //先获取农田箱的 类型
             FarmType farmType = this.farm.farmType;
             this.folk.setStatus(new TextComponentTranslation("container.sim.job.crop.farmer.Planting",new Object[0]).getUnformattedText());
@@ -448,6 +451,9 @@ public class JobTaskFarmerPlant extends JobTask {
                     boolean hasBlock = false;
                     //获得角落
                     BlockPos bp = new BlockPos(this.farm.getCorner().offset(this.farm.facing, x).offset(this.farm.facing.rotateY(), z));
+                    if (!this.folk.entity.world.isBlockLoaded(bp)) {
+                        continue;
+                    }
 //                ItemStack seed = ItemStack.EMPTY;
                     ItemStack seed = null;
                     List<IInventory> iterator = this.job.inventoriesFindClosest(this.job.workPlace, 5);
@@ -527,10 +533,24 @@ public class JobTaskFarmerPlant extends JobTask {
                         }
 
 //                    //获取种植下方的物品是否是 农田等可种植区域
+                        if (crop == null) {
+                            continue;
+                        }
                         IBlockState soil = this.folk.entity.world.getBlockState(bp.down());
                         //Block crop=plantable.getPlant(this.folk.entity.world,bp.down()).getBlock();
                         //确定此块是否可以支持传入的植物，允许其种植和生长。一些例子：芦苇检查它是否是芦苇，或者它的沙子/泥土/草和水附近的仙人掌检查它是否为仙人掌，或者如果它的沙子Nether类型检查灵魂沙子作物检查耕土洞穴检查它是否坚硬地面平原检查它的草或泥土水检查它是否静止
-                        boolean fs_canSustainPlant = soil.getBlock().canSustainPlant(soil, this.folk.entity.world, bp.down(), EnumFacing.UP, (IPlantable) item);
+                        // P11(S1): 不再无条件把物品强转 IPlantable。仙人掌/可可豆等 ItemBlock 不实现 IPlantable，
+                        // 旧代码会在这里 ClassCastException；优先用作物方块自身做 canSustainPlant 判断。
+                        IPlantable plantable = crop instanceof IPlantable
+                                ? (IPlantable) crop
+                                : (item instanceof IPlantable ? (IPlantable) item : null);
+                        if (plantable == null) {
+                            continue;
+                        }
+                        boolean fs_canSustainPlant = soil.getBlock().canSustainPlant(soil, this.folk.entity.world, bp.down(), EnumFacing.UP, plantable);
+                        // P11(S1): 普通作物需要 9 级光照；甘蔗/仙人掌/可可豆不受这条限制。
+                        boolean lightOk = crop == Blocks.REEDS || crop == Blocks.CACTUS || crop == Blocks.COCOA
+                                || this.folk.entity.world.getLightFromNeighbors(bp) >= 9;
                         //北
 
                         /* Chunk chunk =this.folk.entity.world.getChunkFromChunkCoords(bp.north().getX(),bp.west().getZ());*/
@@ -555,7 +575,7 @@ public class JobTaskFarmerPlant extends JobTask {
                         boolean f5 = this.folk.entity.world.isAirBlock(bp);
                         String b_u_name = block.getUnlocalizedName();
 //                    System.out.println("当前种植的作物是：" + b_u_name);
-                        if (!f1 && !f2 && !f3 && fs_canSustainPlant && !f4 && f5) {
+                        if (!f1 && !f2 && !f3 && fs_canSustainPlant && !f4 && f5 && lightOk) {
                             for (IInventory inv : iterator) {
                                 for (int i = 0; i < inv.getSizeInventory(); ++i) {
                                     ItemStack slot = inv.getStackInSlot(i);

@@ -3,8 +3,10 @@ package com.trhsy.sim.npcCode.task;
 import com.trhsy.sim.loader.ModSimLoader;
 import com.trhsy.sim.npcCode.V3;
 import com.trhsy.sim.npcCode.job.Job;
+import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.passive.*;
 import net.minecraft.util.math.AxisAlignedBB;
+import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.text.TextComponentTranslation;
 
 import java.util.List;
@@ -66,27 +68,64 @@ public class JobTaskSpawnLivestock extends JobTask {
     }
 
     private void spawnAnimals(V3 controlBox, String animal, int count) {
-        EntityAnimal newAnimal = null;
-
-        for(int c = 1; c <= count; ++c) {
-            if (animal.contentEquals(new TextComponentTranslation("container.sim.job_Livestock_pig",new Object[0]).getUnformattedText())) {
+        for (int c = 1; c <= count; ++c) {
+            EntityAnimal newAnimal = null;
+            if (animal.contentEquals(new TextComponentTranslation("container.sim.job_Livestock_pig", new Object[0]).getUnformattedText())) {
                 newAnimal = new EntityPig(this.job.jobWorld);
-            } else if (animal.contentEquals(new TextComponentTranslation("container.sim.job_Livestock_cow",new Object[0]).getUnformattedText())) {
+            } else if (animal.contentEquals(new TextComponentTranslation("container.sim.job_Livestock_cow", new Object[0]).getUnformattedText())) {
                 newAnimal = new EntityCow(this.job.jobWorld);
-            } else if (animal.contentEquals(new TextComponentTranslation("container.sim.job_Livestock_chicken",new Object[0]).getUnformattedText())) {
+            } else if (animal.contentEquals(new TextComponentTranslation("container.sim.job_Livestock_chicken", new Object[0]).getUnformattedText())) {
                 newAnimal = new EntityChicken(this.job.jobWorld);
-            } else if (animal.contentEquals(new TextComponentTranslation("container.sim.job_Livestock_sheep",new Object[0]).getUnformattedText())) {
+            } else if (animal.contentEquals(new TextComponentTranslation("container.sim.job_Livestock_sheep", new Object[0]).getUnformattedText())) {
                 newAnimal = new EntitySheep(this.job.jobWorld);
-            }else if (animal.contentEquals(new TextComponentTranslation("container.sim.job_Livestock_rabbit",new Object[0]).getUnformattedText())) {
+            } else if (animal.contentEquals(new TextComponentTranslation("container.sim.job_Livestock_rabbit", new Object[0]).getUnformattedText())) {
                 newAnimal = new EntityRabbit(this.job.jobWorld);
             }
 
-            ((EntityAnimal)newAnimal).setLocationAndAngles(controlBox.x, controlBox.y + 1.0D, controlBox.z, 0.0F, 0.0F);
-            if (!this.job.jobWorld.isRemote) {
-                this.job.jobWorld.spawnEntity(newAnimal);
+            if (newAnimal == null) {
+                ModSimLoader.log.warn("未知牲畜类型，停止生成: {}", animal);
+                return;
+            }
+
+            // P11(S1): 不再把所有动物堆在控制箱同一格。
+            // 在围栏范围内随机找“两格空气 + 脚下实体方块”的位置，并检查原版生成条件/碰撞/间距。
+            boolean spawned = false;
+            for (int attempt = 0; attempt < 24; attempt++) {
+                int dx = this.job.jobWorld.rand.nextInt(7) - 3;
+                int dz = this.job.jobWorld.rand.nextInt(7) - 3;
+                int dy = this.job.jobWorld.rand.nextInt(3);
+                BlockPos pos = new BlockPos(controlBox.x + dx, controlBox.y + dy, controlBox.z + dz);
+                if (!this.job.jobWorld.isBlockLoaded(pos)) {
+                    continue;
+                }
+                if (!this.job.jobWorld.isAirBlock(pos) || !this.job.jobWorld.isAirBlock(pos.up())) {
+                    continue;
+                }
+                IBlockState ground = this.job.jobWorld.getBlockState(pos.down());
+                if (!ground.getMaterial().isSolid() || ground.getMaterial().isLiquid()) {
+                    continue;
+                }
+                newAnimal.setLocationAndAngles(pos.getX() + 0.5D, pos.getY(), pos.getZ() + 0.5D,
+                        this.job.jobWorld.rand.nextFloat() * 360.0F, 0.0F);
+                if (!newAnimal.getCanSpawnHere() || !newAnimal.isNotColliding()) {
+                    continue;
+                }
+                // 至少留 1 格间距，避免 1.12.2 的 maxEntityCramming 把动物挤伤。
+                List<EntityAnimal> nearby = this.job.jobWorld.getEntitiesWithinAABB(
+                        newAnimal.getClass(), newAnimal.getEntityBoundingBox().grow(0.8D));
+                if (!nearby.isEmpty()) {
+                    continue;
+                }
+                if (!this.job.jobWorld.isRemote) {
+                    this.job.jobWorld.spawnEntity(newAnimal);
+                }
+                spawned = true;
+                break;
+            }
+            if (!spawned) {
+                ModSimLoader.log.warn("围栏内没有安全生成点，跳过 1 只{}", animal);
             }
         }
-
     }
 
     /**

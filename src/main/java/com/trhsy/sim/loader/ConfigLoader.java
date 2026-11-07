@@ -57,7 +57,7 @@ public class ConfigLoader {
 
     public static void load(FMLPreInitializationEvent event) {
         try {
-            configFile = new Configuration(event.getSuggestedConfigurationFile(), "1.12.2-1.0.9 Beta3");
+            configFile = new Configuration(event.getSuggestedConfigurationFile(), "1.12.2-1.0.9 Beta4");
             syncConfig();
         } catch (Exception e) {
             StackTraceElement element=e.getStackTrace()[0];ModSimLoader.log.error("load出错了：" + e.getMessage()+"行数："+element.getLineNumber());
@@ -81,12 +81,42 @@ public class ConfigLoader {
      * @Param []
      * @return boolean
      **/
+    /**
+     * P11(S1): 配置分类使用固定英文 internal name；旧版本的分类名是本地化字符串，
+     * 切换语言会生成新分类、丢失设置。这里在第一次加载时把旧分类迁移到固定分类。
+     */
+    private static ConfigCategory getOrMigrateCategory(String fixedName, String... probeKeys) {
+        ConfigCategory fixed = configFile.getCategory(fixedName);
+        if (!fixed.isEmpty()) {
+            return fixed;
+        }
+        for (String name : configFile.getCategoryNames()) {
+            if (name.equals(fixedName)) {
+                continue;
+            }
+            ConfigCategory old = configFile.getCategory(name);
+            if (old == null || old.isEmpty()) {
+                continue;
+            }
+            for (String key : probeKeys) {
+                if (old.containsKey(key)) {
+                    fixed.putAll(old.getValues());
+                    configFile.removeCategory(old);
+                    configFile.save();
+                    ModSimLoader.log.info("配置分类已迁移: {} -> {}", name, fixedName);
+                    return fixed;
+                }
+            }
+        }
+        return fixed;
+    }
+
     public static boolean syncConfig() {
         boolean changed = false;
         try {
-            //模拟城市游戏配置
-            String simConfig=new TextComponentTranslation("container.sim.config_name1",new Object[0]).getUnformattedText();
-            Gameplay =configFile.getCategory(simConfig);
+            //模拟城市游戏配置（固定 internal name，避免语言切换生成新分类）
+            String simConfig = "gameplay";
+            Gameplay = getOrMigrateCategory("gameplay", "FolkTalking", "LumbermillArea");
             List<String> propOrder = Lists.newArrayList();
             //NPC是否能说话
             Property p = configFile.get(simConfig, "FolkTalking", configFolkTalking);
@@ -123,9 +153,7 @@ public class ConfigLoader {
             String s7=new TextComponentTranslation("container.sim.config_loader7",new Object[0]).getUnformattedText();
             p.setComment(s7);
             configMaterialReminderInterval = p.getInt();
-            if (configMaterialReminderInterval <= 0) {
-                configMaterialReminderInterval = 2000;
-            }
+            // P11(S1): 0 表示不再提醒，不再强行改成 2000。
             propOrder.add(p.getName());
 
             //是否可以下雨
@@ -137,12 +165,12 @@ public class ConfigLoader {
             propOrder.add(p.getName());
 
             Gameplay.setPropertyOrder(propOrder);
-            String npcNames=new TextComponentTranslation("container.sim.config_name2",new Object[0]).getUnformattedText();
+            // 名字配置（固定 internal name）
+            String npcNames = "names";
             propOrder = Lists.newArrayList();
-            Nameplay =configFile.getCategory(npcNames);
+            Nameplay = getOrMigrateCategory("names", "MaleNames", "FemaleNames");
 
             p = configFile.get(npcNames, "MaleNames", new TextComponentTranslation("container.sim.MaleNames",new Object[0]).getUnformattedText());
-            p.setValue(new TextComponentTranslation("container.sim.MaleNames",new Object[0]).getUnformattedText());
             String temp = p.getString();
             //这些是随机名字生成器使用的男性名字，请保持格式不变，否则会发生不好的事情。
             String s10=new TextComponentTranslation("container.sim.config_loader10",new Object[0]).getUnformattedText();
@@ -151,7 +179,6 @@ public class ConfigLoader {
             propOrder.add(p.getName());
 
             p = configFile.get(npcNames, "FemaleNames", new TextComponentTranslation("container.sim.FemaleNames",new Object[0]).getUnformattedText());
-            p.setValue(new TextComponentTranslation("container.sim.FemaleNames",new Object[0]).getUnformattedText());
             temp = p.getString();
             //这些是随机名字生成器使用的女性名字，保持格式不变，否则会发生不好的事情。
             String s11=new TextComponentTranslation("container.sim.config_loader11",new Object[0]).getUnformattedText();
@@ -160,7 +187,6 @@ public class ConfigLoader {
             propOrder.add(p.getName());
 
             p = configFile.get(npcNames, "LastNames", new TextComponentTranslation("container.sim.LastNames",new Object[0]).getUnformattedText());
-            p.setValue(new TextComponentTranslation("container.sim.LastNames",new Object[0]).getUnformattedText());
             temp = p.getString();
             //这些是随机名称生成器使用的姓氏，请保持格式不变，否则会发生错误。
             String s12=new TextComponentTranslation("container.sim.config_loader12",new Object[0]).getUnformattedText();
