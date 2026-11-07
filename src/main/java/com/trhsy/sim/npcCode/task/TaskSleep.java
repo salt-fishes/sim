@@ -8,6 +8,7 @@ package com.trhsy.sim.npcCode.task;
 import com.trhsy.sim.loader.ModSimLoader;
 import com.trhsy.sim.npcCode.NpcData;
 import com.trhsy.sim.npcCode.V3;
+import com.trhsy.sim.npcCode.build.Building;
 import net.minecraft.init.Blocks;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.text.TextComponentTranslation;
@@ -46,8 +47,8 @@ public class TaskSleep extends Task {
         // P11(S1): 只有真正到家才进入“睡眠”状态；在回家路上不标记为 sleeping。
         this.folk.isSleeping = this.isAtHome;
         // P3: 睡在住宅的居住点上（原来停在哪睡哪，容易睡在门口/墙边）
-        if (this.isAtHome && this.folk.home != null && this.folk.home.livingXYZ != null) {
-            this.folk.snapTo(this.folk.home.livingXYZ);
+        if (this.isAtHome && this.folk.home != null) {
+            this.folk.snapTo(findSleepSpot());
             this.folk.entity.getNavigator().clearPath();
         }
     }
@@ -70,8 +71,8 @@ public class TaskSleep extends Task {
             this.fs_t=System.currentTimeMillis();
             this.folk.setStatus(this.statusText);
             // P3: 到家的瞬间精确落到居住点再睡
-            if (this.folk.home != null && this.folk.home.livingXYZ != null) {
-                this.folk.snapTo(this.folk.home.livingXYZ);
+            if (this.folk.home != null) {
+                this.folk.snapTo(findSleepSpot());
                 this.folk.entity.getNavigator().clearPath();
             }
             ModSimLoader.log.info("{} 已到家，开始睡觉", folk.getName());
@@ -115,8 +116,57 @@ public class TaskSleep extends Task {
 */
     }
     private boolean checkIfAtHome() {
-        return this.folk.home != null &&
+        return this.folk.home != null && this.folk.home.livingXYZ != null &&
                 this.folk.isAtLocation(this.folk.home.livingXYZ);
+    }
+
+    /**
+     * P14(S1): 给同一住宅的住户分配不同的睡眠点。
+     * 有床时优先用床；床被其他 sleeping NPC 占用时，在居住点周围找空位。
+     * 注意：NPC 仍不会像玩家一样真正“躺”在床上，只是位置/状态分离。
+     */
+    private V3 findSleepSpot() {
+        Building home = this.folk.home;
+        if (home == null) {
+            return this.folk.pos;
+        }
+        V3 base = home.livingXYZ;
+        if (home.bed != null) {
+            V3 bedSpot = new V3(home.bed.getX() + 0.5D, home.bed.getY() + 0.55D, home.bed.getZ() + 0.5D);
+            if (!isSleepSpotOccupied(bedSpot, 1.5D)) {
+                return bedSpot;
+            }
+        }
+        if (base == null) {
+            return this.folk.pos;
+        }
+        if (!isSleepSpotOccupied(base, 1.0D)) {
+            return base;
+        }
+        for (int i = 0; i < 8; i++) {
+            double angle = i * Math.PI / 4.0D;
+            V3 candidate = new V3(base.x + Math.cos(angle) * 0.9D, base.y, base.z + Math.sin(angle) * 0.9D,
+                    base.dimension);
+            if (!isSleepSpotOccupied(candidate, 0.9D)) {
+                return candidate;
+            }
+        }
+        return base;
+    }
+
+    private boolean isSleepSpotOccupied(V3 spot, double radius) {
+        if (spot == null || this.folk.home == null) {
+            return false;
+        }
+        for (NpcData other : this.folk.home.occupants) {
+            if (other == null || other == this.folk || !other.isSleeping || other.pos == null) {
+                continue;
+            }
+            if (other.pos.getDistanceTo(spot) <= radius) {
+                return true;
+            }
+        }
+        return false;
     }
     @Override
     public void onTaskComplete() {

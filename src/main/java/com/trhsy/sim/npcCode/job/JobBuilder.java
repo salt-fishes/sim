@@ -549,16 +549,19 @@ public class JobBuilder extends Job {
                     if (fs_st_block instanceof BlockDoor && newBlock != fs_st_block) {
                         normalBlock = false;
                         //放置门
-                        ItemDoor.placeDoor(this.folk.entity.world, newBP, EnumFacing.NORTH, fs_st_block, false);
+                        ItemDoor.placeDoor(this.folk.entity.world, newBP, rotateFacing(EnumFacing.NORTH), fs_st_block, false);
                     }
                     //床
                     if (fs_st_block instanceof BlockBed) {
-                        BlockPos pos = newBP.west();
+                        EnumFacing bedFacing = rotateFacing(EnumFacing.WEST);
+                        BlockPos headPos = newBP.offset(bedFacing);
                         normalBlock = false;//床不是普通的块
-                        IBlockState iblockstate1 = Blocks.BED.getDefaultState().withProperty(BlockBed.OCCUPIED, false).withProperty(BlockBed.FACING, EnumFacing.WEST).withProperty(BlockBed.PART, BlockBed.EnumPartType.FOOT);
+                        IBlockState iblockstate1 = Blocks.BED.getDefaultState().withProperty(BlockBed.OCCUPIED, false).withProperty(BlockBed.FACING, bedFacing).withProperty(BlockBed.PART, BlockBed.EnumPartType.FOOT);
                         if (this.folk.entity.world.setBlockState(newBP, iblockstate1, 11)) {
                             IBlockState iblockstate2 = iblockstate1.withProperty(BlockBed.PART, BlockBed.EnumPartType.HEAD);
-                            this.folk.entity.world.setBlockState(pos, iblockstate2, 11);
+                            if (this.folk.entity.world.isBlockLoaded(headPos)) {
+                                this.folk.entity.world.setBlockState(headPos, iblockstate2, 11);
+                            }
                         }
                     }
 
@@ -954,6 +957,18 @@ public class JobBuilder extends Job {
                 || block == Blocks.LAVA
                 || block == Blocks.FLOWING_LAVA
                 || block == Blocks.FIRE;
+    }
+
+    /**
+     * P14(S1): 按实际放置方向旋转门/床的朝向，避免所有建筑的门都朝北、床都朝西。
+     */
+    private EnumFacing rotateFacing(EnumFacing base) {
+        int steps = (this.direction - this.blueprint.direction + 4) % 4;
+        EnumFacing facing = base;
+        for (int i = 0; i < steps; i++) {
+            facing = facing.rotateY();
+        }
+        return facing;
     }
 
     /**

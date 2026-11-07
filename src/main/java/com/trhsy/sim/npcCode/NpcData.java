@@ -230,8 +230,6 @@ public class NpcData {
     public String homeId;
     /** P2: 上次安全传送时间（毫秒），用于冷却。 */
     private transient long lastTeleportTime = 0L;
-    /** P2: 传送冷却，避免每 tick 瞬移。 */
-    private static final long TELEPORT_COOLDOWN_MS = 3000L;
     /** P3: 天黑后的自由活动时间（ticks）。先社交/闲逛，之后才强制回家睡觉。 */
     private static final long EVENING_FREE_TICKS = 1200L;
     /** P2+: 移动进度看门狗（有目标却连续 5 秒无进展 → 救援传送）。 */
@@ -3357,33 +3355,6 @@ public class NpcData {
         return ground.getMaterial().isSolid() && !ground.getMaterial().isLiquid();
     }
 
-    /** P10(S0): 冷却中的安全传送；只接受 attemptTeleport 的落点检查结果。 */
-    private boolean teleportWithCooldown(V3 target) {
-        long now = System.currentTimeMillis();
-        if (now - this.lastTeleportTime < TELEPORT_COOLDOWN_MS) {
-            return false;
-        }
-        if (!isSafeTeleport(target)) {
-            return false;
-        }
-        this.lastTeleportTime = now;
-        boolean ok = false;
-        try {
-            if (this.entity instanceof net.minecraft.entity.EntityLivingBase) {
-                ok = ((net.minecraft.entity.EntityLivingBase) this.entity).attemptTeleport(target.x, target.y, target.z);
-            }
-        } catch (Exception e) {
-            ModSimLoader.log.error("teleportWithCooldown出错了：" + e.getMessage());
-            return false;
-        }
-        if (ok) {
-            this.pos = V3.fromVec3d(this.entity.getPositionVector());
-            this.pos.dimension = this.entity.dimension;
-            spawnPortalParticles();
-        }
-        return ok;
-    }
-
     /** P2+: 记录当前移动目标，供"无进展看门狗"判断。 */
     private void noteMoveTarget(V3 v3) {
         // P9: 只有"目标变化"时才重置无进展计数。取货等任务会每秒重发
@@ -3465,8 +3436,6 @@ public class NpcData {
 
     /** P2+: 传送全局限频：同一 NPC 至少间隔 2 秒才允许下一次强制传送。 */
     private static final long TELEPORT_MIN_INTERVAL_MS = 2000L;
-    /** P4: 超过这个距离的工作类移动允许一次冷却传送（巡逻用 walkTo，不受影响）。 */
-    private static final double LONG_DISTANCE_TELEPORT = 32.0D;
 
     /**
      * P2+: 无视冷却的定点传送（去工作超时、救援等硬性场景）。
