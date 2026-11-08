@@ -40,7 +40,9 @@ public class ConfigSyncPacket implements IMessage {
                 category.put(name, new Property(name, value, Property.Type.tryParse(type)));
             }
         }
-        buf.release();
+        // P16(S1): 不要在这里 release。FMLIndexedMessageToMessageCodec 在
+        // decode 结束后会统一 release payload；这里再 release 会导致
+        // IllegalReferenceCountException: refCnt: 0，玩家一进服就断线。
     }
 
     @Override

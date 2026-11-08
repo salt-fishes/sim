@@ -1005,6 +1005,10 @@ public class JobBuilder extends Job {
             build.blockSpecial = this.blockSpecial;
             //建筑物类型
             build.buildingType = this.blueprint.buildingType;
+            // P16(S1): 建筑尺寸也写入存档，旧实现只写 0,0,0。
+            build.length = this.blueprint.length;
+            build.width = this.blueprint.width;
+            build.height = this.blueprint.height;
             //建筑物的结构
             build.structure = new CopyOnWriteArrayList<V3>(this.placedBlocks);
             // P15(S1): 床的位置要在结构完成后写入，TaskSleep 才能优先睡床。
@@ -1037,7 +1041,10 @@ public class JobBuilder extends Job {
                 } else {
                     this.jobWorld.playSound((EntityPlayer) null, build.livingXYZ.x, build.livingXYZ.y, build.livingXYZ.z, cashshort, SoundCategory.BLOCKS, 1.0F, 1.0F);
                 }
-                this.conBox.setDead();
+                // P16(S1): conBox 在服务端/自动建造时可能为空，不能无条件 setDead。
+                if (this.conBox != null) {
+                    this.conBox.setDead();
+                }
             }
 
         } catch (Exception e) {
