@@ -4,6 +4,7 @@ import com.trhsy.sim.config.SimConfigSync;
 import com.trhsy.sim.loader.ModSimLoader;
 import com.trhsy.sim.loader.SoundRegistry;
 import com.trhsy.sim.proxy.CommonProxy;
+import com.trhsy.sim.util.AsyncFileWriter;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.fml.common.Mod;
@@ -13,6 +14,7 @@ import net.minecraftforge.fml.common.event.FMLInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLPostInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLServerStartingEvent;
+import net.minecraftforge.fml.common.event.FMLServerStoppingEvent;
 
 import java.io.PrintWriter;
 import java.io.StringWriter;
@@ -37,7 +39,7 @@ public class ModSim {
     /**
      * 模组版本 在Mod间的依赖关系时可能会用作识别
      **/
-    public static final String VERSION = "1.12.2-1.0.9 Beta9";
+    public static final String VERSION = "1.12.2-1.0.9 Beta10";
     /**
      * 将生成该mod的实例注册到对应mod的id里面，也可以访问其他mod的，要注意这里的id和此mod的id相同
      */
@@ -122,6 +124,19 @@ public class ModSim {
         } catch (Exception e) {
             StackTraceElement element = e.getStackTrace()[0];
             logException("serverStarting", e);
+        }
+    }
+
+    /**
+     * P15(S1) 修正：FMLServerStoppingEvent 不是 Forge EventBus 事件，
+     * 不能放在 EventLoader 里用 @SubscribeEvent；必须在 @Mod 主类用 @EventHandler。
+     */
+    @EventHandler
+    public void serverStopping(FMLServerStoppingEvent event) {
+        try {
+            AsyncFileWriter.flush(10000L);
+        } catch (Exception e) {
+            logException("serverStopping", e);
         }
     }
 }
