@@ -120,80 +120,87 @@ public class JobTaskCollectItems extends JobTask {
         } else {
 
             for (int i = 0; i < this.collectionItems.size(); ++i) {
-                Item colItem = ((ItemStack) this.collectionItems.get(i)).getItem();
+                ItemStack wanted = this.collectionItems.get(i);
+                Item colItem = wanted.getItem();
+                String supplier = null;
                 //猪排
                 if (colItem == Items.PORKCHOP) {
                     //养猪场
-                    this.addDestination(new TextComponentTranslation("container.sim.Vocation13",new Object[0]).getUnformattedText());
+                    supplier = new TextComponentTranslation("container.sim.Vocation13",new Object[0]).getUnformattedText();
                     //兔肉
                 } else if (colItem == Items.RABBIT) {
                     //养兔场
-                    this.addDestination(new TextComponentTranslation("container.sim.Vocation29",new Object[0]).getUnformattedText());
+                    supplier = new TextComponentTranslation("container.sim.Vocation29",new Object[0]).getUnformattedText();
                     //牛肉
                 } else if (colItem == Items.BEEF) {
                     //养牛场
-                    this.addDestination(new TextComponentTranslation("container.sim.Vocation12",new Object[0]).getUnformattedText());
+                    supplier = new TextComponentTranslation("container.sim.Vocation12",new Object[0]).getUnformattedText();
                     //鸡肉
                 } else if (colItem == Items.CHICKEN) {
                     //养鸡场
-                    this.addDestination(new TextComponentTranslation("container.sim.Vocation14",new Object[0]).getUnformattedText());
+                    supplier = new TextComponentTranslation("container.sim.Vocation14",new Object[0]).getUnformattedText();
                     //羊肉
                 } else if (colItem == Items.MUTTON) {
                     //养羊场
-                    this.addDestination(new TextComponentTranslation("container.sim.Vocation28",new Object[0]).getUnformattedText());
+                    supplier = new TextComponentTranslation("container.sim.Vocation28",new Object[0]).getUnformattedText();
                     //鸡蛋
                 } else if (colItem == Items.EGG) {
                     //鸡蛋农场
-                    this.addDestination(new TextComponentTranslation("container.sim.Vocation3",new Object[0]).getUnformattedText());
+                    supplier = new TextComponentTranslation("container.sim.Vocation3",new Object[0]).getUnformattedText();
                     //牛奶
                 } else if (colItem == ItemLoader.itemBucketMilk) {
                     //奶牛场
-                    this.addDestination(new TextComponentTranslation("container.sim.Vocation20",new Object[0]).getUnformattedText());
+                    supplier = new TextComponentTranslation("container.sim.Vocation20",new Object[0]).getUnformattedText();
                     //鱼
                 } else if (colItem == Items.FISH) {
                     //渔场
-                    this.addDestination(new TextComponentTranslation("container.sim.Vocation18",new Object[0]).getUnformattedText());
+                    supplier = new TextComponentTranslation("container.sim.Vocation18",new Object[0]).getUnformattedText();
                     //胡萝卜
                 } else if (colItem == Items.CARROT) {
-                    this.addDestination("farmer:" + new TextComponentTranslation("container.sim.FarmType1",new Object[0]).getUnformattedText());
+                    supplier = "farmer:" + new TextComponentTranslation("container.sim.FarmType1",new Object[0]).getUnformattedText();
                     //马铃薯
                 } else if (colItem == Items.POTATO) {
-                    this.addDestination("farmer:" + new TextComponentTranslation("container.sim.FarmType3",new Object[0]).getUnformattedText());
+                    supplier = "farmer:" + new TextComponentTranslation("container.sim.FarmType3",new Object[0]).getUnformattedText();
                     //甜菜根
                 } else if (colItem == Items.BEETROOT) {
-                    this.addDestination("farmer:" + new TextComponentTranslation("container.sim.FarmType6",new Object[0]).getUnformattedText());
+                    supplier = "farmer:" + new TextComponentTranslation("container.sim.FarmType6",new Object[0]).getUnformattedText();
                     //可可豆
                 } else if (colItem == Items.DYE) {
-                    this.addDestination("farmer:" + new TextComponentTranslation("container.sim.FarmType10",new Object[0]).getUnformattedText());
+                    supplier = "farmer:" + new TextComponentTranslation("container.sim.FarmType10",new Object[0]).getUnformattedText();
                     //西瓜
                 } else if (colItem == Items.MELON) {
-                    this.addDestination("farmer:" + new TextComponentTranslation("container.sim.FarmType2",new Object[0]).getUnformattedText());
+                    supplier = "farmer:" + new TextComponentTranslation("container.sim.FarmType2",new Object[0]).getUnformattedText();
                     //小麦
                 } else if (colItem == Items.WHEAT) {
-                    this.addDestination("farmer:" + new TextComponentTranslation("container.sim.FarmType5",new Object[0]).getUnformattedText());
+                    supplier = "farmer:" + new TextComponentTranslation("container.sim.FarmType5",new Object[0]).getUnformattedText();
                     //甘蔗
                 } else if (colItem == Items.REEDS) {
-                    this.addDestination("farmer:" + new TextComponentTranslation("container.sim.FarmType7",new Object[0]).getUnformattedText());
+                    supplier = "farmer:" + new TextComponentTranslation("container.sim.FarmType7",new Object[0]).getUnformattedText();
                     //南瓜
                 } else if (colItem == new ItemStack(Blocks.PUMPKIN).getItem()) {
-                    this.addDestination("farmer:" + new TextComponentTranslation("container.sim.FarmType4",new Object[0]).getUnformattedText());
+                    supplier = "farmer:" + new TextComponentTranslation("container.sim.FarmType4",new Object[0]).getUnformattedText();
                     //糖
-                }else if (colItem == Items.SUGAR) {
-                    this.addDestination( new TextComponentTranslation("container.sim.Vocation30",new Object[0]).getUnformattedText());
+                } else if (colItem == Items.SUGAR) {
+                    supplier = new TextComponentTranslation("container.sim.Vocation30",new Object[0]).getUnformattedText();
                     //奶酪
-                }else if (colItem == ItemLoader.itemCheese) {
+                } else if (colItem == ItemLoader.itemCheese) {
                     // P9: 用稳定职业 ID（奶酪工坊 Vocation21）匹配建筑，
                     // 原来用物品显示名匹配，工厂 jobType 对不上就永远收不到奶酪。
-                    this.addDestination( new TextComponentTranslation("container.sim.Vocation21",new Object[0]).getUnformattedText());
-                //面包
-                }if (colItem == Items.BREAD) {
-                    this.addDestination( new TextComponentTranslation("container.sim.Vocation6",new Object[0]).getUnformattedText());
+                    supplier = new TextComponentTranslation("container.sim.Vocation21",new Object[0]).getUnformattedText();
+                    //面包
+                } else if (colItem == Items.BREAD) {
+                    supplier = new TextComponentTranslation("container.sim.Vocation6",new Object[0]).getUnformattedText();
+                }
+                if (supplier != null) {
+                    this.addDestination(supplier, wanted);
                 }
             }
 
             if (this.destinations.size() < 1) {
-                //找不到任何可收集的建筑物
-                this.failTask(this.job.folk.getName() + " (" + this.job.jobName + ") " + new TextComponentTranslation("container.sim.job_task_could",new Object[0]).getUnformattedText());
+                // P20: 没有“有库存”的供货点属于正常情况（例如面包店自己箱子里
+                // 已经备好原料），不要记任务失败/发聊天，直接跳过采集。
+                ModSimLoader.log.info("{} 没有可用供货点，跳过采集", this.job.jobName);
+                this.completeTask();
             } else {
                 this.currentIndex = 0;
                 this.currentDestination = this.destinations.get(0);
@@ -217,44 +224,67 @@ public class JobTaskCollectItems extends JobTask {
     }
 
     /**
-     * 添加目的地
+     * 添加目的地（P20：只添加目标箱里真有对应库存的供货点）。
      *
-     * @param jobt
+     * @param jobt   供货职业显示名 / farmer:作物类型
+     * @param wanted 本次要收集的物品
      */
-    private void addDestination(String jobt) {
+    private void addDestination(String jobt, ItemStack wanted) {
+        if (wanted == null || wanted.isEmpty()) {
+            return;
+        }
+        int before = this.destinations.size();
         //如果是农场作物
         if (jobt.contains("farmer:")) {
             String fType = jobt.split(":")[1];
-            // P4: 取最近的农场供货点（默认 2 个；有库存就取，不要求一定有雇员）
             List<FarmBox> farms = ModSimLoader.getClosestFarm(this.job.workPlace, fType);
-            int n = Math.min(this.maxSuppliersPerType, farms.size());
-            for (int i = 0; i < n; i++) {
-                FarmBox f = farms.get(i);
-                this.addDestinationV3(new V3(f.loc.x, f.loc.y + 1, f.loc.z));
+            int added = 0;
+            for (FarmBox f : farms) {
+                if (f == null || f.loc == null || added >= this.maxSuppliersPerType) {
+                    continue;
+                }
+                V3 dest = new V3(f.loc.x, f.loc.y + 1, f.loc.z, f.loc.dimension);
+                if (hasStockAt(dest, wanted)) {
+                    this.addDestinationV3(dest);
+                    added++;
+                }
             }
         } else {
             List<Building> buildings = ModSimLoader.getClosestBuildingByJob(jobt, this.job.workPlace);
-            if (buildings != null && buildings.size() > 0) {
-                // P4: 取最近的供货建筑（默认 2 个；不再要求有住户）
-                int n = Math.min(this.maxSuppliersPerType, buildings.size());
-                for (int i = 0; i < n; i++) {
-                    Building building = buildings.get(i);
-                    if (building.controlXYZ != null) {
-                        this.addDestinationV3(new V3(building.controlXYZ.x, building.controlXYZ.y + 1,
-                                building.controlXYZ.z, building.dimension));
+            if (buildings != null) {
+                int added = 0;
+                for (Building building : buildings) {
+                    if (building.controlXYZ == null || added >= this.maxSuppliersPerType) {
+                        continue;
+                    }
+                    V3 dest = new V3(building.controlXYZ.x, building.controlXYZ.y + 1,
+                            building.controlXYZ.z, building.dimension);
+                    if (hasStockAt(dest, wanted)) {
+                        this.addDestinationV3(dest);
+                        added++;
                     }
                 }
             }
         }
-        if (this.destinations.size() == 0) {
-            String s1="";
-            for (int i = 0; i < collectionItems.size(); i++) {
-                ItemStack itemStack = collectionItems.get(i);
-                s1+=itemStack.getDisplayName()+",";
-            }
-            String s2=new TextComponentTranslation("container.sim.job_coll_items",new Object[0]).getUnformattedText();
-            ModSimLoader.sendChat(this.job.jobName+":["+s1+"]"+s2);
+        if (this.destinations.size() == before) {
+            ModSimLoader.log.debug("{} 跳过无库存供货点：{} x{}", this.job.jobName,
+                    wanted.getDisplayName(), wanted.getCount());
         }
+    }
+
+    /** 检查目标点 5 格内箱子是否有指定物品。 */
+    private boolean hasStockAt(V3 dest, ItemStack wanted) {
+        List<IInventory> chests = this.job.inventoriesFindClosest(dest, 5);
+        for (IInventory inv : chests) {
+            for (int slot = 0; slot < inv.getSizeInventory(); slot++) {
+                ItemStack st = inv.getStackInSlot(slot);
+                if (st != null && !st.isEmpty() && st.isItemEqual(wanted)
+                        && ItemStack.areItemStackTagsEqual(st, wanted)) {
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 
     @Override

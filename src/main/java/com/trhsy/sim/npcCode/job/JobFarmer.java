@@ -44,35 +44,40 @@ public class JobFarmer extends Job {
     public void onUpdate() {
         super.onUpdate();
         try {
-            if (this.atWork) {
-                if (this.stage == -1) {
+            if (!this.atWork) {
+                return;
+            }
+            // P17(S1): 一次把整轮任务排好。
+            // 旧实现每次 onUpdate 只推进一步 farmer_stage，依赖“每 tick 都会调用”；
+            // 实际服务端在区块/批次/季节切换时可能几十 tick 才进来一次，idle 先完成，
+            // nextTask 把 stage 置 -1，farmer_stage 又被重置为 0，农民永远停在 idle。
+            if (this.farm == null) {
+                this.farm = ModSimLoader.getFarm(this.workPlace);
+            }
+            if (this.farm == null) {
+                this.folk.setStatus(new TextComponentTranslation("container.sim.job.crop.farmer.no_seeds", new Object[0]).getUnformattedText());
+                return;
+            }
+            if (this.currentTask == null) {
+                if (this.jobTasks.isEmpty()) {
                     this.farmer_stage = 0;
                     this.stage = 0;
-                } else if (this.farmer_stage == 0) {
-                    this.farmer_stage = 1;
-                    //去上班
-                    this.addJobTask(new JobTaskIdle(this, 200L, new TextComponentTranslation("container.sim.job.builder_Arrived",new Object[0]).getUnformattedText()));
-                } else if (this.farmer_stage == 1) {
-                    this.farmer_stage = 2;
-                    //锄地
-                    this.addJobTask(new JobTaskFarmer(this, -1L, new TextComponentTranslation("container.sim.job.livestock.farmer.Starting",new Object[0]).getUnformattedText(),this.farm));
-                } else if (this.farmer_stage == 2) {
-                    this.farmer_stage = 3;
-                    //种植
-                    this.addJobTask(new JobTaskFarmerPlant(this, -1L, new TextComponentTranslation("container.sim.job.livestock.farmer.Starting",new Object[0]).getUnformattedText(),this.farm));
-                } else if (this.farmer_stage == 3) {
-                    this.farmer_stage = 4;
-                    //等待
-                    this.addJobTask(new JobTaskFarmerGrow(this, -1L, new TextComponentTranslation("container.sim.job.livestock.farmer.Starting",new Object[0]).getUnformattedText(),this.farm));
-                } else if (this.farmer_stage == 4) {
+                    // 去上班
+                    this.addJobTask(new JobTaskIdle(this, 200L, new TextComponentTranslation("container.sim.job.builder_Arrived", new Object[0]).getUnformattedText()));
+                    // 锄地
+                    this.addJobTask(new JobTaskFarmer(this, -1L, new TextComponentTranslation("container.sim.job.livestock.farmer.Starting", new Object[0]).getUnformattedText(), this.farm));
+                    // 种植
+                    this.addJobTask(new JobTaskFarmerPlant(this, -1L, new TextComponentTranslation("container.sim.job.livestock.farmer.Starting", new Object[0]).getUnformattedText(), this.farm));
+                    // 等待/催熟
+                    this.addJobTask(new JobTaskFarmerGrow(this, -1L, new TextComponentTranslation("container.sim.job.livestock.farmer.Starting", new Object[0]).getUnformattedText(), this.farm));
+                    // 收获
+                    this.addJobTask(new JobTaskFarmerHarvest(this, -1L, new TextComponentTranslation("container.sim.job.livestock.farmer.Starting", new Object[0]).getUnformattedText(), this.farm));
                     this.farmer_stage = 5;
-                    //收获
-                    this.addJobTask(new JobTaskFarmerHarvest(this, -1L, new TextComponentTranslation("container.sim.job.livestock.farmer.Starting",new Object[0]).getUnformattedText(),this.farm));
-                }else{
-                    if (this.jobTasks.size() > 0&&this.currentTask==null) {
-                        this.currentTask = (JobTask) this.jobTasks.get(0);
-                        this.currentTask.begin();
-                    }
+                    this.stage = 5;
+                }
+                if (!this.jobTasks.isEmpty()) {
+                    this.currentTask = this.jobTasks.get(0);
+                    this.currentTask.begin();
                 }
             }
         } catch (Exception e) {

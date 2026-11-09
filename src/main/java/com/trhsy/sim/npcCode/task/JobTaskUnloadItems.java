@@ -38,7 +38,7 @@ public class JobTaskUnloadItems extends JobTask {
     @Override
     public void onUpdate() {
         List<ItemStack> toDelete = new ArrayList();
-        if (this.job.folk.isAtLocation(this.job.workPlace)) {
+        if (this.job.folk.isAtDestination(this.job.workPlace, 3.0D, 4.0D)) {
             //正在卸载货物
             this.folk.setStatus(new TextComponentTranslation("container.sim.job_task_Unloading_inventory", new Object[0]).getUnformattedText());
             if (this.timeToUnload == 0L) {

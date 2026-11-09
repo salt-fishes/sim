@@ -2,6 +2,7 @@ package com.trhsy.sim.npcCode.task;
 
 import com.trhsy.sim.loader.ModSimLoader;
 import com.trhsy.sim.npcCode.V3;
+import com.trhsy.sim.npcCode.economy.Economy;
 import com.trhsy.sim.npcCode.job.Job;
 import net.minecraft.client.resources.I18n;
 import net.minecraft.item.ItemStack;
@@ -42,7 +43,7 @@ public class JobTaskPlaceInChest extends JobTask {
 
     @Override
     public void onUpdate() {
-        if (this.job.folk.isAtLocation(this.job.workPlace)) {
+        if (this.job.folk.isAtDestination(this.job.workPlace, 3.0D, 4.0D)) {
             if (this.timeToPlace == 0L) {
                 this.timeToPlace = System.currentTimeMillis();
                 return;
@@ -53,7 +54,8 @@ public class JobTaskPlaceInChest extends JobTask {
             }
 
             this.job.placeInJobChest(this.toPlace);
-            ModSimLoader.addMoney(0.02F * (float)this.toPlace.getCount());
+            // P20: 成品产出收入归生产 NPC，不再反向给玩家发钱。
+            Economy.payOutput(this.job.folk, this.toPlace.getCount(), this.job.jobName);
             this.completeTask();
         } else if (!this.job.folk.entity.isMoving() && this.job.folk.entity.getNavigator().getPath() == null) {
             V3 v3=this.job.workPlace;

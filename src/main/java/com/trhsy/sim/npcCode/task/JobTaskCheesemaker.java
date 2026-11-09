@@ -37,7 +37,9 @@ public class JobTaskCheesemaker extends JobTask{
     public JobTaskCheesemaker(Job j, long ms, String status) {
         super(j, ms);
         this.status = status;
-        V3 v3=new V3(this.job.workPlace.x,this.job.workPlace.y-1,this.job.workPlace.z);
+        V3 v3=new V3(this.job.workPlace.x,this.job.workPlace.y,this.job.workPlace.z);
+        // P18: 工作点就是控制箱方块（与其他职业一致）；旧实现再 -1，会落到控制箱下方，
+        // 导致“未找到奶酪工厂”。控制箱由 workPlace 直接匹配。
         this.theCheeseFactory = ModSimLoader.getBuildingByV3(v3);
         // 校验奶酪工厂是否存在
         if (this.theCheeseFactory == null) {
@@ -97,8 +99,9 @@ public class JobTaskCheesemaker extends JobTask{
                 }
                 if (!filledOk) {
                     ModSimLoader.log.warn("未找到可填充牛奶的方块，进入下一阶段");
-                    this.cheesemakerStage = 3;
                 }
+                // P18: 旧实现只在 filledOk=false 时推进；成功填满牛奶槽后反而永远停在阶段 2。
+                this.cheesemakerStage = 3;
                 //搅拌
             }else if(this.cheesemakerStage == 3){
                 //检查牛奶粘度

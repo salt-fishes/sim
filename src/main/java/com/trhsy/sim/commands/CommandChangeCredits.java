@@ -3,6 +3,7 @@ package com.trhsy.sim.commands;
 import com.trhsy.sim.loader.ModSimLoader;
 import com.trhsy.sim.loader.NetWorkLoader;
 import com.trhsy.sim.network.client.PacketUpdateMoney;
+import com.trhsy.sim.npcCode.store.SimStore;
 import net.minecraft.client.resources.I18n;
 import net.minecraft.command.CommandException;
 import net.minecraft.command.ICommand;
@@ -10,6 +11,7 @@ import net.minecraft.command.ICommandSender;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.text.TextComponentTranslation;
+import net.minecraft.world.World;
 
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -50,8 +52,20 @@ public class CommandChangeCredits implements ICommand {
     public void execute(MinecraftServer server, ICommandSender sender, String[] argString) throws CommandException {
         try {
             if(argString.length>0){
-                ModSimLoader.money = Float.parseFloat(argString[0]);
-                ModSimLoader.saveStates();
+                float amount = Float.parseFloat(argString[0]);
+                ModSimLoader.money = amount;
+                // P17(S1): 直接写 SimStore。旧实现只写 settings.sk2，而
+                // simModLoad 从 sim_store.dat 读资金；开服早期执行 /credits 时
+                // 运行时值会在下一次 simModLoad 被旧 store 覆盖。
+                World world = server != null ? server.getWorld(0) : sender.getEntityWorld();
+                SimStore store = SimStore.get(world);
+                if (store != null) {
+                    store.money = amount;
+                    store.markDirty();
+                } else {
+                    // 非主世界/客户端兜底：保留旧路径，至少不丢运行时值。
+                    ModSimLoader.saveStates();
+                }
                 NetWorkLoader.net.sendToAll(new PacketUpdateMoney());
             }else{
                 //无效的参数，应该是：/credits <amount>

@@ -859,7 +859,10 @@ public class JobBuilder extends Job {
                     }
                     //特除方块
                     if (f_block == BlockLoader.blockSpecial) {
-                        int  meta=fs_structure.getMeta();
+                        // P18: 这里必须用当前 blockNumber 的 Structure；旧实现用的是
+                        // 上一次循环残留的 fs_structure，导致所有特殊方块 meta 被记成 0
+                        // （奶酪工厂的搅拌位/奶酪位全部丢失）。
+                        int meta = this.blueprint.structure[this.blockNumber].getMeta();
                         V3 v3 = new V3(tempBP.getX(), tempBP.getY(), tempBP.getZ(), f_block, meta);
                         this.blockSpecial.add(v3);
                     }

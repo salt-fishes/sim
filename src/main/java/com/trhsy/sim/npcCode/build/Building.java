@@ -225,7 +225,12 @@ public class Building {
                                 double y= Double.parseDouble(fs_f[1]);
                                 double z= Double.parseDouble(fs_f[2]);
                                 int m= Integer.parseInt(fs_f[3]);
-                                V3 v=new V3(x,y,z,m);
+                                V3 v=new V3(x,y,z);
+                                // P18: 第 4 个值是特殊方块 meta，不是 dimension。
+                                // 旧实现 new V3(x,y,z,m) 会把 meta 当维度，读档后
+                                // getSpecialBlocks(4) 永远为空。
+                                v.meta = m;
+                                v.dimension = this.dimension;
                                 this.blockSpecial.add(v);
                             }
                             //居住者

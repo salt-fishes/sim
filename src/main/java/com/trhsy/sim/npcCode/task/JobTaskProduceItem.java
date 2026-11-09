@@ -2,6 +2,7 @@ package com.trhsy.sim.npcCode.task;
 
 import com.trhsy.sim.loader.ModSimLoader;
 import com.trhsy.sim.npcCode.V3;
+import com.trhsy.sim.npcCode.economy.Economy;
 import com.trhsy.sim.npcCode.job.Job;
 import net.minecraft.inventory.IInventory;
 import net.minecraft.item.Item;
@@ -72,7 +73,9 @@ public class JobTaskProduceItem extends JobTask {
     @Override
     public void onUpdate() {
         //在工作期间
-        if (this.job.folk.isAtLocation(this.job.workPlace)) {
+        // P20: 工作点判定放宽到水平 3 格；控制箱常嵌在家具/柜台里，
+        // NPC 只能站到 1.5~2 格外的可站立面，旧判定会导致生产任务永远不执行。
+        if (this.job.folk.isAtDestination(this.job.workPlace, 3.0D, 4.0D)) {
             //设置状态
             this.folk.setStatus(this.status);
 
@@ -113,7 +116,9 @@ public class JobTaskProduceItem extends JobTask {
                 }
                 //箱子里放入制作的物品
                 this.job.placeInJobChest(new ItemStack(this.produce, maxProd, this.produceMeta));
-                ModSimLoader.addMoney(-0.2F * (float) maxProd);
+                // P20: 原料成本照旧由城市承担，成品再按件给生产 NPC 发产出补贴。
+                ModSimLoader.addMoney(-0.02F * (float) maxProd);
+                Economy.payOutput(this.job.folk, maxProd, this.job.jobName);
             }
             //完成任务
             this.completeTask();

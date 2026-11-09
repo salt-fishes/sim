@@ -11,6 +11,9 @@ import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.text.TextComponentTranslation;
 import net.minecraftforge.fml.common.registry.ForgeRegistries;
 
+import java.util.HashMap;
+import java.util.Map;
+
 /**
  * 稳定 ID 注册表（P0/P1）。
  *
@@ -99,6 +102,54 @@ public final class SimIds {
             20, 21, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37
     };
 
+    /**
+     * 中文职业名 -> 稳定 ID。
+     *
+     * <p>专服语言固定 en_US，但蓝图/建筑里的 JOB/jobtypes 可能来自中文客户端，
+     * 存的是中文显示名。只按当前语言反查会导致“中文建筑找不到英文供货建筑”，
+     * 例如奶酪匠找不到“牛奶农”的奶牛场。这里补一张双语反查表。
+     */
+    private static final Map<String, String> ZH_JOB_IDS = new HashMap<>();
+
+    static {
+        ZH_JOB_IDS.put("建筑工", "vocation1");
+        ZH_JOB_IDS.put("伐木工", "vocation2");
+        ZH_JOB_IDS.put("鸡蛋农", "vocation3");
+        ZH_JOB_IDS.put("矿工", "vocation4");
+        ZH_JOB_IDS.put("农民", "vocation5");
+        ZH_JOB_IDS.put("面包师", "vocation6");
+        ZH_JOB_IDS.put("士兵", "vocation7");
+        ZH_JOB_IDS.put("牧羊人", "vocation8");
+        ZH_JOB_IDS.put("杂货商", "vocation9");
+        ZH_JOB_IDS.put("快递员", "vocation10");
+        ZH_JOB_IDS.put("建筑商", "vocation11");
+        ZH_JOB_IDS.put("养牛户", "vocation12");
+        ZH_JOB_IDS.put("养猪户", "vocation13");
+        ZH_JOB_IDS.put("养鸡户", "vocation14");
+        ZH_JOB_IDS.put("屠夫", "vocation15");
+        ZH_JOB_IDS.put("规划师", "vocation16");
+        ZH_JOB_IDS.put("玻璃制造商", "vocation17");
+        ZH_JOB_IDS.put("渔夫", "vocation18");
+        ZH_JOB_IDS.put("路径生成器", "vocation19");
+        ZH_JOB_IDS.put("牛奶农", "vocation20");
+        ZH_JOB_IDS.put("奶酪匠", "vocation21");
+        ZH_JOB_IDS.put("汉堡店经理", "vocation22");
+        ZH_JOB_IDS.put("油炸厨师", "vocation23");
+        ZH_JOB_IDS.put("服务员", "vocation24");
+        ZH_JOB_IDS.put("板砖工匠", "vocation25");
+        ZH_JOB_IDS.put("食品商", "vocation26");
+        ZH_JOB_IDS.put("养羊户", "vocation28");
+        ZH_JOB_IDS.put("养兔户", "vocation29");
+        ZH_JOB_IDS.put("制糖师", "vocation30");
+        ZH_JOB_IDS.put("行长", "vocation31");
+        ZH_JOB_IDS.put("插花师", "vocation32");
+        ZH_JOB_IDS.put("赤脚大夫", "vocation33");
+        ZH_JOB_IDS.put("妇产科医生", "vocation34");
+        ZH_JOB_IDS.put("麦当劳老板", "vocation35");
+        ZH_JOB_IDS.put("汉堡店老板", "vocation36");
+        ZH_JOB_IDS.put("酒保", "vocation37");
+    }
+
     /** 显示串 -> 稳定 ID（vocationN）。找不到返回 ""。 */
     public static String jobIdFromDisplay(String localizedJobName) {
         if (localizedJobName == null || localizedJobName.isEmpty()) {
@@ -117,6 +168,11 @@ public final class SimIds {
             if (localizedJobName.equals(translate("container.sim.Vocation" + n))) {
                 return "vocation" + n;
             }
+        }
+        // 专服 en_US 下，中文客户端/中文蓝图留下的中文 jobType
+        String zh = ZH_JOB_IDS.get(localizedJobName);
+        if (zh != null) {
+            return zh;
         }
         return "";
     }

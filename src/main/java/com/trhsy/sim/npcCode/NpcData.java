@@ -11,6 +11,7 @@ import com.trhsy.sim.npcCode.block.MineBox;
 import com.trhsy.sim.npcCode.build.Building;
 import com.trhsy.sim.npcCode.build.BuildingBlueprint;
 import com.trhsy.sim.npcCode.build.TerrainType;
+import com.trhsy.sim.npcCode.economy.Economy;
 import com.trhsy.sim.npcCode.enums.EnumFamilyType;
 import com.trhsy.sim.npcCode.job.*;
 import com.trhsy.sim.npcCode.moodbuff.MoodBuff;
@@ -2701,6 +2702,9 @@ public class NpcData {
                 //应该工作
                 if (this.job != null && this.shouldWork()) {
                     this.job.onMinute();
+                    // P20: 工资统一在这里发，避免各职业 onMinute 覆盖后漏发。
+                    Economy.cityPaysNpc(this, Economy.WAGE_PER_MINUTE,
+                            "在岗工资（" + this.job.jobName + "）");
                 }
                 //父亲
                 NpcData father;
@@ -3614,12 +3618,18 @@ public class NpcData {
     private V3 getAdjustedV3(V3 v3) {
         // P2+: 落点检查。只尝试"目标上方1格 / 目标同高 / 上方2格"，
         // **绝不向上爬到屋顶**（旧实现向上扫 4 格，室内目标被挡时会把 NPC 放到屋顶上）。
-        double y = v3.y + 1.0D;
+        // P18: 校验和返回必须用同一个方块列。旧实现用 floor(x)/floor(z) 校验，
+        // 却返回 x+0.5/z+0.5；当目标是 92.5 这类坐标时，实际落点变成 93.0，
+        // 偏到下一格，isSafeTeleport 必然失败（日志：目标不安全或未加载）。
+        double bx = Math.floor(v3.x);
+        double bz = Math.floor(v3.z);
+        double by = Math.floor(v3.y);
+        double y = by + 1.0D;
         World w = this.entity != null ? this.entity.world : this.world;
         if (w != null) {
-            double[] candidates = {v3.y + 1.0D, v3.y, v3.y + 2.0D};
+            double[] candidates = {by + 1.0D, by, by + 2.0D};
             for (double cy : candidates) {
-                BlockPos pos = new BlockPos(v3.x, cy, v3.z);
+                BlockPos pos = new BlockPos(bx, cy, bz);
                 // P10(S0): 未加载区块不要 isAirBlock，避免隐式加载。
                 if (!w.isBlockLoaded(pos)) {
                     continue;
@@ -3636,7 +3646,7 @@ public class NpcData {
                 break;
             }
         }
-        return new V3(v3.x + 0.5D, y, v3.z + 0.5D, v3.dimension);
+        return new V3(bx + 0.5D, y, bz + 0.5D, v3.dimension);
     }
 
     /**

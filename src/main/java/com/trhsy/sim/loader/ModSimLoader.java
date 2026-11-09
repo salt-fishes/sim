@@ -594,7 +594,10 @@ public class ModSimLoader {
                 continue;
             }
             String bid = SimIds.jobIdFromDisplay(b.jobType);
+            boolean sheepAlias = (wantId.equals("vocation27") || wantId.equals("vocation28"))
+                    && (bid.equals("vocation27") || bid.equals("vocation28"));
             boolean match = (!wantId.isEmpty() && wantId.equals(bid))
+                    || sheepAlias
                     || (wantId.isEmpty() && b.jobType.contentEquals(jobType));
             if (match) {
                 bs.add(b);

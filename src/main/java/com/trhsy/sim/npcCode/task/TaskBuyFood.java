@@ -4,6 +4,7 @@ import com.trhsy.sim.loader.ModSimLoader;
 import com.trhsy.sim.npcCode.NpcData;
 import com.trhsy.sim.npcCode.V3;
 import com.trhsy.sim.npcCode.build.Building;
+import com.trhsy.sim.npcCode.economy.Economy;
 import net.minecraft.inventory.IInventory;
 import net.minecraft.item.ItemFood;
 import net.minecraft.item.ItemStack;
@@ -25,8 +26,8 @@ import net.minecraft.world.World;
  * "工作 → 工资 → 买食物 → 钱回流给店主" 的闭环。
  */
 public class TaskBuyFood extends Task {
-    /** 一份食物的价格。 */
-    public static final float FOOD_PRICE = 0.5F;
+    /** 一份食物的价格（P20：统一走 Economy，真正扣 NPC 余额）。 */
+    public static final float FOOD_PRICE = Economy.FOOD_PRICE;
 
     private final Building shop;
     private transient long actionDelay = 0L;
@@ -78,6 +79,11 @@ public class TaskBuyFood extends Task {
             int heal = 1;
             if (food.getItem() instanceof ItemFood) {
                 heal = Math.max(1, ((ItemFood) food.getItem()).getHealAmount(food) / 2);
+            }
+            // P20: 先结账再吃；余额不足时按慈善免费，保证不会饿死。
+            boolean paid = Economy.npcPaysCity(this.folk, FOOD_PRICE, "在 " + this.shop.buildingName + " 买饭");
+            if (!paid) {
+                ModSimLoader.log.info("{} 在 {} 慈善免费获得一份食物", this.folk.getName(), this.shop.buildingName);
             }
             this.folk.hunger = Math.min(10.0D, this.folk.hunger + heal);
             ModSimLoader.log.info("{} 在 {} 买了食物，余额 {}，饥饿值 {}",

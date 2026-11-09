@@ -5,6 +5,7 @@ import com.trhsy.sim.loader.SoundRegistry;
 import com.trhsy.sim.npcCode.NpcData;
 import com.trhsy.sim.npcCode.V3;
 import com.trhsy.sim.npcCode.build.Building;
+import com.trhsy.sim.npcCode.economy.Economy;
 import com.trhsy.sim.npcCode.task.JobTask;
 import com.trhsy.sim.util.PricesForBlocks;
 import net.minecraft.block.Block;
@@ -768,7 +769,11 @@ public abstract class Job {
      **/
     public int feedFolks() {
         int fedFolks = 0;
+        float revenue = 0.0F;
+        long feedStart = System.currentTimeMillis();
         try {
+            // P20: 工作箱只扫描一次，不能在每个 NPC 循环里重复扫描 9x9x9 体积。
+            List<IInventory> shopChests = this.inventoriesFindClosest(this.workPlace, 5);
 
             for (NpcData fd : ModSimLoader.folks) {
 
@@ -790,7 +795,7 @@ public abstract class Job {
                     continue;
                 }
                 // 遍历最近的箱子
-                for (IInventory chest : this.inventoriesFindClosest(this.workPlace, 5)) {
+                for (IInventory chest : shopChests) {
 
                     for (int i = 0; i < chest.getSizeInventory() && needFood > 0; ++i) {
 
@@ -799,8 +804,10 @@ public abstract class Job {
                             continue;
                         }
                         String itemName = is.getItem().getUnlocalizedName(is);
-                        // 输出当前物品信息（调试用）
-                        ModSimLoader.log.debug("检查物品：{}，类：{}", is.getUnlocalizedName(), is.getItem().getClass().getName());
+                        // 输出当前物品信息（调试用，避免每槽都拼字符串）
+                        if (ModSimLoader.log.isDebugEnabled()) {
+                            ModSimLoader.log.debug("检查物品：{}，类：{}", is.getUnlocalizedName(), is.getItem().getClass().getName());
+                        }
 // 判断是否为食物（包括蛋糕）
                         if (is.getItem() instanceof ItemFood) {
                             ItemFood itemFood = (ItemFood) is.getItem();
@@ -822,8 +829,9 @@ public abstract class Job {
                             if (actual <= 0) {
                                 continue;
                             }
-                            // P4: 先不做定价系统，商店免费喂食，保证 NPC 不被饿死
+                            // P20: 商店喂食收费；余额不足按慈善免费。
                             fd.hunger = Math.min(10.0D, fd.hunger + (double) healPerItem * actual);
+                            revenue += Economy.chargeShopMeal(fd, actual, this.jobName);
                             fedFolks++;
                             needFood = 10 - (int) Math.ceil(fd.hunger); // 重新计算剩余需求
                             ModSimLoader.log.info("喂食{}个{}给NPC{}，当前饥饿值：{}",
@@ -839,8 +847,9 @@ public abstract class Job {
                             if (actual <= 0) {
                                 continue;
                             }
-                            // P4: 先不做定价系统，商店免费喂食
+                            // P20: 商店喂食收费；余额不足按慈善免费。
                             fd.hunger = Math.min(10.0D, fd.hunger + (double) cakeHeal * actual);
+                            revenue += Economy.chargeShopMeal(fd, actual, this.jobName);
                             fedFolks++;
                             needFood = 10 - (int) Math.ceil(fd.hunger);
                             ModSimLoader.log.info("喂食{}个蛋糕给NPC{}，当前饥饿值：{}",
@@ -861,6 +870,11 @@ public abstract class Job {
 
                 }
 
+            }
+            if (revenue > 0.0F) {
+                ModSimLoader.log.info("{} 商店喂食结算：{} 人次，收入 {}，耗时 {} ms",
+                        this.jobName, fedFolks, String.format("%.2f", revenue),
+                        System.currentTimeMillis() - feedStart);
             }
             return fedFolks;
         } catch (Exception e) {

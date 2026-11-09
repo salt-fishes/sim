@@ -67,6 +67,10 @@ public class JobBaker extends Job {
                     this.restockRounds++;
                     ModSimLoader.log.info("面包店原料不足，开始第 {} 轮补货", this.restockRounds);
                     this.baker_stage = 1; // 1=加"到位"idle，之后 2=采货
+                } else if (wt < 11600L && this.canProduce()) {
+                    // P20: 原料已经备齐（常见于预置供货箱）时必须先生产；
+                    // 旧逻辑直接跳到 stage 5 开卖，货架上只有原料没有成品。
+                    this.baker_stage = 4;
                 } else if (wt < 11600L) {
                     this.baker_stage = 5; // 5=开卖
                 } else {
@@ -323,6 +327,14 @@ public class JobBaker extends Job {
     private boolean needMoreIngredients() {
         return this.wheat < RESTOCK_MIN || this.egg < RESTOCK_MIN || this.pumpkin < RESTOCK_MIN
                 || this.milk_bucket < RESTOCK_MIN || this.sugar < RESTOCK_MIN || this.dye < RESTOCK_MIN;
+    }
+
+    /** P20: 当前箱子里的原料是否足够做出至少一种成品。 */
+    private boolean canProduce() {
+        return (this.milk_bucket >= 3 && this.sugar >= 2 && this.egg >= 1 && this.wheat > 3)
+                || (this.pumpkin > 1 && this.sugar > 1 && this.egg > 1)
+                || (this.dye >= 1 && this.wheat >= 2)
+                || (this.wheat > 3);
     }
 
     @Override

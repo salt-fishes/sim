@@ -70,8 +70,10 @@ public class JobFisherman extends Job {
         this.nearWater = false;
         try {
             //寻找附近水
+            // P16: 旧实现只扫描工作点下方第 3 格的一层，工业图纸“渔场”的水面在下方第 2 格，
+            // 会导致 nearWater 永远为 false、渔夫到岗后不作业。改为向下 3 格的体积扫描。
             BlockPos corner1 = this.pos.north(5).east(5).down(3);
-            BlockPos corner2 =  this.pos.south(5).west(5).down(3);
+            BlockPos corner2 =  this.pos.south(5).west(5);
 
             Iterator var6 = BlockPos.getAllInBox(corner1, corner2).iterator();
             //找到水
