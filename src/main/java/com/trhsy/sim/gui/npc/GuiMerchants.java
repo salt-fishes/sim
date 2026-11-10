@@ -1,6 +1,8 @@
 package com.trhsy.sim.gui.npc;
 
 import com.trhsy.sim.gui.ATMscreen;
+import com.trhsy.sim.gui.GuiLayout;
+import com.trhsy.sim.gui.GuiStyle;
 import com.trhsy.sim.loader.ModSimLoader;
 import com.trhsy.sim.loader.SoundRegistry;
 import com.trhsy.sim.network.client.PacketOpenMerchantsGui;
@@ -9,13 +11,16 @@ import com.trhsy.sim.util.PricesForBlocks;
 import com.trhsy.sim.util.items.Commodity;
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.gui.GuiScreen;
+import net.minecraft.client.renderer.RenderHelper;
 import net.minecraft.init.Items;
+import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.SoundCategory;
 import net.minecraft.util.SoundEvent;
 import net.minecraft.util.text.TextComponentTranslation;
 import org.lwjgl.input.Mouse;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -39,6 +44,7 @@ public class GuiMerchants extends GuiScreen {
     //鼠标计数
     private int mouseCount = 0;
     private List<Commodity> cart;
+    private List<ItemStack> depositItems = new ArrayList<ItemStack>();
 
     public GuiMerchants() {
     }
@@ -64,334 +70,367 @@ public class GuiMerchants extends GuiScreen {
     @Override
     public void initGui() {
         try {
-
-            //更新售卖物品
             if (Commodity.theCommodities.size() == 0) {
                 Commodity.refreshAvailableCommoditities();
             }
-
-            this.buttonList.clear();
-            //开始
             if (this.theScreen == ATMscreen.START) {
-                //出售
-                String sim_gui_ATMs_Deposit = new TextComponentTranslation("container.sim.Merchant10",new Object[0]).getUnformattedText();
-                this.buttonList.add(new GuiButton(0, this.width / 2 - 50, 50, 100, 20, sim_gui_ATMs_Deposit));
-                //购买
-                String sim_gui_ATMs_Commodities = new TextComponentTranslation("container.sim.Merchant9",new Object[0]).getUnformattedText();
-                this.buttonList.add(new GuiButton(1, this.width / 2 - 50, 70, 100, 20, sim_gui_ATMs_Commodities));
-            } else {
-                int offset;
-                int inv;
-                //出售
-                if (this.theScreen == ATMscreen.DEPOSIT) {
-                    offset = 30;
-
-                    for (inv = 0; inv < this.mc.player.inventory.getSizeInventory(); inv++) {
-                        ItemStack is = this.mc.player.inventory.getStackInSlot(inv);
-                        if (is != null) {
-                            //出售一个
-                            String sim_gui_ATMs_Sell_1 = new TextComponentTranslation("container.sim.sim_gui_ATMs_Sell_1",new Object[0]).getUnformattedText();
-                            //出售
-                            String sim_gui_ATMs_Sell = new TextComponentTranslation("container.sim.sim_gui_ATMs_Sell",new Object[0]).getUnformattedText();
-                            // 个
-                            String sim_gui_ATMs_for = new TextComponentTranslation("container.sim.sim_gui_ATMs_for",new Object[0]).getUnformattedText();
-                            //末影珍珠
-                            if (is.getItem() == Items.ENDER_PEARL) {
-
-                                this.buttonList.add(new GuiButton(inv + 100, this.width / 2, offset, 100, 20, sim_gui_ATMs_Sell_1 + ModSimLoader.displayMoney(PricesForBlocks.bankPriceDiamond)));
-                                this.buttonList.add(new GuiButton(inv + 500, this.width / 2 + 100, offset, 100, 20, sim_gui_ATMs_Sell + is.getCount() + sim_gui_ATMs_for + ModSimLoader.displayMoney(PricesForBlocks.bankPriceDiamond * (float) is.getCount())));
-                                offset += 20;
-                                //火焰棒
-                            } else if (is.getItem() == Items.BLAZE_ROD) {
-                                this.buttonList.add(new GuiButton(inv + 100, this.width / 2, offset, 100, 20, sim_gui_ATMs_Sell_1 + ModSimLoader.displayMoney(PricesForBlocks.bankPriceEmerald)));
-                                this.buttonList.add(new GuiButton(inv + 500, this.width / 2 + 100, offset, 100, 20, sim_gui_ATMs_Sell + is.getCount() + sim_gui_ATMs_for + ModSimLoader.displayMoney(PricesForBlocks.bankPriceEmerald * (float) is.getCount())));
-                                offset += 20;
-                                //骨
-                            } else if (is.getItem() == Items.BONE) {
-                                this.buttonList.add(new GuiButton(inv + 100, this.width / 2, offset, 100, 20, sim_gui_ATMs_Sell_1 + ModSimLoader.displayMoney(PricesForBlocks.bankPriceRedstone)));
-                                this.buttonList.add(new GuiButton(inv + 500, this.width / 2 + 100, offset, 100, 20, sim_gui_ATMs_Sell + is.getCount() + sim_gui_ATMs_for + ModSimLoader.displayMoney(PricesForBlocks.bankPriceRedstone * (float) is.getCount())));
-                                offset += 20;
-                                //火药
-                            } else if (is.getItem() == Items.GUNPOWDER) {
-                                this.buttonList.add(new GuiButton(inv + 100, this.width / 2, offset, 100, 20, sim_gui_ATMs_Sell_1 + ModSimLoader.displayMoney(PricesForBlocks.bankPriceGlowstone)));
-                                this.buttonList.add(new GuiButton(inv + 500, this.width / 2 + 100, offset, 100, 20, sim_gui_ATMs_Sell + is.getCount() + sim_gui_ATMs_for + ModSimLoader.displayMoney(PricesForBlocks.bankPriceGlowstone * (float) is.getCount())));
-                                offset += 20;
-                                //粘液球
-                            } else if (is.getItem() == Items.SLIME_BALL) {
-                                this.buttonList.add(new GuiButton(inv + 100, this.width / 2, offset, 100, 20, sim_gui_ATMs_Sell_1 + ModSimLoader.displayMoney(PricesForBlocks.bankPriceGold)));
-                                this.buttonList.add(new GuiButton(inv + 500, this.width / 2 + 100, offset, 100, 20, sim_gui_ATMs_Sell + is.getCount() + sim_gui_ATMs_for + ModSimLoader.displayMoney(PricesForBlocks.bankPriceGold * (float) is.getCount())));
-                                offset += 20;
-                                //细绳
-                            } else if (is.getItem() == Items.STRING) {
-                                this.buttonList.add(new GuiButton(inv + 100, this.width / 2, offset, 100, 20, sim_gui_ATMs_Sell_1 + ModSimLoader.displayMoney(PricesForBlocks.bankPriceIron)));
-                                this.buttonList.add(new GuiButton(inv + 500, this.width / 2 + 100, offset, 100, 20, sim_gui_ATMs_Sell + is.getCount() + sim_gui_ATMs_for + ModSimLoader.displayMoney(PricesForBlocks.bankPriceIron * (float) is.getCount())));
-                                offset += 20;
-                                //蜘蛛眼
-                            } else if (is.getItem() == Items.SPIDER_EYE) {
-                                this.buttonList.add(new GuiButton(inv + 100, this.width / 2, offset, 100, 20, sim_gui_ATMs_Sell_1 + ModSimLoader.displayMoney(PricesForBlocks.bankPriceTin)));
-                                this.buttonList.add(new GuiButton(inv + 500, this.width / 2 + 100, offset, 100, 20, sim_gui_ATMs_Sell + is.getCount() + sim_gui_ATMs_for + ModSimLoader.displayMoney(PricesForBlocks.bankPriceTin * (float) is.getCount())));
-                                offset += 20;
-                            }
-                        }
-                    }
-                    //购买
-                } else if (this.theScreen == ATMscreen.COMMODITIES) {
-                    offset = 30;
-
-                    for (inv = 0; inv < Commodity.theCommodities.size(); inv++) {
-                        this.buttonList.add(new GuiButton(inv + 200, this.width / 2, offset, 20, 20, "-"));
-                        this.buttonList.add(new GuiButton(inv + 300, this.width / 2 + 20, offset, 20, 20, "+"));
-                        offset += 20;
-                    }
-                    //购买
-                    String sim_gui_ATMs_Buy = new TextComponentTranslation("container.sim.sim_gui_ATMs_Buy",new Object[0]).getUnformattedText();
-                    this.buttonList.add(new GuiButton(400, this.width - 60, this.height - 30, 50, 20, sim_gui_ATMs_Buy));
-                }
+                this.theScreen = ATMscreen.DEPOSIT;
             }
+            this.buttonList.clear();
+            int px = left();
+            int py = top();
+            int pw = panelW();
+            int ph = panelH();
 
+            this.buttonList.add(new GuiButton(0, px + pw - 60, py + 4, 52, 18, new TextComponentTranslation("container.sim.sim_gui_BC_Done", new Object[0]).getUnformattedText()));
+            GuiButton sellTab = new GuiButton(10, px + 8, py + 24, 80, 20, new TextComponentTranslation("container.sim.gui.sell", new Object[0]).getUnformattedText());
+            GuiButton buyTab = new GuiButton(11, px + 92, py + 24, 80, 20, new TextComponentTranslation("container.sim.gui.buy", new Object[0]).getUnformattedText());
+            sellTab.enabled = this.theScreen != ATMscreen.DEPOSIT;
+            buyTab.enabled = this.theScreen != ATMscreen.COMMODITIES;
+            this.buttonList.add(sellTab);
+            this.buttonList.add(buyTab);
+
+            if (this.theScreen == ATMscreen.DEPOSIT) {
+                this.buildDepositItems();
+                int cardW = (pw - 32) / 3;
+                int cardH = 32;
+                int startY = py + 62;
+                for (int i = 0; i < this.depositItems.size() && i < 15; i++) {
+                    int x = px + 12 + (i % 3) * (cardW + 4);
+                    int y = startY + (i / 3) * (cardH + 2);
+                    this.buttonList.add(new GuiButton(100 + i, x + cardW - 56, y + 12, 24, 18, new TextComponentTranslation("container.sim.gui.sell_one", new Object[0]).getUnformattedText()));
+                    this.buttonList.add(new GuiButton(500 + i, x + cardW - 30, y + 12, 28, 18, new TextComponentTranslation("container.sim.gui.sell_all", new Object[0]).getUnformattedText()));
+                }
+            } else if (this.theScreen == ATMscreen.COMMODITIES) {
+                int cardW = (pw - 32) / 3;
+                int cardH = 32;
+                int startY = py + 62;
+                for (int i = 0; i < Commodity.theCommodities.size() && i < 15; i++) {
+                    int x = px + 12 + (i % 3) * (cardW + 4);
+                    int y = startY + (i / 3) * (cardH + 2);
+                    this.buttonList.add(new GuiButton(200 + i, x + cardW - 58, y + 12, 16, 18, "-"));
+                    this.buttonList.add(new GuiButton(300 + i, x + cardW - 24, y + 12, 16, 18, "+"));
+                }
+                this.buttonList.add(new GuiButton(400, px + pw - 90, py + ph - 26, 82, 20, new TextComponentTranslation("container.sim.sim_gui_ATMs_Buy", new Object[0]).getUnformattedText()));
+            }
         } catch (Exception e) {
             StackTraceElement element = e.getStackTrace()[0];
             ModSimLoader.log.error("GuiMerchants-initGui出错了：" + e.getMessage() + "行数：" + element.getLineNumber());
         }
-
     }
 
     @Override
-    public void drawScreen(int i, int j, float f) {
+    public void drawScreen(int mouseX, int mouseY, float partialTicks) {
         try {
             if (this.mouseCount < 10) {
                 ++this.mouseCount;
                 Mouse.setGrabbed(false);
             }
-
             this.drawDefaultBackground();
-            //模拟城镇能力有限公司
-            String sim_gui_ATMs_Ltd = new TextComponentTranslation("container.sim.sim_gui_ATMs_Ltd",new Object[0]).getUnformattedText();
-            this.drawCenteredString(this.fontRenderer, sim_gui_ATMs_Ltd, this.width / 2, 5, 16777215);
-            if (this.theScreen == ATMscreen.START) {
-                //欢迎来到杂货铺,这里能买到一些你意想不到的物品，当然你若有一些特除物品也可卖给我
-                String sim_gui_ATMs_Welcome = new TextComponentTranslation("container.sim.sim_gui_ATMs_Welcome1",new Object[0]).getUnformattedText();
-                this.drawCenteredString(this.fontRenderer, sim_gui_ATMs_Welcome, this.width / 2, 15, 65280);
-                //作为模拟城镇金币的交换,我们为您提供最优惠的价格
-                String sim_gui_ATMs_exchange = new TextComponentTranslation("container.sim.sim_gui_ATMs_exchange",new Object[0]).getUnformattedText();
-                this.drawCenteredString(this.fontRenderer, sim_gui_ATMs_exchange, this.width / 2, 25, 65280);
-                //末影珍珠,烈焰棒,骨头,火药,粘液球,细绳,蜘蛛眼。
-                String sim_gui_ATMs_Diamonds = new TextComponentTranslation("container.sim.sim_gui_ATMs_Diamonds1",new Object[0]).getUnformattedText();
-                this.drawCenteredString(this.fontRenderer, sim_gui_ATMs_Diamonds, this.width / 2, 35, 65280);
-            } else {
-                int offset;
-                if (this.theScreen == ATMscreen.DEPOSIT) {
-                    offset = 35;
-                    boolean playerHasItems = false;
-                    //本行接受的库存物品：
-                    String sim_gui_ATMs_Items = new TextComponentTranslation("container.sim.sim_gui_ATMs_Items1",new Object[0]).getUnformattedText();
-                    this.drawCenteredString(this.fontRenderer, sim_gui_ATMs_Items, this.width / 2, 15, 65280);
+            int px = left();
+            int py = top();
+            int pw = panelW();
+            int ph = panelH();
+            GuiStyle.panel(px, py, pw, ph, new TextComponentTranslation("container.sim.gui.grocery", new Object[0]).getUnformattedText(), this.fontRenderer);
 
-                    for (int inv = 0; inv < this.mc.player.inventory.getSizeInventory(); inv++) {
-                        ItemStack is = this.mc.player.inventory.getStackInSlot(inv);
-                        //末影珍珠、火焰棒、骨、火药、粘液球、细绳、蜘蛛眼
-                        if (is != null && (is.getItem() == Items.ENDER_PEARL || is.getItem() == Items.BLAZE_ROD || is.getItem() == Items.BONE || is.getItem() == Items.GUNPOWDER || is.getItem() == Items.SLIME_BALL || is.getItem() == Items.STRING || is.getItem() == Items.SPIDER_EYE )) {
-                            this.drawString(this.fontRenderer, is.getCount() + " x " + is.getDisplayName(), 40, offset, 65280);
-                            playerHasItems = true;
-                            offset += 20;
-                        }
+            String balance = new TextComponentTranslation("container.sim.gui.money", new Object[0]).getUnformattedText() + ": " + ModSimLoader.displayMoney(ModSimLoader.money);
+            GuiStyle.text(this.fontRenderer, px + pw - 12 - this.fontRenderer.getStringWidth(balance), py + 30, balance, GuiStyle.GREEN);
+
+            int cardW = (pw - 32) / 3;
+            int cardH = 32;
+            int startY = py + 62;
+            if (this.theScreen == ATMscreen.DEPOSIT) {
+                GuiStyle.text(this.fontRenderer, px + 12, py + 50, new TextComponentTranslation("container.sim.sim_gui_ATMs_Items1", new Object[0]).getUnformattedText(), GuiStyle.TEXT_MUTED);
+                if (this.depositItems.isEmpty()) {
+                    GuiStyle.text(this.fontRenderer, px + 12, startY + 4, new TextComponentTranslation("container.sim.sim_gui_ATMs_sorry", new Object[0]).getUnformattedText(), GuiStyle.TEXT_MUTED);
+                } else {
+                    for (int i = 0; i < this.depositItems.size() && i < 15; i++) {
+                        ItemStack stack = this.depositItems.get(i);
+                        int x = px + 12 + (i % 3) * (cardW + 4);
+                        int y = startY + (i / 3) * (cardH + 2);
+                        int count = this.countType(stack);
+                        float price = this.depositPrice(stack);
+                        GuiStyle.inset(x, y, cardW, cardH);
+                        GuiStyle.slot(x + 2, y + 2);
+                        this.drawItem(stack, x + 3, y + 3);
+                        GuiStyle.text(this.fontRenderer, x + 22, y + 2, GuiLayout.truncate(this.fontRenderer, stack.getDisplayName(), cardW - 26), GuiStyle.TEXT);
+                        GuiStyle.text(this.fontRenderer, x + 2, y + 19, count + " x " + ModSimLoader.displayMoney(price), GuiStyle.GREEN);
                     }
-
-                    if (!playerHasItems) {
-                        //你没有我们想买的东西,抱歉。
-                        String sim_gui_ATMs_sorry = new TextComponentTranslation("container.sim.sim_gui_ATMs_sorry",new Object[0]).getUnformattedText();
-                        this.drawString(this.fontRenderer, sim_gui_ATMs_sorry, 40, offset, 65280);
+                }
+            } else if (this.theScreen == ATMscreen.COMMODITIES) {
+                GuiStyle.text(this.fontRenderer, px + 12, py + 50, new TextComponentTranslation("container.sim.sim_gui_ATMs_today", new Object[0]).getUnformattedText(), GuiStyle.TEXT_MUTED);
+                if (Commodity.theCommodities.isEmpty()) {
+                    GuiStyle.text(this.fontRenderer, px + 12, startY + 4, new TextComponentTranslation("container.sim.sim_gui_ATMs_later", new Object[0]).getUnformattedText(), GuiStyle.TEXT_MUTED);
+                } else {
+                    float total = 0.0F;
+                    for (int i = 0; i < Commodity.theCommodities.size() && i < 15; i++) {
+                        Commodity item = Commodity.theCommodities.get(i);
+                        int x = px + 12 + (i % 3) * (cardW + 4);
+                        int y = startY + (i / 3) * (cardH + 2);
+                        int qty = this.cartQuantity(item);
+                        total += qty * item.priceEach;
+                        GuiStyle.inset(x, y, cardW, cardH);
+                        GuiStyle.slot(x + 2, y + 2);
+                        this.drawItem(item.theItemStack, x + 3, y + 3);
+                        GuiStyle.text(this.fontRenderer, x + 22, y + 2, GuiLayout.truncate(this.fontRenderer, item.theItemStack.getDisplayName(), cardW - 26), GuiStyle.TEXT);
+                        GuiStyle.text(this.fontRenderer, x + 2, y + 19, item.quantity + " x " + ModSimLoader.displayMoney(item.priceEach), GuiStyle.TEXT_MUTED);
+                        GuiStyle.text(this.fontRenderer, x + cardW - 40, y + 19, String.valueOf(qty), GuiStyle.TEXT);
                     }
-                } else if (this.theScreen == ATMscreen.COMMODITIES) {
-                    //今天可以买到的商品
-                    String sim_gui_ATMs_today = new TextComponentTranslation("container.sim.sim_gui_ATMs_today",new Object[0]).getUnformattedText();
-                    this.drawCenteredString(this.fontRenderer, sim_gui_ATMs_today, this.width / 2, 20, 65280);
-                    offset = 35;
-                    if (Commodity.theCommodities.size() == 0) {
-                        //目前没有物品,请稍后再来。
-                        String sim_gui_ATMs_later = new TextComponentTranslation("container.sim.sim_gui_ATMs_later",new Object[0]).getUnformattedText();
-                        this.drawString(this.fontRenderer, sim_gui_ATMs_later, 20, offset, 65280);
-                    }
-
-                    for (int it = 0; it < Commodity.theCommodities.size(); it++) {
-                        Commodity item = (Commodity) Commodity.theCommodities.get(it);
-                        this.drawString(this.fontRenderer, item.quantity + " x " + item.theItemStack.getDisplayName() + " @ " + ModSimLoader.displayMoney(item.priceEach) + " " + new TextComponentTranslation("container.sim.job.credits",new Object[0]).getUnformattedText(), 20, offset, 65280);
-                        int qty = 0;
-
-                        for (int ci = 0; ci < this.cart.size(); ++ci) {
-                            Commodity cartItem = (Commodity) this.cart.get(ci);
-                            if (cartItem.theItemStack.getDisplayName().contentEquals(item.theItemStack.getDisplayName())) {
-                                qty = cartItem.quantity;
-                            }
-                        }
-
-                        this.drawString(this.fontRenderer, qty + "", this.width / 2 - 30, offset, 65280);
-                        offset += 20;
-                    }
+                    GuiStyle.text(this.fontRenderer, px + 12, py + ph - 20, new TextComponentTranslation("container.sim.gui.total", new Object[0]).getUnformattedText() + ": " + ModSimLoader.displayMoney(total), GuiStyle.GREEN);
                 }
             }
 
-            this.drawCenteredString(this.fontRenderer, this.errorText, this.width / 2, this.height - 15, 16711680);
-            super.drawScreen(i, j, f);
+            if (this.errorText != null && !this.errorText.isEmpty()) {
+                GuiStyle.text(this.fontRenderer, px + 12, py + 46, GuiLayout.truncate(this.fontRenderer, this.errorText, pw - 24), GuiStyle.RED);
+            }
+            super.drawScreen(mouseX, mouseY, partialTicks);
         } catch (Exception e) {
             StackTraceElement element = e.getStackTrace()[0];
             ModSimLoader.log.error("GuiMerchants-drawScreen出错了：" + e.getMessage() + "行数：" + element.getLineNumber());
         }
-
-
     }
 
+    private int panelW() {
+        return Math.min(360, this.width - 16);
+    }
 
-    /**
-     * 执行动作
-     *
-     * @param guibutton
-     */
-    @Override
-    protected void actionPerformed(GuiButton guibutton) {
-        try {
-            if (System.currentTimeMillis() - this.fuckingBodge >= 500L) {
-                this.fuckingBodge = System.currentTimeMillis();
-                //出售
-                String sim_gui_ATMs_Deposit = new TextComponentTranslation("container.sim.Merchant10",new Object[0]).getUnformattedText();
-                //购买
-                String sim_gui_ATMs_Commodities = new TextComponentTranslation("container.sim.Merchant9",new Object[0]).getUnformattedText();
-                if (guibutton.displayString.contentEquals(sim_gui_ATMs_Deposit)) {
-                    this.theScreen = ATMscreen.DEPOSIT;
-                    this.initGui();
-                } else if (guibutton.displayString.contentEquals(sim_gui_ATMs_Commodities)) {
-                    this.theScreen = ATMscreen.COMMODITIES;
-                    this.initGui();
-                } else {
-                    if (guibutton.id >= 100 && guibutton.id < 200) {
-                        ItemStack is = this.mc.player.inventory.getStackInSlot(guibutton.id - 100);
-                        SoundEvent cashshort = SoundRegistry.CASHSHORT;
-                        if (cashshort == null || cashshort.getRegistryName() == null) {
-                            ModSimLoader.log.error("播放失败：sim:cashshort 声音事件未注册");
-                        } else {
-                            mc.world.playSound(this.mc.player.posX, this.mc.player.posY, this.mc.player.posZ, cashshort, SoundCategory.BLOCKS, 1.0F, 1.0F,false);}
-                        String money = guibutton.displayString.substring(guibutton.displayString.indexOf(new TextComponentTranslation("container.sim.trhsy",new Object[0]).getUnformattedText()) + 1);
-                        float soldFor = Float.parseFloat(money);
-                        ModSimLoader.money += soldFor;
-                        is.shrink(1);
-                        if (is.getCount() == 0) {
-                            is = null;
-                        }
+    private int panelH() {
+        return Math.min(250, this.height - 16);
+    }
 
-                        this.mc.player.inventory.setInventorySlotContents(guibutton.id - 100, is);
-                        this.initGui();
-                    } else if (guibutton.id >= 500 && guibutton.id < 600) {
-                        SoundEvent cashshort = SoundRegistry.CASHSHORT;
-                        if (cashshort == null || cashshort.getRegistryName() == null) {
-                            ModSimLoader.log.error("播放失败：sim:cashshort 声音事件未注册");
-                        } else {
-                            mc.world.playSound(this.mc.player.posX, this.mc.player.posY, this.mc.player.posZ, cashshort, SoundCategory.BLOCKS, 1.0F, 1.0F,false);}
-                        String number = guibutton.displayString.substring(guibutton.displayString.indexOf(new TextComponentTranslation("container.sim.trhsy",new Object[0]).getUnformattedText()) + 1);
-                        float soldFor = Float.parseFloat(number);
-                        ModSimLoader.money += soldFor;
-                        this.mc.player.inventory.setInventorySlotContents(guibutton.id - 500, ItemStack.EMPTY);
-                        this.initGui();
-                    } else {
-                        int ci;
-                        Commodity cartItem;
-                        Commodity comm;
-                        if (guibutton.id >= 200 && guibutton.id < 300) {
-                            comm = (Commodity) Commodity.theCommodities.get(guibutton.id - 200);
+    private int left() {
+        return GuiLayout.centerX(this.width, panelW());
+    }
 
-                            for (ci = 0; ci < this.cart.size(); ++ci) {
-                                cartItem = (Commodity) this.cart.get(ci);
-                                if (cartItem.theItemStack.getDisplayName().contentEquals(comm.theItemStack.getDisplayName()) && cartItem.quantity > 0) {
-                                    --cartItem.quantity;
-                                    break;
-                                }
+    private int top() {
+        return GuiLayout.centerY(this.height, panelH());
+    }
 
-                                if (cartItem.quantity == 0) {
-                                    this.cart.remove(ci);
-                                    break;
-                                }
-                            }
-                        } else if (guibutton.id >= 300 && guibutton.id < 400) {
-                            comm = (Commodity) Commodity.theCommodities.get(guibutton.id - 300);
-                            boolean added = false;
+    private void drawItem(ItemStack stack, int x, int y) {
+        RenderHelper.enableGUIStandardItemLighting();
+        this.itemRender.renderItemIntoGUI(stack, x, y);
+        RenderHelper.disableStandardItemLighting();
+    }
 
-                            for (int cj = 0; cj < this.cart.size(); ++cj) {
-                                Commodity cc = (Commodity) this.cart.get(cj);
-                                if (cc.theItemStack.getDisplayName().contentEquals(comm.theItemStack.getDisplayName())) {
-                                    if (cc.quantity >= comm.quantity) {
-                                        return;
-                                    }
-
-                                    ++cc.quantity;
-                                    added = true;
-                                    break;
-                                }
-                            }
-
-                            if (!added) {
-                                this.cart.add(new Commodity(comm.theItemStack, 1, comm.priceEach));
-                            }
-                        } else if (guibutton.id == 400) {
-                            if (this.cart.size() == 0) {
-                                //您尚未添加任何项目。
-                                String sim_gui_ATMs_added = new TextComponentTranslation("container.sim.sim_gui_ATMs_added",new Object[0]).getUnformattedText();
-                                this.errorText = sim_gui_ATMs_added;
-                                return;
-                            }
-
-                            float cost = 0.0F;
-
-                            ItemStack is;
-                            for (ci = 0; ci < this.cart.size(); ++ci) {
-                                cartItem = this.cart.get(ci);
-                                is = cartItem.theItemStack;
-                                is.setCount(cartItem.quantity) ;
-                                cost += (float) cartItem.quantity * cartItem.priceEach;
-                            }
-
-                            if (cost > ModSimLoader.money) {
-                                //代价是
-                                String sim_gui_ATMs_cost = new TextComponentTranslation("container.sim.sim_gui_ATMs_cost",new Object[0]).getUnformattedText();
-                                //, 但你只有
-                                String sim_gui_ATMs_only = new TextComponentTranslation("container.sim.sim_gui_ATMs_only",new Object[0]).getUnformattedText();
-                                this.errorText = sim_gui_ATMs_cost + ModSimLoader.displayMoney(cost) + sim_gui_ATMs_only + ModSimLoader.displayMoney(ModSimLoader.money);
-                                return;
-                            }
-
-                            for (ci = 0; ci < this.cart.size(); ++ci) {
-                                cartItem = this.cart.get(ci);
-                                is = cartItem.theItemStack;
-                                is.setCount(cartItem.quantity);
-                                this.mc.player.inventory.addItemStackToInventory(is);
-
-                                for (int ai = 0; ai < Commodity.theCommodities.size(); ++ai) {
-                                    Commodity ac = (Commodity) Commodity.theCommodities.get(ai);
-                                    if (ac.theItemStack.getDisplayName().contentEquals(cartItem.theItemStack.getDisplayName())) {
-                                        Commodity.theCommodities.remove(ai);
-                                        break;
-                                    }
-                                }
-                            }
-
-                            ModSimLoader.money -= cost;
-                            //购买的商品价值
-                            String sim_gui_ATMs_worth = new TextComponentTranslation("container.sim.sim_gui_ATMs_worth",new Object[0]).getUnformattedText();
-                            ModSimLoader.sendChat(sim_gui_ATMs_worth + ModSimLoader.displayMoney(cost));
-                            SoundEvent cash = SoundRegistry.CASH;
-                            if (cash == null || cash.getRegistryName() == null) {
-                                ModSimLoader.log.error("播放失败：sim:cash 声音事件未注册");
-                            } else {
-                                this.mc.world.playSound(this.mc.player.posX, this.mc.player.posY, this.mc.player.posZ, cash, SoundCategory.BLOCKS, 1.0F, 1.0F,false);}
-                            this.mc.currentScreen = null;
-                            this.mc.setIngameFocus();
-                        }
-                    }
-                }
-
+    private void buildDepositItems() {
+        this.depositItems.clear();
+        for (int i = 0; i < this.mc.player.inventory.getSizeInventory(); i++) {
+            ItemStack stack = this.mc.player.inventory.getStackInSlot(i);
+            if (stack == null || stack.isEmpty() || !this.isAccepted(stack)) {
+                continue;
             }
-        } catch (Exception e) {
-            StackTraceElement element = e.getStackTrace()[0];
-            ModSimLoader.log.error("GUIBANJATMactionPerformed出错了：" + e.getMessage() + "行数：" + element.getLineNumber());
+            boolean known = false;
+            for (ItemStack type : this.depositItems) {
+                if (this.sameType(type, stack)) {
+                    known = true;
+                    break;
+                }
+            }
+            if (!known) {
+                this.depositItems.add(new ItemStack(stack.getItem(), 1, stack.getMetadata()));
+            }
         }
     }
 
+    private boolean isAccepted(ItemStack stack) {
+        Item item = stack.getItem();
+        return item == Items.ENDER_PEARL || item == Items.BLAZE_ROD || item == Items.BONE
+                || item == Items.GUNPOWDER || item == Items.SLIME_BALL || item == Items.STRING
+                || item == Items.SPIDER_EYE;
+    }
+
+    private float depositPrice(ItemStack stack) {
+        Item item = stack.getItem();
+        if (item == Items.ENDER_PEARL) {
+            return PricesForBlocks.bankPriceDiamond;
+        }
+        if (item == Items.BLAZE_ROD) {
+            return PricesForBlocks.bankPriceEmerald;
+        }
+        if (item == Items.BONE) {
+            return PricesForBlocks.bankPriceRedstone;
+        }
+        if (item == Items.GUNPOWDER) {
+            return PricesForBlocks.bankPriceGlowstone;
+        }
+        if (item == Items.SLIME_BALL) {
+            return PricesForBlocks.bankPriceGold;
+        }
+        if (item == Items.STRING) {
+            return PricesForBlocks.bankPriceIron;
+        }
+        return PricesForBlocks.bankPriceIron;
+    }
+
+    private boolean sameType(ItemStack a, ItemStack b) {
+        return a != null && b != null && a.getItem() == b.getItem() && a.getMetadata() == b.getMetadata();
+    }
+
+    private int countType(ItemStack type) {
+        int count = 0;
+        for (int i = 0; i < this.mc.player.inventory.getSizeInventory(); i++) {
+            ItemStack stack = this.mc.player.inventory.getStackInSlot(i);
+            if (stack != null && !stack.isEmpty() && this.sameType(type, stack)) {
+                count += stack.getCount();
+            }
+        }
+        return count;
+    }
+
+    private void sellDeposit(int typeIndex, boolean all) {
+        if (typeIndex < 0 || typeIndex >= this.depositItems.size()) {
+            return;
+        }
+        ItemStack type = this.depositItems.get(typeIndex);
+        float unit = this.depositPrice(type);
+        float total = 0.0F;
+        for (int i = 0; i < this.mc.player.inventory.getSizeInventory(); i++) {
+            ItemStack stack = this.mc.player.inventory.getStackInSlot(i);
+            if (stack == null || stack.isEmpty() || !this.sameType(type, stack)) {
+                continue;
+            }
+            if (all) {
+                total += unit * stack.getCount();
+                this.mc.player.inventory.setInventorySlotContents(i, ItemStack.EMPTY);
+            } else {
+                total += unit;
+                stack.shrink(1);
+                if (stack.getCount() <= 0) {
+                    this.mc.player.inventory.setInventorySlotContents(i, ItemStack.EMPTY);
+                }
+                break;
+            }
+        }
+        if (total > 0.0F) {
+            ModSimLoader.money += total;
+            this.playCashSound(SoundRegistry.CASHSHORT);
+            this.errorText = "";
+        }
+        this.initGui();
+    }
+
+    private int cartQuantity(Commodity commodity) {
+        int qty = 0;
+        for (Commodity cartItem : this.cart) {
+            if (this.sameStack(cartItem.theItemStack, commodity.theItemStack)) {
+                qty += cartItem.quantity;
+            }
+        }
+        return qty;
+    }
+
+    private boolean sameStack(ItemStack a, ItemStack b) {
+        return a != null && b != null && a.getItem() == b.getItem() && a.getMetadata() == b.getMetadata();
+    }
+
+    private void changeCart(int index, int delta) {
+        if (index < 0 || index >= Commodity.theCommodities.size()) {
+            return;
+        }
+        Commodity commodity = Commodity.theCommodities.get(index);
+        for (int i = 0; i < this.cart.size(); i++) {
+            Commodity cartItem = this.cart.get(i);
+            if (this.sameStack(cartItem.theItemStack, commodity.theItemStack)) {
+                int next = cartItem.quantity + delta;
+                if (next <= 0) {
+                    this.cart.remove(i);
+                } else {
+                    cartItem.quantity = Math.min(next, commodity.quantity);
+                }
+                return;
+            }
+        }
+        if (delta > 0) {
+            this.cart.add(new Commodity(commodity.theItemStack, 1, commodity.priceEach));
+        }
+    }
+
+    private void buyCart() {
+        if (this.cart.isEmpty()) {
+            this.errorText = new TextComponentTranslation("container.sim.sim_gui_ATMs_added", new Object[0]).getUnformattedText();
+            return;
+        }
+        float cost = 0.0F;
+        for (Commodity cartItem : this.cart) {
+            cost += cartItem.quantity * cartItem.priceEach;
+        }
+        if (cost > ModSimLoader.money) {
+            this.errorText = new TextComponentTranslation("container.sim.sim_gui_ATMs_cost", new Object[0]).getUnformattedText()
+                    + ModSimLoader.displayMoney(cost)
+                    + new TextComponentTranslation("container.sim.sim_gui_ATMs_only", new Object[0]).getUnformattedText()
+                    + ModSimLoader.displayMoney(ModSimLoader.money);
+            return;
+        }
+        for (Commodity cartItem : this.cart) {
+            ItemStack bought = cartItem.theItemStack.copy();
+            bought.setCount(cartItem.quantity);
+            this.mc.player.inventory.addItemStackToInventory(bought);
+            for (int i = 0; i < Commodity.theCommodities.size(); i++) {
+                if (this.sameStack(Commodity.theCommodities.get(i).theItemStack, cartItem.theItemStack)) {
+                    Commodity.theCommodities.remove(i);
+                    break;
+                }
+            }
+        }
+        ModSimLoader.money -= cost;
+        this.playCashSound(SoundRegistry.CASH);
+        ModSimLoader.sendChat(new TextComponentTranslation("container.sim.sim_gui_ATMs_worth", new Object[0]).getUnformattedText() + ModSimLoader.displayMoney(cost));
+        this.mc.currentScreen = null;
+        this.mc.setIngameFocus();
+    }
+
+    private void playCashSound(SoundEvent event) {
+        if (event == null || event.getRegistryName() == null) {
+            return;
+        }
+        this.mc.world.playSound(this.mc.player.posX, this.mc.player.posY, this.mc.player.posZ, event, SoundCategory.BLOCKS, 1.0F, 1.0F, false);
+    }
+
+    @Override
+    protected void actionPerformed(GuiButton button) {
+        try {
+            if (!button.enabled) {
+                return;
+            }
+            if (button.id == 0) {
+                this.mc.currentScreen = null;
+                this.mc.setIngameFocus();
+                return;
+            }
+            if (button.id == 10) {
+                this.theScreen = ATMscreen.DEPOSIT;
+                this.errorText = "";
+                this.initGui();
+                return;
+            }
+            if (button.id == 11) {
+                this.theScreen = ATMscreen.COMMODITIES;
+                this.errorText = "";
+                this.initGui();
+                return;
+            }
+            if (button.id >= 100 && button.id < 200) {
+                this.sellDeposit(button.id - 100, false);
+                return;
+            }
+            if (button.id >= 500 && button.id < 600) {
+                this.sellDeposit(button.id - 500, true);
+                return;
+            }
+            if (button.id >= 200 && button.id < 300) {
+                this.changeCart(button.id - 200, -1);
+                return;
+            }
+            if (button.id >= 300 && button.id < 400) {
+                this.changeCart(button.id - 300, 1);
+                return;
+            }
+            if (button.id == 400) {
+                this.buyCart();
+            }
+        } catch (Exception e) {
+            StackTraceElement element = e.getStackTrace()[0];
+            ModSimLoader.log.error("GuiMerchants-actionPerformed出错了：" + e.getMessage() + "行数：" + element.getLineNumber());
+        }
+    }
 }

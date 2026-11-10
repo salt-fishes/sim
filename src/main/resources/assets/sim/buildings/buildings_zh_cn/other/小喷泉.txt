@@ -1,5 +1,5 @@
 5x5x4
-A=minecraft:air,0;C=minecraft:stone_slab,0;D=minecraft:double_stone_slab,0;E=minecraft:water,9;F=minecraft:air,0;G=minecraft:air,5;H=minecraft:water,8;I=minecraft:water,1;J=minecraft:water,0;AU=Trhsy;DIR=2;DESC=暂无;
+A=minecraft:air,0;C=minecraft:stone_slab,0;D=minecraft:double_stone_slab,0;E=minecraft:water,9;F=minecraft:air,0;G=minecraft:air,5;H=minecraft:water,8;I=minecraft:water,1;J=minecraft:water,0;AU=原版;DIR=2;DESC=暂无;
 $CDCCCDEDCDEFEDCDEDCCCDCC
 AAGAAAAEAAGEHEGAAEAAAAGAA
 AAAAAAAEAAAEHEAAAEAAAAAAA

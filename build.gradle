@@ -6,6 +6,10 @@ buildscript {
 //            url = "https://maven.aliyun.com/nexus/content/groups/public/"
 //        }
         maven {
+            name = "forge maven (2026 主站)"
+            url = "https://maven.minecraftforge.net/"
+        }
+        maven {
             name = "files forge"
             url = "http://files.minecraftforge.net/maven"
         }
@@ -54,7 +58,11 @@ apply plugin: 'net.minecraftforge.gradle.forge'
 //Only edit below this line, the above code adds and enables the necessary things for Forge to be setup.
 
 
-version = "1.12.2-1.0.9 Beta12"
+repositories {
+    mavenLocal()
+}
+
+version = "1.12.2-1.0.9 Beta13"
 group = "com.trhsy.sim" 
 archivesBaseName = "simulated"
 
@@ -128,4 +136,9 @@ if (project.hasProperty("lintAll")) {
     compileJava.options.compilerArgs.add('-Xlint:all')
 }
 compileJava.options.fork = true
-compileJava.options.forkOptions.executable = "D:\\java\\jdk1.8.0_271\\bin\\javac.exe"
+// Forge 1.12.2 + ForgeGradle 2.3 必须用 JDK 8 编译；从当前 JAVA_HOME 取 javac，避免写死本机路径。
+def javaHome = System.getenv("JAVA_HOME")
+if (javaHome != null && !javaHome.trim().isEmpty()) {
+    def javacName = System.getProperty("os.name").toLowerCase().contains("win") ? "javac.exe" : "javac"
+    compileJava.options.forkOptions.executable = new File(javaHome, "bin/" + javacName).absolutePath
+}

@@ -1,5 +1,5 @@
 7x7x29
-A=minecraft:air,0;C=minecraft:iron_block,0;D=minecraft:quartz_block,0;E=minecraft:planks,0;F=minecraft:sponge,0;G=minecraft:ladder,3;H=minecraft:air,0;I=minecraft:glass_pane,0;J=minecraft:quartz_stairs,1;K=minecraft:quartz_stairs,2;L=minecraft:quartz_stairs,3;M=minecraft:wool,14;N=minecraft:wool,0;O=minecraft:quartz_stairs,0;P=minecraft:fence,0;AU=Trhsy;DIR=2;DESC=暂无;
+A=minecraft:air,0;C=minecraft:iron_block,0;D=minecraft:quartz_block,0;E=minecraft:planks,0;F=minecraft:sponge,0;G=minecraft:ladder,3;H=minecraft:air,0;I=minecraft:glass_pane,0;J=minecraft:quartz_stairs,1;K=minecraft:quartz_stairs,2;L=minecraft:quartz_stairs,3;M=minecraft:wool,14;N=minecraft:wool,0;O=minecraft:quartz_stairs,0;P=minecraft:fence,0;AU=原版;DIR=2;DESC=暂无;
 CADADACAAAAAAAD$!AAGDAAAAAAADAAAAGDAAAAAAACADADAC
 CADADACAAAAAAADAAAAGDAAAAAAADAAAAGDAAAAAAACADADAC
 CDDDDDCDHDDHDDDHDDHGDDDDDDDDDHDDHGDDHDDHDDCDDDDDC

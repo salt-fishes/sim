@@ -1,5 +1,5 @@
 9x9x6
-A=minecraft:air,0;C=minecraft:grass,0;D=minecraft:stone_slab,1;E=minecraft:sandstone,0;F=minecraft:planks,0;G=minecraft:wooden_door,1;H=minecraft:chest,2;I=minecraft:jukebox,0;J=minecraft:sandstone_stairs,2;K=minecraft:bed,2;L=minecraft:fence,0;M=minecraft:bed,10;N=minecraft:sandstone_stairs,3;O=minecraft:furnace,3;P=minecraft:cauldron,0;Q=minecraft:crafting_table,0;R=minecraft:wooden_door,8;S=minecraft:torch,4;T=minecraft:glass_pane,0;U=minecraft:wooden_pressure_plate,0;AU=Trhsy;DIR=2;DESC=暂无;
+A=minecraft:air,0;C=minecraft:grass,0;D=minecraft:stone_slab,1;E=minecraft:sandstone,0;F=minecraft:planks,0;G=minecraft:wooden_door,1;H=minecraft:chest,2;I=minecraft:jukebox,0;J=minecraft:sandstone_stairs,2;K=minecraft:bed,2;L=minecraft:fence,0;M=minecraft:bed,10;N=minecraft:sandstone_stairs,3;O=minecraft:furnace,3;P=minecraft:cauldron,0;Q=minecraft:crafting_table,0;R=minecraft:wooden_door,8;S=minecraft:torch,4;T=minecraft:glass_pane,0;U=minecraft:wooden_pressure_plate,0;AU=原版;DIR=2;DESC=暂无;
 ACCCDCCCACCEEEEECCCEEFFFEECCEFFFFFECCEFFF$FECCEFFFFFECCEEFFFEECCCEEEEECCACCCCCCCA
 AAAAAAAAAAAEEGEEAAAEEHAHEEAAEIA!AJEAAEKAAALEAAEMAAANEAAEEOPQEEAAAEEEEEAAAAAAAAAAA
 AAAAAAAAAAAEEREEAAAEESASEEAAEAAAAAEAATAAAAUTAAEAAAAAEAAEEAAAEEAAAEETEEAAAAAAAAAAA

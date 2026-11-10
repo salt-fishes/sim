@@ -35,7 +35,7 @@ public class BlockCheese extends Block {
         this.setHardness(0.1F);             // 易破坏
         this.setResistance(0.3F);           // 低抗性
         this.setCreativeTab(CreativeTabsLoader.tabSimU);  // 自定义创意标签页
-        this.setUnlocalizedName("sim_u.cheeseBlock");  // 未本地化名称（关联 lang 文件）
+        this.setUnlocalizedName("cheeseBlock");  // 关联 lang: tile.cheeseBlock.name
     }
 // ------------------------------ 核心方法重写（多语言/交互逻辑） ------------------------------
     /**

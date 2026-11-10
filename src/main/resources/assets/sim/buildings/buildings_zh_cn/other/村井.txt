@@ -1,5 +1,5 @@
 4x4x5
-A=minecraft:air,0;C=minecraft:cobblestone,0;D=minecraft:water,0;E=minecraft:fence,0;AU=Trhsy;DIR=2;DESC=暂无;
+A=minecraft:air,0;C=minecraft:cobblestone,0;D=minecraft:water,0;E=minecraft:fence,0;AU=原版;DIR=2;DESC=暂无;
 $CCCCDDCCDDCCCCC
 CCCCCAACCAACCCCC
 EAAEAAAAAAAAEAAE

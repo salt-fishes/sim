@@ -51,14 +51,11 @@ public class JobSugar extends Job{
                     List<ItemStack> colItems = new ArrayList();
                     //甘蔗
                     colItems.add(new ItemStack(Items.REEDS, 64));
-                    //收集
-                    this.addJobTask(new JobTaskCollectItems(this, -1L, colItems));
+                    //向物流中心下单
+                    this.addJobTask(new JobTaskRequestSupply(this, -1L, colItems));
                     this.sugarStage = 3;
                 } else if (this.sugarStage == 3) {
-                    List<ItemStack> colItems = new ArrayList();
-                    //甘蔗
-                    colItems.add(new ItemStack(Items.REEDS, 64));
-                    this.addJobTask(new JobTaskUnloadItems(this, -1L, colItems));
+                    //货由快递员直接放进店内箱子
                     this.sugarStage = 4;
                 } else if (this.sugarStage == 4) {
 
@@ -111,6 +108,11 @@ public class JobSugar extends Job{
             ModSimLoader.log.error("JobSugar-onUpdate出错了：" + e.getMessage() + "行数：" + element.getLineNumber());
         }
     }
+    @Override
+    public boolean isLogisticsSource() {
+        return true;
+    }
+
     @Override
     public String toString() {
         return this.jobName;

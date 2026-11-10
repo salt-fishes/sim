@@ -1,5 +1,5 @@
 9x9x7
-A=minecraft:air,0;C=minecraft:stonebrick,0;D=minecraft:ladder,3;E=minecraft:torch,3;F=minecraft:log,1;G=minecraft:glass,0;H=minecraft:planks,0;I=minecraft:stone,0;AU=Trhsy;DIR=2;DESC=暂无;
+A=minecraft:air,0;C=minecraft:stonebrick,0;D=minecraft:ladder,3;E=minecraft:torch,3;F=minecraft:log,1;G=minecraft:glass,0;H=minecraft:planks,0;I=minecraft:stone,0;AU=原版;DIR=2;DESC=暂无;
 $AAAAAAAAACCCACCCAACAAAAACAACAAAAACAACAAAAACAACAADAACAACAACAACAACCCCCCCAAAAAAAAAA
 AAAEAEAAAAFGFAFGFAAHAAAAAHAAGAAAAAGAAGAAAAAGA!GAADAAGAAHAAHAAHAAFHGHGHFAAAAAAAAAA
 AAAAAAAAAAFHFHFHFAAHAAAAAHAAHAAAAAHAAHAAAAAHAAHAADAAHAAHAAHAAHAAFHHHHHFAAAAAAAAAA

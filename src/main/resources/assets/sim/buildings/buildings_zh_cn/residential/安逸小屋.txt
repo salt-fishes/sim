@@ -1,5 +1,5 @@
 7x7x7
-A=minecraft:air,0;C=minecraft:grass,0;D=minecraft:cobblestone,0;E=minecraft:planks,2;F=minecraft:stone_slab,10;G=minecraft:crafting_table,0;H=minecraft:furnace,5;I=minecraft:planks,3;J=minecraft:stone_slab,2;K=minecraft:planks,0;L=minecraft:glass_pane,0;AU=Trhsy;DIR=2;DESC=暂无;
+A=minecraft:air,0;C=minecraft:grass,0;D=minecraft:cobblestone,0;E=minecraft:planks,2;F=minecraft:stone_slab,10;G=minecraft:crafting_table,0;H=minecraft:furnace,5;I=minecraft:planks,3;J=minecraft:stone_slab,2;K=minecraft:planks,0;L=minecraft:glass_pane,0;AU=原版;DIR=2;DESC=暂无;
 CCCCCCCDDDD$DDDEEEEEDDEEEEDDDEEEEEDDDDDDDDCCDDDCC
 AAAAAAADDDDADDDAAAAFDDAA!AGDDAAAAFDDDDHDDDAADDDAA
 AAAAAAAIILIAIIIAAAAAILAAAAALIAAAAAIIIAAAIIAADDDAA

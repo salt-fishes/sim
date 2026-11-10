@@ -70,15 +70,22 @@ public class PacketOpenControlGui implements IMessage {
         this.describe=ByteBufUtils.readUTF8String(buf);
         this.buildingType=ByteBufUtils.readUTF8String(buf);
         this.isResidential = buf.readBoolean();
+        this.occupants = new CopyOnWriteArrayList<NpcData>();
         try {
-            String ids=ByteBufUtils.readUTF8String(buf);
-            String[] id=ids.split(";");
-            List<NpcData> newOccupants=new CopyOnWriteArrayList<NpcData>();
-            for (String s:id){
-                NpcData npcData= ModSimLoader.getFolkDataByUID(UUID.fromString(s));
-                newOccupants.add(npcData);
+            String ids = ByteBufUtils.readUTF8String(buf);
+            if (ids == null || ids.isEmpty()) {
+                return;
             }
-            this.occupants= newOccupants;
+            String[] id = ids.split(";");
+            for (String s : id) {
+                if (s == null || s.isEmpty()) {
+                    continue;
+                }
+                NpcData npcData = ModSimLoader.getFolkDataByUID(UUID.fromString(s));
+                if (npcData != null) {
+                    this.occupants.add(npcData);
+                }
+            }
         } catch (Exception var3) {
         }
 
@@ -93,14 +100,15 @@ public class PacketOpenControlGui implements IMessage {
         ByteBufUtils.writeUTF8String(buf, this.describe);
         ByteBufUtils.writeUTF8String(buf, this.buildingType);
         buf.writeBoolean(this.isResidential);
-        if (this.occupants != null&&this.occupants.size()>0) {
-            String ids="";
+        String ids = "";
+        if (this.occupants != null) {
             for (int i = 0; i < this.occupants.size(); i++) {
-                ids+= this.occupants.get(i).ID+";";
+                if (this.occupants.get(i) != null && this.occupants.get(i).ID != null) {
+                    ids += this.occupants.get(i).ID + ";";
+                }
             }
-            ByteBufUtils.writeUTF8String(buf, ids);
         }
-
+        ByteBufUtils.writeUTF8String(buf, ids);
     }
 
     public static class Handler implements IMessageHandler<PacketOpenControlGui, IMessage> {

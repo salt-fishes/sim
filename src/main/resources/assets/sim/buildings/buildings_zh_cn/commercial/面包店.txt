@@ -1,5 +1,5 @@
 9x8x6
-A=minecraft:air,0;C=minecraft:cobblestone,0;D=minecraft:planks,0;E=minecraft:fence,0;F=minecraft:glass,0;G=minecraft:chest,2;H=minecraft:cake,0;I=minecraft:stone_slab,2;J=minecraft:torch,2;K=minecraft:torch,1;L=minecraft:torch,4;M=minecraft:stone_slab,0;AU=Trhsy;DIR=2;DESC=在面包店雇佣面包师，用农场的小麦为NPC烤面包，用南瓜做南瓜派，如果你有鸡蛋，糖，牛奶NPC甚至可以给你做出来蛋糕;JOB=面包师;
+A=minecraft:air,0;C=minecraft:cobblestone,0;D=minecraft:planks,0;E=minecraft:fence,0;F=minecraft:glass,0;G=minecraft:chest,2;H=minecraft:cake,0;I=minecraft:stone_slab,2;J=minecraft:torch,2;K=minecraft:torch,1;L=minecraft:torch,4;M=minecraft:stone_slab,0;AU=原版;DIR=2;DESC=在面包店雇佣面包师，用农场的小麦为NPC烤面包，用南瓜做南瓜派，如果你有鸡蛋，糖，牛奶NPC甚至可以给你做出来蛋糕;JOB=面包师;
 AAAAAAAAACCCCCCCCCCDDDDDDDCCDDDDDDDCCDDDDDDDCCD*D***DCCDDD$DDDCCCCCCCCCC
 AAAAADDDACDAADCCCCCAAAAAAACCAAAAAAACCAAAAAAACCAFGFFFACCAA!AAAACCACCCCCCC
 AAAAAAHAACDAADFFFCCIAAAAAACCAAAAAAACCAAAAAAACCAHAAHAACCAAAAAAACCACFFCCCC

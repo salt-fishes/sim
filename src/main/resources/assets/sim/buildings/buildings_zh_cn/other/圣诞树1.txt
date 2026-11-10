@@ -1,5 +1,5 @@
 7x8x11
-A=minecraft:air,0;C=minecraft:grass,0;D=minecraft:dirt,0;E=minecraft:glowstone,0;F=minecraft:log,1;G=minecraft:leaves,13;H=minecraft:wool,13;I=minecraft:wool,14;J=minecraft:wool,5;K=minecraft:leaves,5;L=minecraft:wool,0;M=minecraft:wool,1;AU=Trhsy;DIR=2;DESC=暂无;
+A=minecraft:air,0;C=minecraft:grass,0;D=minecraft:dirt,0;E=minecraft:glowstone,0;F=minecraft:log,1;G=minecraft:leaves,13;H=minecraft:wool,13;I=minecraft:wool,14;J=minecraft:wool,5;K=minecraft:leaves,5;L=minecraft:wool,0;M=minecraft:wool,1;AU=原版;DIR=2;DESC=暂无;
 $AAAAACAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACAAAAAD
 CAAAAACAAAAAAAAAAAAAAAAAEAAAAAEFEAAAAAEAAAAAAAAAACAAAAAC
 AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAFAAAAAAAAAAAAAAAAAAAAAAAA

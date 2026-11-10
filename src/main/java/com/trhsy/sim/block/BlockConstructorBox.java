@@ -5,6 +5,7 @@ import com.trhsy.sim.network.client.PacketOpenConstructorGui;
 import com.trhsy.sim.network.client.PacketOpenSetupGui;
 import com.trhsy.sim.npcCode.NpcData;
 import com.trhsy.sim.npcCode.V3;
+import com.trhsy.sim.util.Onboarding;
 import net.minecraft.block.Block;
 import net.minecraft.block.SoundType;
 import net.minecraft.block.material.Material;
@@ -69,6 +70,14 @@ public class BlockConstructorBox extends Block {
         } else {
 
             worldIn.playSound(pos.getX(),pos.getY(), pos.getZ(),SIM_U_BUILDING_CONSTRUCTOR_ACTIVATED, SoundCategory.BLOCKS, 1.0F, 1.0F,false);
+        }
+
+        // 第一次放建筑箱时，把“右键 → 选蓝图 → 雇建筑师”直接发到聊天栏。
+        if (!worldIn.isRemote && placer instanceof EntityPlayerMP) {
+            EntityPlayerMP player = (EntityPlayerMP) placer;
+            if (Onboarding.markConstructorTip(player)) {
+                Onboarding.send(player, "container.sim.tip.constructor_placed");
+            }
         }
     }
 
@@ -248,5 +257,6 @@ public class BlockConstructorBox extends Block {
     public void addInformation(ItemStack stack, @Nullable World player, List<String> tooltip, ITooltipFlag advanced) {
         // 从 lang 文件加载翻译（示例："block.sim.constructor_box.tooltip"="建筑箱：右键激活以打开建造界面"）
         tooltip.add(I18n.translateToLocal(TOOLTIP_KEY));
+        tooltip.add(I18n.translateToLocal(TOOLTIP_KEY + ".2"));
     }
 }

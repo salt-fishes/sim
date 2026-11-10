@@ -1,5 +1,5 @@
 11x11x56
-A=minecraft:air,0;C=minecraft:fence,0;D=minecraft:planks,0;E=minecraft:stone_slab,2;F=minecraft:glass,0;H=minecraft:torch,5;I=minecraft:torch,3;J=minecraft:furnace,3;K=minecraft:netherrack,0;L=minecraft:fire,15;M=minecraft:iron_block,0;N=minecraft:wool,5;O=minecraft:wool,7;P=minecraft:wool,10;Q=minecraft:wool,0;R=minecraft:wool,4;S=minecraft:wool,11;T=minecraft:wool,14;AU=Trhsy;DIR=2;DESC=暂无;
+A=minecraft:air,0;C=minecraft:fence,0;D=minecraft:planks,0;E=minecraft:stone_slab,2;F=minecraft:glass,0;H=minecraft:torch,5;I=minecraft:torch,3;J=minecraft:furnace,3;K=minecraft:netherrack,0;L=minecraft:fire,15;M=minecraft:iron_block,0;N=minecraft:wool,5;O=minecraft:wool,7;P=minecraft:wool,10;Q=minecraft:wool,0;R=minecraft:wool,4;S=minecraft:wool,11;T=minecraft:wool,14;AU=原版;DIR=2;DESC=暂无;
 $CCCCACCCCCCAAAAAAAAACCAAAAAAAAACCAADDEDDAACCAADDDDDAACCAADDDDDAACCAADDDDDAACCAAAAAAAAACCAAAAAAAAACCAAAAAAAAACCCCCCCCCCCC
 AAAACACAAAAAAAAAAAAAAAAAAAAAAAAAAAAADDADDAAAAAADAAADAAAAAADAAADAAAAAADDDDDAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACAAAAAAAAAC
 AAAACCCAAAAAAAAAAAAAAAAAAAAAAAAAAAAADDADDAAAAAAFAAAFAAAAAAFAAAFAAAAAADDFDDAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACAAAAAAAAAC

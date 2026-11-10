@@ -1,5 +1,5 @@
 8x7x5
-A=minecraft:air,0;C=minecraft:brick_stairs,3;D=minecraft:brick_block,0;E=minecraft:frosted_ice,0;F=minecraft:lapis_block,0;G=minecraft:iron_block,0;H=minecraft:bed,2;I=minecraft:bed,10;J=minecraft:glass,0;K=minecraft:wool,15;AU=Trhsy;DIR=2;DESC=暂无;
+A=minecraft:air,0;C=minecraft:brick_stairs,3;D=minecraft:brick_block,0;E=minecraft:frosted_ice,0;F=minecraft:lapis_block,0;G=minecraft:iron_block,0;H=minecraft:bed,2;I=minecraft:bed,10;J=minecraft:glass,0;K=minecraft:wool,15;AU=原版;DIR=2;DESC=暂无;
 AAAACAAADDDD$DDDDFFFFFFDDFFFFFFDDFFFFFFDDFFFFFFDDDDDDDDD
 AAAAAAAAGGGGAGGGGAAAAAAGGAAAAAAGGAAAAAHGGAAAAAIGGGGAGGGG
 AAAAAAAAGJGGAGGGGAAAAAAGGAAAAAAJGAAAAAAJGAAAAAAGGGGAGJGG

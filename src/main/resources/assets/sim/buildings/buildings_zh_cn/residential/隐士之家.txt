@@ -1,5 +1,5 @@
 6x6x6
-A=minecraft:air,0;C=minecraft:nether_brick,0;D=minecraft:nether_brick_stairs,0;E=minecraft:torch,5;F=minecraft:wooden_door,0;G=minecraft:crafting_table,0;H=minecraft:furnace,3;I=minecraft:bed,0;J=minecraft:bed,8;K=minecraft:chest,4;L=minecraft:nether_brick_fence,0;M=minecraft:wooden_door,8;N=minecraft:wooden_door,9;AU=Trhsy;DIR=2;DESC=暂无;
+A=minecraft:air,0;C=minecraft:nether_brick,0;D=minecraft:nether_brick_stairs,0;E=minecraft:torch,5;F=minecraft:wooden_door,0;G=minecraft:crafting_table,0;H=minecraft:furnace,3;I=minecraft:bed,0;J=minecraft:bed,8;K=minecraft:chest,4;L=minecraft:nether_brick_fence,0;M=minecraft:wooden_door,8;N=minecraft:wooden_door,9;AU=原版;DIR=2;DESC=暂无;
 ACDDCAACCCC!CC$CCCCCCCCCACCCCAAACCAA
 AEAAEAACFFCACGAAACCHAIJCACKKCAAACCAA
 AAAAAALCMNCLLAAAALLAAAALLLAALLALLLLA

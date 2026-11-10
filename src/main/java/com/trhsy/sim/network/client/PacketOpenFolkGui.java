@@ -4,6 +4,8 @@ import com.trhsy.sim.loader.ModSimClientLoader;
 import com.trhsy.sim.loader.ModSimLoader;
 import com.trhsy.sim.npcCode.FolkRelationship;
 import com.trhsy.sim.npcCode.NpcData;
+import com.trhsy.sim.npcCode.SimIds;
+import com.trhsy.sim.npcCode.economy.Economy;
 import io.netty.buffer.ByteBuf;
 import net.minecraft.util.text.TextComponentTranslation;
 import net.minecraftforge.fml.common.FMLCommonHandler;
@@ -61,6 +63,12 @@ public class PacketOpenFolkGui implements IMessage {
     public String relationshipData = "";
     /**怀孕阶段*/
     public float pregnancyStage;
+    /**个人存款*/
+    public float money;
+    /**岗位工资（每分钟）*/
+    public float wage;
+    /**稳定职业 ID*/
+    public String jobId = "";
     public PacketOpenFolkGui() {
     }
     public PacketOpenFolkGui(NpcData fd) {
@@ -93,6 +101,9 @@ public class PacketOpenFolkGui implements IMessage {
         this.farming = String.valueOf(fd.skillFarming);
         this.mining = String.valueOf(fd.skillMining);
         this.pregnancyStage=fd.pregnancyStage;
+        this.money = fd.money;
+        this.wage = fd.job != null ? Economy.WAGE_PER_MINUTE : 0.0F;
+        this.jobId = fd.job != null ? SimIds.jobIdFromDisplay(fd.job.jobName) : "";
     }
     @Override
     public void fromBytes(ByteBuf buf) {
@@ -116,6 +127,9 @@ public class PacketOpenFolkGui implements IMessage {
         this.status = ByteBufUtils.readUTF8String(buf);
         this.hungerStatus=ByteBufUtils.readUTF8String(buf);
         this.pregnancyStage=buf.readFloat();
+        this.money=buf.readFloat();
+        this.wage=buf.readFloat();
+        this.jobId=ByteBufUtils.readUTF8String(buf);
     }
 
     @Override
@@ -140,6 +154,9 @@ public class PacketOpenFolkGui implements IMessage {
         ByteBufUtils.writeUTF8String(buf, this.status);
         ByteBufUtils.writeUTF8String(buf, this.hungerStatus);
         buf.writeFloat(this.pregnancyStage);
+        buf.writeFloat(this.money);
+        buf.writeFloat(this.wage);
+        ByteBufUtils.writeUTF8String(buf, this.jobId == null ? "" : this.jobId);
     }
     public static class Handler implements IMessageHandler<PacketOpenFolkGui, IMessage> {
         public Handler() {

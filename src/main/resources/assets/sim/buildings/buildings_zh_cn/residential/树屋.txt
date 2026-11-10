@@ -1,5 +1,5 @@
 9x7x13
-A=minecraft:air,0;C=minecraft:ladder,2;D=minecraft:log,1;E=minecraft:torch,1;F=minecraft:torch,2;G=minecraft:leaves,13;H=minecraft:planks,0;I=minecraft:lapis_block,0;J=minecraft:vine,2;K=minecraft:leaves,5;L=minecraft:trapdoor,4;M=minecraft:bed,0;N=minecraft:ladder,4;O=minecraft:bed,8;P=minecraft:furnace,4;Q=minecraft:vine,4;R=minecraft:glass_pane,0;S=minecraft:vine,1;AU=Trhsy;DIR=2;DESC=暂无;
+A=minecraft:air,0;C=minecraft:ladder,2;D=minecraft:log,1;E=minecraft:torch,1;F=minecraft:torch,2;G=minecraft:leaves,13;H=minecraft:planks,0;I=minecraft:lapis_block,0;J=minecraft:vine,2;K=minecraft:leaves,5;L=minecraft:trapdoor,4;M=minecraft:bed,0;N=minecraft:ladder,4;O=minecraft:bed,8;P=minecraft:furnace,4;Q=minecraft:vine,4;R=minecraft:glass_pane,0;S=minecraft:vine,1;AU=原版;DIR=2;DESC=暂无;
 AAAAAAAAAAAA!AAAAAAAAACAAAAAAAADAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
 AAAAAAAAAAAAAAAAAAAAAACAAAAAAAEDFAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
 AAAAAAAAAAAAAAAAAAAAAACAAAAAAGADAAAAAAGGDGAAAAAAAAAAAAAAAAAAAAA

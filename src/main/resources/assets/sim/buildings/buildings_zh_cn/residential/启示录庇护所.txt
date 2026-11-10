@@ -1,5 +1,5 @@
 5x6x5
-A=minecraft:air,0;C=minecraft:mossy_cobblestone,0;D=minecraft:stone_slab,3;E=minecraft:planks,0;F=minecraft:stone_slab,2;AU=Trhsy;DIR=2;DESC=暂无;
+A=minecraft:air,0;C=minecraft:mossy_cobblestone,0;D=minecraft:stone_slab,3;E=minecraft:planks,0;F=minecraft:stone_slab,2;AU=原版;DIR=2;DESC=暂无;
 ACDCACCCCCCC$CCCCCCCCCCCCCCCCC
 AAAAAEEAEEEAAAEEAAAEEAAAEEEEEE
 AAAAAEEAEEEAAAEEAAAEEAAAEEEEEE

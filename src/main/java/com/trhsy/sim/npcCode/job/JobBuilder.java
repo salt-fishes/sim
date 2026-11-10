@@ -5,6 +5,7 @@ import com.trhsy.sim.entity.EntityConBox;
 import com.trhsy.sim.loader.BlockLoader;
 import com.trhsy.sim.loader.ConfigLoader;
 import com.trhsy.sim.loader.ModSimLoader;
+import com.trhsy.sim.loader.SimChunkLoader;
 import com.trhsy.sim.loader.SoundRegistry;
 import com.trhsy.sim.npcCode.NpcData;
 import com.trhsy.sim.npcCode.V3;
@@ -14,6 +15,7 @@ import com.trhsy.sim.npcCode.build.Structure;
 import com.trhsy.sim.npcCode.task.JobTask;
 import com.trhsy.sim.npcCode.task.JobTaskBuilder;
 import com.trhsy.sim.npcCode.task.JobTaskIdle;
+import com.trhsy.sim.util.WoodHelper;
 import net.minecraft.block.*;
 import net.minecraft.block.properties.IProperty;
 import net.minecraft.block.state.IBlockState;
@@ -507,9 +509,9 @@ public class JobBuilder extends Job {
 //                    this.createBuilding();
                     this.isOk=true;
                     //生活方块地毯
-                } else if (fs_st_block == BlockLoader.blockLiving) {
+                } else if (fs_st_block == Blocks.CARPET) {
                     this.livingPos = new BlockPos(newBP.getX(), newBP.getY() - 0.5, newBP.getZ());
-                    fs_st_block = BlockLoader.blockLiving.getStateFromMeta(fs_structure.getMeta()).getBlock();
+                    fs_st_block = Blocks.CARPET.getStateFromMeta(fs_structure.getMeta()).getBlock();
                 }
                 //特除方块
                 if (!skipPlacement && fs_st_block == BlockLoader.blockSpecial) {
@@ -596,9 +598,13 @@ public class JobBuilder extends Job {
                                         //循环箱子库存
                                         for (int i = 0; i < inv.getSizeInventory(); i++) {
                                             ItemStack itemStack = inv.getStackInSlot(i);
-                                            //拿走当前需要的块
-                                            if (itemStack != null && itemStack.getItem() == Item.getItemFromBlock(fs_st_block)) {
+                                            // 正常模式：木板/原木允许任意木种；专家模式仍按蓝图精确收橡木。
+                                            boolean accepted = ModSimLoader.gamemode == 2
+                                                    ? this.isExactMaterial(fs_structure, itemStack)
+                                                    : WoodHelper.matches(fs_st_block, itemStack);
+                                            if (accepted) {
                                                 hasBlock = true;
+                                                // 只收材料，不改变蓝图设计：放置时仍用 fs_structure 的原方块状态
                                                 inv.decrStackSize(i, 1);
                                                 break;
                                             }
@@ -613,7 +619,7 @@ public class JobBuilder extends Job {
 
                             if (!hasBlock) {
                                 //等待材料
-                                this.folk.setStatus(new TextComponentTranslation("container.sim.JobBuilder4", new Object[0]).getUnformattedText() + fs_st_block.getLocalizedName());
+                                this.folk.setStatus(new TextComponentTranslation("container.sim.JobBuilder4", new Object[0]).getUnformattedText() + this.materialName(fs_st_block));
                                 this.missingBlock = fs_st_block;
                                 long now = System.currentTimeMillis();
                                 // P11(S1): 使用配置的材料提醒间隔（分钟）；0 表示不再提醒。
@@ -626,7 +632,7 @@ public class JobBuilder extends Job {
 
                                         String s2 = new TextComponentTranslation("container.sim.job.builder_constructor_started_more", new Object[0]).getUnformattedText();
                                         //谁在建“”需要更多的“”
-                                        ModSimLoader.sendChat(this.folk.getName() + s1 + "(" + this.blueprint.name + ") " + s2 + this.missingBlock.getLocalizedName());
+                                        ModSimLoader.sendChat(this.folk.getName() + s1 + "(" + this.blueprint.name + ") " + s2 + this.materialName(this.missingBlock));
                                     }
                                 }
                                 return;
@@ -854,7 +860,7 @@ public class JobBuilder extends Job {
                     if (f_block == BlockLoader.blockControlBox) {
                         this.controllerPos = tempBP;
                         //生活方块地毯
-                    } else if (f_block == BlockLoader.blockLiving) {
+                    } else if (f_block == Blocks.CARPET) {
                         this.livingPos = new BlockPos(newBP.getX(), newBP.getY() - 0.5, newBP.getZ());
                     }
                     //特除方块
@@ -935,6 +941,51 @@ public class JobBuilder extends Job {
     }
 
     /**
+     * 专家模式：严格按蓝图方块 + metadata 收材料。
+     */
+    private boolean isExactMaterial(Structure structure, ItemStack stack) {
+        if (structure == null || stack == null || stack.isEmpty()) {
+            return false;
+        }
+        Block required = structure.getiBlockState().getBlock();
+        if (WoodHelper.isPlanks(required)) {
+            return stack.getItem() == Item.getItemFromBlock(Blocks.PLANKS)
+                    && (stack.getMetadata() & 7) == (structure.getMeta() & 7);
+        }
+        if (WoodHelper.isLog(required)) {
+            return stack.getItem() == Item.getItemFromBlock(required)
+                    && (stack.getMetadata() & 3) == (structure.getMeta() & 3);
+        }
+        if (required == Blocks.WOOL) {
+            return stack.getItem() == Item.getItemFromBlock(Blocks.WOOL)
+                    && stack.getMetadata() == structure.getMeta();
+        }
+        return stack.getItem() == Item.getItemFromBlock(required);
+    }
+
+    /**
+     * 材料名：正常/创造模式显示“任意木板/任意原木”；专家模式显示蓝图原本的方块名。
+     */
+    private String materialName(Block block) {
+        if (block == null) {
+            return "";
+        }
+        if (ModSimLoader.gamemode != 2 && WoodHelper.isPlanks(block)) {
+            return new TextComponentTranslation("container.sim.sim_gui_BC12", new Object[0]).getUnformattedText();
+        }
+        if (ModSimLoader.gamemode != 2 && WoodHelper.isLog(block)) {
+            return new TextComponentTranslation("container.sim.sim_gui_BC10", new Object[0]).getUnformattedText();
+        }
+        if (ModSimLoader.gamemode != 2 && WoodHelper.isWoodFence(block)) {
+            return new TextComponentTranslation("container.sim.sim_gui_BC_any_fence", new Object[0]).getUnformattedText();
+        }
+        if (ModSimLoader.gamemode != 2 && block == Blocks.WOOL) {
+            return new TextComponentTranslation("container.sim.sim_gui_BC_any_wool", new Object[0]).getUnformattedText();
+        }
+        return block.getLocalizedName();
+    }
+
+    /**
      * @return boolean
      * @Author fan
      * @Description //TODO 是否是同一个块
@@ -944,10 +995,12 @@ public class JobBuilder extends Job {
     public boolean isSameBlock(Block b1, Block b2) {
         if (b1 == b2) {
             return true;
-        } else {
-            //泥土 玻璃
-            return b1 == Blocks.DIRT && b2 == Blocks.GRASS || b1 == Blocks.GRASS && b2 == Blocks.DIRT;
         }
+        // 放置必须按蓝图设计，因此不同木种不视为同一个方块；
+        // 木材互换只发生在“交材料”阶段（WoodHelper.matches）。
+
+        //泥土 玻璃
+        return b1 == Blocks.DIRT && b2 == Blocks.GRASS || b1 == Blocks.GRASS && b2 == Blocks.DIRT;
     }
 
     /**
@@ -1027,8 +1080,14 @@ public class JobBuilder extends Job {
             //描述
             build.desc = this.blueprint.desc;
             ModSimLoader.buildings.add(build);
+            // 第一栋建筑完成时给一次明确的正反馈和下一步提示。
+            if (ModSimLoader.buildings.size() == 1) {
+                ModSimLoader.sendChat(new TextComponentTranslation("container.sim.tip.first_building", new Object[0]).getUnformattedText());
+            }
             //保存建筑
             build.saveBuilding();
+            // 新建建筑完成后立即把地块加入强制加载，工人和店主才能马上正常工作。
+            SimChunkLoader.refresh(this.jobWorld);
             if(this.isOk){
                 if (this.conBox != null) {
                     this.conBox.folk = null;

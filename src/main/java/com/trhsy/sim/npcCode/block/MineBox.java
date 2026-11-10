@@ -10,6 +10,7 @@ import net.minecraftforge.common.DimensionManager;
 
 import java.io.*;
 import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.util.UUID;
 
 /**
@@ -73,10 +74,26 @@ public class MineBox {
             sb.append("x|").append(this.x).append('\n');
             sb.append("z|").append(this.z).append('\n');
             sb.append("level|").append(this.level).append('\n');
-            AsyncFileWriter.write(target, sb.toString(), Charset.defaultCharset());
+            AsyncFileWriter.write(target, sb.toString(), StandardCharsets.UTF_8);
         } catch (Exception var12) {
             StackTraceElement element = var12.getStackTrace()[0];
             ModSimLoader.log.error("saveMine出错了：" + var12.getMessage() + "行数：" + element.getLineNumber());
+        }
+    }
+
+    /**
+     * 移除矿场：内存列表 + 存档文件。
+     */
+    public void removeMine(UUID uid) {
+        ModSimLoader.mines.remove(this);
+        UUID fileId = uid == null ? this.ID : uid;
+        if (fileId == null) {
+            return;
+        }
+        File file = new File(ModSimLoader.getSavesDataFolder() + File.separator
+                + "mines" + File.separator + fileId + ".sk2");
+        if (file.exists() && !file.delete()) {
+            ModSimLoader.log.warn("无法删除矿场存档: " + file.getAbsolutePath());
         }
     }
 
@@ -91,7 +108,7 @@ public class MineBox {
         try {
             //BufferedReader reader = new BufferedReader(new FileReader(mineFolder.getAbsolutePath() + File.separator + loadID + ".sk2"));
             InputStream inputStream =new FileInputStream(new File(mineFolder.getAbsolutePath() + File.separator + loadID + ".sk2"));
-            BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));
+            BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream, StandardCharsets.UTF_8));
             for(String line = reader.readLine(); line != null; line = reader.readLine()) {
                 int m1 = line.indexOf("|");
                 line.substring(0, m1);

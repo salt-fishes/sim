@@ -1,5 +1,5 @@
 7x7x8
-A=minecraft:air,0;C=minecraft:stonebrick,0;D=minecraft:diamond_block,0;E=minecraft:cobblestone,0;F=minecraft:glass,0;G=minecraft:stone,0;H=minecraft:planks,0;AU=Trhsy;DIR=2;DESC=暂无;
+A=minecraft:air,0;C=minecraft:stonebrick,0;D=minecraft:diamond_block,0;E=minecraft:cobblestone,0;F=minecraft:glass,0;G=minecraft:stone,0;H=minecraft:planks,0;AU=原版;DIR=2;DESC=暂无;
 CCC$CCCCEEEEECCEEEEECCEE*EECCEEEEECCEEEEECCCCCCCC
 CCCACCCCAAAAACCAAA!ACCAAAAACCAAAAACCAAAAACCCCCCCC
 CFCACFCCAAAAACCAAAAACFAAAAAFCAAAAACCAAAAACCCCFCCC

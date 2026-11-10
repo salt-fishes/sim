@@ -1,5 +1,5 @@
 5x5x4
-A=minecraft:air,0;C=minecraft:web,0;D=minecraft:coal_ore,0;E=minecraft:iron_block,0;F=minecraft:diamond_block,0;G=minecraft:redstone_ore,0;H=minecraft:gold_block,0;I=minecraft:lapis_ore,0;J=minecraft:melon_block,0;K=minecraft:iron_ore,0;AU=Trhsy;DIR=2;DESC=暂无;
+A=minecraft:air,0;C=minecraft:web,0;D=minecraft:coal_ore,0;E=minecraft:iron_block,0;F=minecraft:diamond_block,0;G=minecraft:redstone_ore,0;H=minecraft:gold_block,0;I=minecraft:lapis_ore,0;J=minecraft:melon_block,0;K=minecraft:iron_ore,0;AU=原版;DIR=2;DESC=暂无;
 $DDDCDEEEDDEFEDDEEEDCDDDC
 CDDDCDGHGDDHFHDDGHGDCDDDC
 CDDDCDIJIDDJFJDDIJIDCDDDC

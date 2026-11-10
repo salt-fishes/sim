@@ -1,5 +1,5 @@
 12x9x6
-A=minecraft:air,0;C=minecraft:grass,0;D=minecraft:dirt,0;E=minecraft:fence,0;F=minecraft:yellow_flower,0;G=minecraft:brick_block,0;H=minecraft:glass,0;I=minecraft:wooden_door,6;K=minecraft:tallgrass,1;L=minecraft:planks,0;M=sim:block_control_box,0;O=minecraft:wooden_door,4;P=minecraft:wooden_door,8;Q=minecraft:wooden_door,9;R=minecraft:glass_pane,0;S=minecraft:stone_slab,0;T=sim:block_light_box,0;U=minecraft:stone_slab,4;AU=Trhsy;DIR=2;DESC=你可以在这里买到一些稀有物品;JOB=杂货商;
+A=minecraft:air,0;C=minecraft:grass,0;D=minecraft:dirt,0;E=minecraft:fence,0;F=minecraft:yellow_flower,0;G=minecraft:brick_block,0;H=minecraft:glass,0;I=minecraft:wooden_door,6;K=minecraft:tallgrass,1;L=minecraft:planks,0;M=sim:block_control_box,0;O=minecraft:wooden_door,4;P=minecraft:wooden_door,8;Q=minecraft:wooden_door,9;R=minecraft:glass_pane,0;S=minecraft:stone_slab,0;T=sim:block_light_box,0;U=minecraft:stone_slab,4;AU=原版;DIR=2;DESC=你可以在这里买到一些稀有物品;JOB=杂货商;
 CCCCCCCCCCCCCDCCDCCDCCDCCDCCCCCCCCDCCDCCDDCCCCDCCDCCCDDCDCDCCDCDDDDDDDDCCDCCDDDDDDDCCCDDCDCDDDCCCCCDDCCDDCCC
 EAFAAAAAAAAEAGHHGIIGHHGAAGAAAAAAAAGAFGAAAAAAAAGAAGAAAAAAAAGKAGALLLMLLAGKKGAAAA!AAAGAEAGAAAAAAGAEAKAGGOOGGAAA
 EAAAAAAAAAAEAGHHGPQGHHGAARAAAAAAAARAARAAAAAAAARAARAAAAAAAARAARAAAAAAAARAAGAAAAAAAAGAEAGAAAAAAGAEAAAGGQPGGAAA

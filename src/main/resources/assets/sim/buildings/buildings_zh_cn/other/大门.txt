@@ -1,5 +1,5 @@
 12x3x9
-A=minecraft:air,0;C=minecraft:cobblestone,0;D=minecraft:stone_slab,3;E=minecraft:stone_stairs,2;F=minecraft:stone_stairs,3;G=minecraft:torch,5;AU=Trhsy;DIR=2;DESC=暂无;
+A=minecraft:air,0;C=minecraft:cobblestone,0;D=minecraft:stone_slab,3;E=minecraft:stone_stairs,2;F=minecraft:stone_stairs,3;G=minecraft:torch,5;AU=原版;DIR=2;DESC=暂无;
 $CAAAAAAAAACCCAAAAAAAAACCCAAAAAAAAAC
 CCAAAAAAAAACCCAAAAAAAAACCCAAAAAAAAAC
 CCCAAAAAAACCCCCAAAAAAACCCCCAAAAAAACC

@@ -1,5 +1,5 @@
 13x13x9
-A=minecraft:air,0;C=minecraft:cobblestone,0;D=minecraft:wooden_door,6;E=minecraft:chest,4;F=minecraft:chest,2;G=minecraft:chest,3;H=minecraft:wooden_door,7;I=minecraft:wooden_door,5;J=minecraft:chest,5;K=minecraft:ladder,5;L=minecraft:wooden_door,8;M=minecraft:crafting_table,0;N=minecraft:furnace,2;O=minecraft:furnace,4;P=minecraft:furnace,5;Q=minecraft:furnace,3;R=minecraft:water,0;S=minecraft:fence,0;AU=Trhsy;DIR=2;DESC=暂无;
+A=minecraft:air,0;C=minecraft:cobblestone,0;D=minecraft:wooden_door,6;E=minecraft:chest,4;F=minecraft:chest,2;G=minecraft:chest,3;H=minecraft:wooden_door,7;I=minecraft:wooden_door,5;J=minecraft:chest,5;K=minecraft:ladder,5;L=minecraft:wooden_door,8;M=minecraft:crafting_table,0;N=minecraft:furnace,2;O=minecraft:furnace,4;P=minecraft:furnace,5;Q=minecraft:furnace,3;R=minecraft:water,0;S=minecraft:fence,0;AU=原版;DIR=2;DESC=暂无;
 CCCCCCDCCCCCCCCCCCCACCCCCCCCAEEAAAEEACCCCFAAA!AAAGCCCCFAAAAAAAGCCCCAAAAAAAAACCHAAAA$AAAAAAICCAAAAAAAAACCCCFAAAAAAAGCCCCFAAAAAAAGCCCCAJJAAAJJACCCCCCCCKCCCCCCCCCCCCCCCCCCC
 CCC*CCLCC*CCCCCC*CCACC*CCCCCMAAAAAAAMCC**AAAAAAAAA**CCAAAAAAAAACCCCAAAAAAAAACCLAAAAAAAAAAALCCAAAAAAAAACCCCAAAAAAAAACC**AAAAAAAAA**CCMAAAAAAAMCCCCC*CCKCC*CCCCCC*CCCCC*CCC
 CCCCCCCCCCCCCCCCCCCCCCCCCCCCNAAAAAAAOCCCCAAAAAAAAACCCCAAAAAAAAACCCCAAAAAAAAACCCCAAAAAAAAACCCCAAAAAAAAACCCCAAAAAAAAACCCCAAAAAAAAACCCCPAAAAAAAQCCCCCCCCKCCCCCCCCCCCCCCCCCCC

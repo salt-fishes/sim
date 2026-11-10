@@ -1,5 +1,5 @@
 9x9x7
-A=minecraft:air,0;C=minecraft:stone_slab,3;D=minecraft:cobblestone,0;E=minecraft:water,0;F=minecraft:lava,8;G=minecraft:glass,0;H=minecraft:lava,0;AU=Trhsy;DIR=2;DESC=暂无;
+A=minecraft:air,0;C=minecraft:stone_slab,3;D=minecraft:cobblestone,0;E=minecraft:water,0;F=minecraft:lava,8;G=minecraft:glass,0;H=minecraft:lava,0;AU=原版;DIR=2;DESC=暂无;
 $AACCCAAAAAADDDAAAAADDADDAACDDDDDDDCCDADDDADCCDDDDDDDCAADDADDAAAAADDDAAAAAACCCAAA
 AAAAAAAAAAAAAAAAAAAADDADDAAAADEDEDAAAAADFDAAAAADEDEDAAAADDADDAAAAAAAAAAAAAAAAAAAA
 AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAGGGAAAAAAGFGAAAAAAGGGAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA

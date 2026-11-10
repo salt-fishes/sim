@@ -1,5 +1,5 @@
 10x13x14
-A=minecraft:air,0;C=minecraft:wool,3;D=minecraft:oak_stairs,1;E=minecraft:wool,9;F=minecraft:crafting_table,0;G=minecraft:chest,3;H=minecraft:wool,0;I=minecraft:furnace,3;J=minecraft:bed,8;K=minecraft:bed,0;L=minecraft:oak_stairs,3;M=minecraft:bookshelf,0;N=minecraft:wool,4;O=minecraft:wool,5;P=minecraft:fence,0;Q=minecraft:wall_sign,3;R=minecraft:wall_sign,2;AU=Trhsy;DIR=2;DESC=暂无;
+A=minecraft:air,0;C=minecraft:wool,3;D=minecraft:oak_stairs,1;E=minecraft:wool,9;F=minecraft:crafting_table,0;G=minecraft:chest,3;H=minecraft:wool,0;I=minecraft:furnace,3;J=minecraft:bed,8;K=minecraft:bed,0;L=minecraft:oak_stairs,3;M=minecraft:bookshelf,0;N=minecraft:wool,4;O=minecraft:wool,5;P=minecraft:fence,0;Q=minecraft:wall_sign,3;R=minecraft:wall_sign,2;AU=原版;DIR=2;DESC=暂无;
 AAAAAAAAAAAAAAAAAAAAAAAAAAAAAACCCCDDCCCCC*EEEEEE*CCEEEEEEEECCEEEEEEEECCEEEEEEEECCEEEEEEEECCEEEEEEEECC$EEEEEEECC*EEEEEE*CCCCCCCCCCC
 AAAAAAAAAAAAAAAAAAAAAAAAAAAAAACCCCAACCCCCAAAAAAAFCCAAAAAAAGCCAAAAAAAGCHAAAAAAAIHHAAAAAAAGHCAAAAAAAGCCAAAAAAAACCJKLMMMAACCCCCCCCCCC
 AAAAAAAAAAAAAAAAAAAAAAAAAAAAAACCCCAACCCCCAAAAAAAACCAAAAAAAACHAAAAAAAAHHAAAAAAAAHHAAAAAAAAHHAAAAAAAAHCAAAAAAAACCAAALMMAACCCCCCCCCCC

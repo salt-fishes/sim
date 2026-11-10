@@ -1,5 +1,5 @@
 8x8x6
-A=minecraft:air,0;C=minecraft:stone_slab,2;D=minecraft:planks,0;E=minecraft:planks,1;F=minecraft:planks,2;G=minecraft:planks,3;AU=Trhsy;DIR=2;DESC=暂无;
+A=minecraft:air,0;C=minecraft:stone_slab,2;D=minecraft:planks,0;E=minecraft:planks,1;F=minecraft:planks,2;G=minecraft:planks,3;AU=原版;DIR=2;DESC=暂无;
 $CCCCCCCCDEEEEDCCE*FF*ECCEFGGFECCEFGGFECCE*FF*ECCDEEEEDCCCCCCCCC
 AAAAAAAAADAAAADAAEAAAAEAAEA!AAEAAEAAAAEAAEAAAAEAADEEEEDAAAAAAAAA
 AAAAAAAAADAAAADAAEAAAAEAAEAAAAEAAEAAAAEAAEAAAAEAADEEEEDAAAAAAAAA

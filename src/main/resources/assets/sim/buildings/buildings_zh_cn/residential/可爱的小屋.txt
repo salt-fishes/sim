@@ -1,5 +1,5 @@
 9x5x4
-A=minecraft:air,0;C=minecraft:trapdoor,7;D=minecraft:log,0;E=minecraft:planks,0;F=minecraft:wooden_door,0;G=minecraft:trapdoor,5;H=minecraft:grass,0;I=minecraft:trapdoor,4;J=minecraft:trapdoor,6;K=minecraft:wooden_door,8;L=minecraft:red_flower,0;M=minecraft:tallgrass,1;N=minecraft:glass_pane,0;O=minecraft:yellow_flower,0;P=minecraft:log,8;Q=minecraft:log,4;R=minecraft:glass,0;AU=Trhsy;DIR=2;DESC=暂无;
+A=minecraft:air,0;C=minecraft:trapdoor,7;D=minecraft:log,0;E=minecraft:planks,0;F=minecraft:wooden_door,0;G=minecraft:trapdoor,5;H=minecraft:grass,0;I=minecraft:trapdoor,4;J=minecraft:trapdoor,6;K=minecraft:wooden_door,8;L=minecraft:red_flower,0;M=minecraft:tallgrass,1;N=minecraft:glass_pane,0;O=minecraft:yellow_flower,0;P=minecraft:log,8;Q=minecraft:log,4;R=minecraft:glass,0;AU=原版;DIR=2;DESC=暂无;
 A$DEFEDCAGHEAAAEHIGHEAAAEHIGHEAAAEHIAJDEEEDJA
 AADEKEDAAALEAAAELAAMNAAANOAAOEAAAEMAAADENEDAA
 AADPPPDAAAAQAAAQAAAAQAAAQAAAAQAAAQAAAADPPPDAA

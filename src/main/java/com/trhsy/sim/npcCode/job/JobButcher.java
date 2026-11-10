@@ -57,12 +57,11 @@ public class JobButcher extends Job{
                     //去上班
                     this.addJobTask(new JobTaskIdle(this, 200L, new TextComponentTranslation("container.sim.job.builder_Arrived",new Object[0]).getUnformattedText()));
                 } else if (this.butcherStage == 1) {
-                    //收集
-                    this.addJobTask(new JobTaskCollectItems(this, -1L, colItems));
+                    //向物流中心下单
+                    this.addJobTask(new JobTaskRequestSupply(this, -1L, colItems));
                     this.butcherStage = 2;
                 } else if (this.butcherStage == 2) {
-                    //卸货
-                    this.addJobTask(new JobTaskUnloadItems(this, -1L, colItems));
+                    //货由快递员直接放进店内箱子
                     this.butcherStage = 3;
                 } else if (this.butcherStage == 3) {
                     /**

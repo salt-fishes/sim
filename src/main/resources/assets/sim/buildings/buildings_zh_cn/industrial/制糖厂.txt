@@ -1,5 +1,5 @@
 9x9x6
-A=minecraft:air,0;C=sim:block_composite_brick,0;D=minecraft:wool,0;E=minecraft:wool,15;F=sim:block_control_box,0;G=minecraft:wooden_door,1;H=minecraft:chest,2;I=minecraft:crafting_table,0;J=sim:block_living,0;K=minecraft:wooden_door,3;L=minecraft:stonebrick,0;M=minecraft:glass,0;N=minecraft:wooden_door,8;O=minecraft:wooden_door,9;P=sim:block_light_box,0;Q=minecraft:stone,0;AU=Trhsy;DIR=2;DESC=雇佣NPC为你制作糖;JOB=制糖师;
+A=minecraft:air,0;C=minecraft:stonebrick,0;D=minecraft:wool,0;E=minecraft:wool,15;F=sim:block_control_box,0;G=minecraft:wooden_door,1;H=minecraft:chest,2;I=minecraft:crafting_table,0;J=minecraft:carpet,0;K=minecraft:wooden_door,3;L=minecraft:stonebrick,0;M=minecraft:glass,0;N=minecraft:wooden_door,8;O=minecraft:wooden_door,9;P=sim:block_light_box,0;Q=minecraft:stone,0;AU=原版;DIR=2;DESC=雇佣NPC为你制作糖;JOB=制糖师;
 CCCCCCCCCCDEDEDEDCCEDEDEDECCDEDEDEDCCEDEDEDECCDEDEDEDCCEDEDEDECCDEDFDEDCCCCCCCCCC
 CCCCGCCCCCAAAAAAACCAAAAAAACCAAAAAAACCAAAAAAACCAAAAAAACCAHHIHHACCAAAAJAACCKCCCCCCC
 LMMLNLMMLLAAAAAAALLAAAAAAALLAAAAAAALMAAAAAAAMLAAAAAAALLAAAAAAALLAAAAAAALLOLLLLLLL

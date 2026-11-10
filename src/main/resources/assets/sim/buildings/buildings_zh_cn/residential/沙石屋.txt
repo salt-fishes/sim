@@ -1,5 +1,5 @@
 8x7x10
-A=minecraft:air,0;C=minecraft:stone_slab,2;D=minecraft:snow_layer,0;E=minecraft:grass,0;F=minecraft:diamond_block,0;G=minecraft:double_stone_slab,2;H=minecraft:log,1;I=minecraft:wool,3;J=minecraft:sandstone,0;K=minecraft:iron_block,0;L=minecraft:fence,0;M=minecraft:stone_slab,0;N=minecraft:leaves,1;O=minecraft:leaves,9;AU=Trhsy;DIR=2;DESC=暂无;
+A=minecraft:air,0;C=minecraft:stone_slab,2;D=minecraft:snow_layer,0;E=minecraft:grass,0;F=minecraft:diamond_block,0;G=minecraft:double_stone_slab,2;H=minecraft:log,1;I=minecraft:wool,3;J=minecraft:sandstone,0;K=minecraft:iron_block,0;L=minecraft:fence,0;M=minecraft:stone_slab,0;N=minecraft:leaves,1;O=minecraft:leaves,9;AU=原版;DIR=2;DESC=暂无;
 ACCCCDAEACGGCDDAHH$HHHAHHIIIIHDAHIIIIHADHIIIIHDDHHHHHHAA
 AAAAAAADAAAAAAAAHHAAHHAHJAAAAJAAJA!AAJAAJAAAAJAAJJJJJJAA
 AAAAAAAAAAAAAAAAHJAAJHAHJAAAAJAAJAAAAJAAJAAAAJAAJJJJJJAA

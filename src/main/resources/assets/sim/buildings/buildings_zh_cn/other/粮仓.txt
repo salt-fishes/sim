@@ -1,5 +1,5 @@
 7x7x11
-A=minecraft:air,0;C=minecraft:stone,0;D=minecraft:iron_block,0;E=minecraft:wool,8;AU=Trhsy;DIR=2;DESC=暂无;
+A=minecraft:air,0;C=minecraft:stone,0;D=minecraft:iron_block,0;E=minecraft:wool,8;AU=原版;DIR=2;DESC=暂无;
 $ACCCAAACAAACACAAAAACCAAAAACCAAAAACACAAACAAACCCAA
 AADADAAADAAADADAAAAADDAAAAADDAAAAADADAAADAAADDDAA
 AADADAAADAAADADAAAAADDAAAAADDAAAAADADAAADAAADDDAA

@@ -63,12 +63,11 @@ public class JobGrocer extends Job{
                     //去上班
                     this.addJobTask(new JobTaskIdle(this, 200L, new TextComponentTranslation("container.sim.job.builder_Arrived",new Object[0]).getUnformattedText()));
                 } else if (this.grocerStage == 1) {
-                    //装卸货
-                    this.addJobTask(new JobTaskCollectItems(this, -1L, colItems));
+                    //向物流中心下单，等快递员把货送到店内箱子
+                    this.addJobTask(new JobTaskRequestSupply(this, -1L, colItems));
                     this.grocerStage = 2;
                 }else if (this.grocerStage == 2) {
-                    //装卸货
-                    this.addJobTask(new JobTaskUnloadItems(this, -1L, colItems));
+                    //货由快递员直接放进店内箱子，不再需要老板自己卸货
                     this.grocerStage = 3;
                 }else if (this.grocerStage == 3) {
                     //售卖

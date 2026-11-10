@@ -1,5 +1,5 @@
 10x15x15
-A=minecraft:air,0;C=minecraft:oak_stairs,3;D=minecraft:planks,0;E=minecraft:fence,0;F=minecraft:wooden_door,2;G=minecraft:glass,0;H=minecraft:wooden_door,8;I=minecraft:wooden_door,9;J=minecraft:wooden_door,0;K=minecraft:oak_stairs,1;L=minecraft:wool,14;M=minecraft:chest,4;N=minecraft:web,0;AU=Trhsy;DIR=2;DESC=暂无;
+A=minecraft:air,0;C=minecraft:oak_stairs,3;D=minecraft:planks,0;E=minecraft:fence,0;F=minecraft:wooden_door,2;G=minecraft:glass,0;H=minecraft:wooden_door,8;I=minecraft:wooden_door,9;J=minecraft:wooden_door,0;K=minecraft:oak_stairs,1;L=minecraft:wool,14;M=minecraft:chest,4;N=minecraft:web,0;AU=原版;DIR=2;DESC=暂无;
 AAAACCAAAADDDDDDDDDDDDDDDDDDDDDD$DDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD
 AAAAAAAAAAEEEEAAEEEEEAAAAAAAAEEAAAAAAAAEDDDDFFDDDDDAAA!AAAADDAAAAAAAADDAAAAAAAADDAAAAAACCDDAAAAAADDDDAAAAAADDDDAAAAAADDDDAAAAAADDDDAAAAAADDDDDDDDDDDDD
 AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAADGGDHIDGGDDAAAAAAAADDAAAAAAAADDAAAAAAAADGAAAAAAAADGAAAAAACCDDAAAAAADDDDAAAAAADDDDAAAAAADDDDAAAAAADDDDDDDDDDDDD

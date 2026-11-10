@@ -1,5 +1,5 @@
 6x8x4
-A=minecraft:air,0;C=minecraft:planks,0;D=minecraft:stone_slab,2;E=minecraft:wall_sign,4;F=minecraft:wooden_door,1;G=minecraft:wall_sign,3;H=minecraft:glass,0;I=minecraft:wooden_door,9;J=minecraft:wall_sign,2;AU=Trhsy;DIR=2;DESC=暂无;
+A=minecraft:air,0;C=minecraft:planks,0;D=minecraft:stone_slab,2;E=minecraft:wall_sign,4;F=minecraft:wooden_door,1;G=minecraft:wall_sign,3;H=minecraft:glass,0;I=minecraft:wooden_door,9;J=minecraft:wall_sign,2;AU=原版;DIR=2;DESC=暂无;
 ACDCAACCCCCAC*CCCAC$CCCACCCCCACCC*CACCCCCAAAAAAA
 ADECAACCFCCACAAACACAAACECAAACACAAACECCCCCAAGAGAA
 AAAAAACHIHCEHAAAHAHAAAHAHAAAHAHAAAHACHHHCEGAAAGA

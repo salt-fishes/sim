@@ -14,6 +14,7 @@ import com.trhsy.sim.npcCode.block.Marker;
 import com.trhsy.sim.npcCode.build.BlueprintRequirements;
 import com.trhsy.sim.npcCode.build.BuildingBlueprint;
 import com.trhsy.sim.npcCode.enums.FarmType;
+import com.trhsy.sim.npcCode.logistics.LogisticsSnapshot;
 import net.minecraft.client.Minecraft;
 import net.minecraft.entity.player.InventoryPlayer;
 import net.minecraft.inventory.IInventory;
@@ -35,6 +36,17 @@ import java.util.concurrent.CopyOnWriteArrayList;
 public class ModSimClientLoader {
     //客户端皮肤
     public static List<NpcSkin> folkSkins = new CopyOnWriteArrayList();
+
+    /** 物流中心 GUI 最近一次服务端快照。 */
+    public static LogisticsSnapshot logisticsSnapshot;
+
+    /** 收到物流快照后更新缓存；如果正停在物流页则重绘。 */
+    public static void applyLogisticsSnapshot(LogisticsSnapshot snapshot) {
+        logisticsSnapshot = snapshot;
+        if (Minecraft.getMinecraft().currentScreen instanceof GuiBlockControllerBlock) {
+            ((GuiBlockControllerBlock) Minecraft.getMinecraft().currentScreen).refreshLogisticsPage();
+        }
+    }
 
     public static List<NpcData> folks = new CopyOnWriteArrayList();
     /**
@@ -235,26 +247,6 @@ public class ModSimClientLoader {
      */
     public static void openFlowerGui(PacketOpenFlowerGui message) {
         Minecraft.getMinecraft().displayGuiScreen(new GuiFlower(message));
-    }
-    /**
-     * @Author fan
-     * @Description //TODO 路径箱
-     * @Date 11:17 2023/8/20
-     * @Param [message]
-     * @return void
-     **/
-    public static void openPathBox(PacketOpenPathBoxGui message) {
-        Minecraft.getMinecraft().displayGuiScreen(new GuiPathBox(message));
-    }
-    /**
-     * @Author fan
-     * @Description //TODO 风车
-     * @Date 12:24 2023/8/20
-     * @Param [message]
-     * @return void
-     **/
-    public static void openWindmill(InventoryPlayer inventory, IInventory chestInventory) {
-        Minecraft.getMinecraft().displayGuiScreen(new GuiWindmill(inventory,chestInventory));
     }
     /**
      * 运行模组

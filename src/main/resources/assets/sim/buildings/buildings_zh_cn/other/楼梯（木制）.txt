@@ -1,5 +1,5 @@
 3x3x4
-A=minecraft:air,0;C=minecraft:wooden_slab,1;D=minecraft:wooden_slab,9;E=minecraft:log,1;AU=Trhsy;DIR=2;DESC=暂无;
+A=minecraft:air,0;C=minecraft:wooden_slab,1;D=minecraft:wooden_slab,9;E=minecraft:log,1;AU=原版;DIR=2;DESC=暂无;
 $AADEAAAA
 AAAAEACDA
 AAAAEDAAC

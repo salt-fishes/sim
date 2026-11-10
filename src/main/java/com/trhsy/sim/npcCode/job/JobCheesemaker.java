@@ -46,14 +46,11 @@ public class JobCheesemaker extends Job{
                     List<ItemStack> colItems = new ArrayList();
                     //牛奶
                     colItems.add(new ItemStack(ItemLoader.itemBucketMilk, 16));
-                    //收集
-                    this.addJobTask(new JobTaskCollectItems(this, -1L, colItems));
+                    //向物流中心下单
+                    this.addJobTask(new JobTaskRequestSupply(this, -1L, colItems));
                     this.cheesemakerStage = 2;
                 } else if (this.cheesemakerStage == 2) {
-                    List<ItemStack> colItems = new ArrayList();
-                    //卸载牛奶
-                    colItems.add(new ItemStack(ItemLoader.itemBucketMilk, 16));
-                    this.addJobTask(new JobTaskUnloadItems(this, -1L, colItems));
+                    //货由快递员直接放进店内箱子
                     this.cheesemakerStage = 3;
                 }else if (this.cheesemakerStage == 3) {
                     //制作奶酪
@@ -71,6 +68,11 @@ public class JobCheesemaker extends Job{
                 ModSimLoader.log.error("JobCheesemaker-onUpdate出错了：" + e.getMessage() + "行数：" + element.getLineNumber());
             }
         }
+    @Override
+    public boolean isLogisticsSource() {
+        return true;
+    }
+
     @Override
     public String toString() {
         return this.jobName;

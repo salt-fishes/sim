@@ -1,5 +1,5 @@
 11x9x9
-A=minecraft:air,0;C=minecraft:stone_slab,2;D=minecraft:double_stone_slab,2;E=minecraft:diamond_block,0;F=minecraft:log,0;G=minecraft:wool,3;H=minecraft:wool,0;I=minecraft:iron_block,0;J=minecraft:ladder,5;K=minecraft:glass,0;AU=Trhsy;DIR=2;DESC=暂无;
+A=minecraft:air,0;C=minecraft:stone_slab,2;D=minecraft:double_stone_slab,2;E=minecraft:diamond_block,0;F=minecraft:log,0;G=minecraft:wool,3;H=minecraft:wool,0;I=minecraft:iron_block,0;J=minecraft:ladder,5;K=minecraft:glass,0;AU=原版;DIR=2;DESC=暂无;
 AAAACDCAAAAAFFFFDFFFFAAFGGGG$GGFAAFGGGGGGGFAAFGGGGGGGFAAFGGGGGGGFAAFGGGGGGGFAAFFFFFFFFFAAAAAAAAAAAA
 AAAAAAAAAAAAFHHFAFHHFAAHAAAAAAAHAAHAAAAAAAHAAHA!AJAAAHAAHAAAFAAAHAAHAAAAAAAHAAFHHHHHHHFAAAAAAAAAAAA
 AAAAAAAAAAAAFKKFAFKKFAAHAAAAAAAHAAKAAAAAAAKAAKAAAJAAAKAAKAAAFAAAKAAHAAAAAAAHAAFHKKHKKHFAAAAAAAAAAAA

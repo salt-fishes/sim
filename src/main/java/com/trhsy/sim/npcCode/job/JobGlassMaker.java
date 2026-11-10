@@ -80,6 +80,11 @@ public class JobGlassMaker extends Job{
 
     }
     @Override
+    public boolean isLogisticsSource() {
+        return true;
+    }
+
+    @Override
     public String toString() {
         return new TextComponentTranslation("container.sim.Vocation17",new Object[0]).getUnformattedText();
     }

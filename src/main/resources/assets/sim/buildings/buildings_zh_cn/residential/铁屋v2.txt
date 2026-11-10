@@ -1,5 +1,5 @@
 7x8x5
-A=minecraft:air,0;C=minecraft:iron_block,0;D=minecraft:glass_pane,0;E=minecraft:bookshelf,0;AU=Trhsy;DIR=2;DESC=暂无;
+A=minecraft:air,0;C=minecraft:iron_block,0;D=minecraft:glass_pane,0;E=minecraft:bookshelf,0;AU=原版;DIR=2;DESC=暂无;
 CCCCCCCC*CCC$CCCCCCCCCCCCCCCCCCCCCCCCCCCCCC*CCC*CCCCCCCC
 CCCACCCCAAAA!CCAAAAACCAAAAACCAAAAACCAAAAACCAAAAACCCCCCCC
 CCCACCCCAAAAACDAAAAADDAAAAADDAAAAADDAAAAADCAAAAACCCDDDCC

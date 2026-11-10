@@ -1,5 +1,5 @@
 10x10x5
-A=minecraft:air,0;C=minecraft:tallgrass,1;D=minecraft:tallgrass,2;E=minecraft:stonebrick,0;F=minecraft:stonebrick,1;G=minecraft:stonebrick,2;H=minecraft:yellow_flower,0;I=minecraft:log,0;J=minecraft:red_flower,0;K=minecraft:leaves,0;L=minecraft:leaves,4;M=minecraft:vine,8;N=minecraft:vine,4;AU=Trhsy;DIR=2;DESC=暂无;
+A=minecraft:air,0;C=minecraft:tallgrass,1;D=minecraft:tallgrass,2;E=minecraft:stonebrick,0;F=minecraft:stonebrick,1;G=minecraft:stonebrick,2;H=minecraft:yellow_flower,0;I=minecraft:log,0;J=minecraft:red_flower,0;K=minecraft:leaves,0;L=minecraft:leaves,4;M=minecraft:vine,8;N=minecraft:vine,4;AU=原版;DIR=2;DESC=暂无;
 CDACCACCDCCEFCCAGFGCHGDCCCCAFCAFCGCCFAGCAGHCCICCCCAGGECCCCCCCFJCDJCDCCJFCCCCCCFACCDCJGFEECCCCCCHHCCC
 AAAAAAAAAAAGGAAAAFFAAFAKKKKKFAAAAKKKKKAAAFAKKIKKAAAEFFKKLLAAAEAALKKAAAAAAAAAAAFAAAAAAAGGFAAAAAAAAAAA
 AAAAAAAAAAAAAAAAAAAAAAAAKKKKAAAAAKKKKKAAAAAKKIKKAAAGGKKKKKAAAAAAKKKKAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA

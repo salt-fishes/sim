@@ -46,9 +46,7 @@ public class PricesForBlocks implements Serializable {
     //金
     public static Float bankPriceGold = 5.12F;
     //锡
-    public static Float bankPriceTin = 5.12F;
     //铜
-    public static Float bankPriceCopper = 5.12F;
     //铁
     public static Float bankPriceIron = 5.12F;
 

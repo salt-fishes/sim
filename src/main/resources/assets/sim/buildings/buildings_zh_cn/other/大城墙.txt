@@ -1,5 +1,5 @@
 6x5x6
-A=minecraft:air,0;C=minecraft:fence,0;D=minecraft:cobblestone,0;E=minecraft:stone_stairs,0;F=minecraft:stone_slab,3;G=minecraft:torch,5;AU=Trhsy;DIR=2;DESC=暂无;
+A=minecraft:air,0;C=minecraft:fence,0;D=minecraft:cobblestone,0;E=minecraft:stone_stairs,0;F=minecraft:stone_slab,3;G=minecraft:torch,5;AU=原版;DIR=2;DESC=暂无;
 $DDDDDEDDDDDDDDDDDDDDDDDDDDDDD
 CCDDDDAEDDDDDDDDDDDDDDDDDDDDDD
 ACCDDDAAEDDDDDDDDDDDDDDDDDDDDD

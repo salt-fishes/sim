@@ -1,5 +1,5 @@
 7x8x5
-A=minecraft:air,0;C=minecraft:stone_slab,1;D=minecraft:cobblestone,0;E=minecraft:frosted_ice,0;F=minecraft:double_stone_slab,1;G=minecraft:wool,11;H=minecraft:tallgrass,1;I=minecraft:wool,14;J=minecraft:planks,0;K=minecraft:glass,0;AU=Trhsy;DIR=2;DESC=暂无;
+A=minecraft:air,0;C=minecraft:stone_slab,1;D=minecraft:cobblestone,0;E=minecraft:frosted_ice,0;F=minecraft:double_stone_slab,1;G=minecraft:wool,11;H=minecraft:tallgrass,1;I=minecraft:wool,14;J=minecraft:planks,0;K=minecraft:glass,0;AU=原版;DIR=2;DESC=暂无;
 CCDD$DDAFDDDDD!ADDDDDAADDDDDAADGGGDAHDGIGDAHDGGGDAADDDDD
 AAJAAAJAAAAAAAACAAAAAAFJJAJJAAJAAAJAAJAAAJAAJAAAJAAJJJJJ
 AAJAAAJAAAAAAAAAAAAAAAAJJAJJFCKAAAKAAKAAAKAAKAAAKAAJKKKJ

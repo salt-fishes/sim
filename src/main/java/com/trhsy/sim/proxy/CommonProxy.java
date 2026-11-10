@@ -24,8 +24,6 @@ public class CommonProxy {
         ConfigLoader.load(event);
         /**启动通讯**/
         new NetWorkLoader(event);
-        /**矿物生成**/
-        new WorldGeneratorLoader();
         /**实体渲染**/
         EntityLoader.registerEntitys();
         /**事件加载**/

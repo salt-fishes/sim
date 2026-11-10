@@ -65,20 +65,11 @@ public class JobBurgers extends Job {
                     colItems.add(new ItemStack(Items.POTATO, 16));
                     //奶酪
                     colItems.add(new ItemStack(ItemLoader.itemCheese, 16));
-                    //收集
-                    this.addJobTask(new JobTaskCollectItems(this, -1L, colItems));
+                    //向物流中心下单
+                    this.addJobTask(new JobTaskRequestSupply(this, -1L, colItems));
                     this.burgersStage = 3;
                 } else if (this.burgersStage == 3) {
-                    List<ItemStack> colItems = new ArrayList();
-                    //面包
-                    colItems.add(new ItemStack(Items.BREAD, 16));
-                    //牛肉
-                    colItems.add(new ItemStack(Items.BEEF, 16));
-                    //土豆
-                    colItems.add(new ItemStack(Items.POTATO, 16));
-                    //奶酪
-                    colItems.add(new ItemStack(ItemLoader.itemCheese, 16));
-                    this.addJobTask(new JobTaskUnloadItems(this, -1L, colItems));
+                    //货由快递员直接放进店内箱子
                     this.burgersStage = 4;
                 } else if (this.burgersStage == 4) {
                     initInventory();

@@ -1,5 +1,5 @@
 5x6x5
-P=minecraft:planks,0;S=minecraft:stone_slab,0;C=minecraft:wool,11;G=minecraft:glass,0;T=minecraft:torch,0;A=minecraft:air,0;AU=Trhsy;DIR=2;DESC=暂无;
+P=minecraft:planks,0;S=minecraft:stone_slab,0;C=minecraft:wool,11;G=minecraft:glass,0;T=minecraft:torch,0;A=minecraft:air,0;AU=原版;DIR=2;DESC=暂无;
 PSSSPPPPPPPCCCPPC$CPPCCCPPPPPP
 AAAATPPAPPPAAAPPAAAPPA!APPPPPP
 AAAAAPPAGPPAAAPGAAAGPAAAPPPGPP

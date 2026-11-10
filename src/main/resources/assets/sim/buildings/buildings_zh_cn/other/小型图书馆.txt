@@ -1,5 +1,5 @@
 10x9x7
-A=minecraft:air,0;C=minecraft:stone_brick_stairs,3;D=minecraft:stonebrick,0;E=minecraft:planks,0;G=minecraft:wooden_slab,8;H=minecraft:bookshelf,0;I=minecraft:jungle_stairs,0;J=minecraft:glass_pane,0;AU=Trhsy;DIR=2;DESC=暂无;
+A=minecraft:air,0;C=minecraft:stone_brick_stairs,3;D=minecraft:stonebrick,0;E=minecraft:planks,0;G=minecraft:wooden_slab,8;H=minecraft:bookshelf,0;I=minecraft:jungle_stairs,0;J=minecraft:glass_pane,0;AU=原版;DIR=2;DESC=暂无;
 $AAAACAAAADDDDDDDDDDDEEEE$EEEDDEEEEEEEEDDEEEEEEEEDDEEEEEEEEDDEEEEEEEEDDEEEEEEEEDDDDDDDDDDD
 AAAAAAAAAADDDDDADDDDDAAAAAGAADDAHAHAGIADDAHAHAGAADDAHAHAGGADDAHAHAAAADDAAAAAHHHDDDDDDDDDDD
 AAAAAAAAAADDJJDADJJDDAAAAAAAADDAHAHAAAADDAHAHAAAADDAHAHAAAADDAHAHAAAADDAAAAAHHHDDDDDDDDDDD

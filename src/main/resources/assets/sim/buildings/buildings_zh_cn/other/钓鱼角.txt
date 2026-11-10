@@ -1,5 +1,5 @@
 7x15x7
-A=minecraft:air,0;C=minecraft:planks,0;D=minecraft:gravel,0;E=minecraft:chest,2;F=minecraft:oak_stairs,0;G=minecraft:water,0;H=minecraft:torch,2;I=minecraft:furnace,3;J=minecraft:sand,0;K=minecraft:stone_slab,2;L=minecraft:fence,0;M=minecraft:deadbush,0;N=minecraft:fence_gate,2;AU=Trhsy;DIR=2;DESC=暂无;
+A=minecraft:air,0;C=minecraft:planks,0;D=minecraft:gravel,0;E=minecraft:chest,2;F=minecraft:oak_stairs,0;G=minecraft:water,0;H=minecraft:torch,2;I=minecraft:furnace,3;J=minecraft:sand,0;K=minecraft:stone_slab,2;L=minecraft:fence,0;M=minecraft:deadbush,0;N=minecraft:fence_gate,2;AU=原版;DIR=2;DESC=暂无;
 $ACCAAACCDDCACCDDDDACCDDDDACCDDDDACCDDDDACCDDDDACCDDDDACCDDDDACCDDDDACCDDDDACCDDDDACCAAAAACCCEEFACCCCCCCC
 AACCAAACCDDCACCDGGDACCDGGDACCDGGDACCDGGDACCDGGDACCDGGDHCCDGGDACCDGGDACCDGGDACCIDDIACCAAAAACCCHFAACCCCCCCC
 AACCAAACCJJCCCCJGGJCCCJGGJCCCJGGJCCCJGGJCCCJGGJCCCJGGJCCCJGGJCCCJGGJCCCJKKJCCCCJJCCCCCCCCCCCCFAAACCCCCCCC

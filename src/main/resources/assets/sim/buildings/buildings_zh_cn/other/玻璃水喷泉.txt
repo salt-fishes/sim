@@ -1,5 +1,5 @@
 5x5x8
-A=minecraft:air,0;C=minecraft:glass_pane,0;D=minecraft:water,0;E=minecraft:double_stone_slab,0;F=minecraft:water,9;G=minecraft:water,1;AU=Trhsy;DIR=2;DESC=暂无;
+A=minecraft:air,0;C=minecraft:glass_pane,0;D=minecraft:water,0;E=minecraft:double_stone_slab,0;F=minecraft:water,9;G=minecraft:water,1;AU=原版;DIR=2;DESC=暂无;
 *************************
 $CCCCCDDDCCDEDCCDDDCCCCCC
 CAAACAAFAAAFEFAAAFAACAAAC

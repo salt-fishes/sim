@@ -1,5 +1,5 @@
 7x8x5
-A=minecraft:air,0;C=minecraft:grass,0;D=minecraft:dirt,0;E=minecraft:planks,2;F=minecraft:water,0;G=minecraft:wooden_slab,2;H=minecraft:fence,0;I=minecraft:planks,1;J=minecraft:chest,3;AU=Trhsy;DIR=2;DESC=雇佣NPC帮助钓鱼获得鱼等;JOB=渔夫;
+A=minecraft:air,0;C=minecraft:grass,0;D=minecraft:dirt,0;E=minecraft:planks,2;F=minecraft:water,0;G=minecraft:wooden_slab,2;H=minecraft:fence,0;I=minecraft:planks,1;J=minecraft:chest,3;AU=原版;DIR=2;DESC=雇佣NPC帮助钓鱼获得鱼等;JOB=渔夫;
 CCCCCCCDDDDDDDCCCCCCCCCCCCCCEFFFFFEFFFFFFFFFFFFFFEFFFFFE
 GGGGGGGEEEEEEE*AAAAA*AAAAAAAHAAAAAHAAAAAAAAAAAAAAHAAAAAH
 AAAAAAAAAAAAAAGGGGGGGEEEEEEEIEEEEEIIEEEEEIIEEEEEIIII$III

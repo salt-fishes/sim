@@ -58,6 +58,8 @@ public class NetWorkLoader {
         registerMessage(PacketSellStuff.Handler.class,PacketSellStuff.class,Side.SERVER);
         //生成npc
         registerMessage(PacketNewFolk.Handler.class,PacketNewFolk.class,Side.SERVER);
+        //物流中心开关
+        registerMessage(PacketToggleLogistics.Handler.class,PacketToggleLogistics.class,Side.SERVER);
 
 
 
@@ -107,10 +109,8 @@ public class NetWorkLoader {
         registerMessage(PacketOpenMerchantsGui.Handler.class,PacketOpenMerchantsGui.class,Side.CLIENT);
         //花店
         registerMessage(PacketOpenFlowerGui.Handler.class,PacketOpenFlowerGui.class,Side.CLIENT);
-        //路径箱
-        registerMessage(PacketOpenPathBoxGui.Handler.class,PacketOpenPathBoxGui.class,Side.CLIENT);
-        //风车
-        registerMessage(PacketOpenWindmillGui.Handler.class,PacketOpenWindmillGui.class,Side.CLIENT);
+        //物流中心设置快照
+        registerMessage(PacketLogisticsSnapshot.Handler.class,PacketLogisticsSnapshot.class,Side.CLIENT);
 
 
 

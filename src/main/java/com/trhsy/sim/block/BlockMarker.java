@@ -148,5 +148,7 @@ public class BlockMarker extends Block {
     @Override
     @SideOnly(Side.CLIENT)
     public void addInformation(ItemStack stack, @Nullable World player, List<String> tooltip, ITooltipFlag advanced) {
+        tooltip.add(net.minecraft.util.text.translation.I18n.translateToLocal("block.sim.marker.tooltip.1"));
+        tooltip.add(net.minecraft.util.text.translation.I18n.translateToLocal("block.sim.marker.tooltip.2"));
     }
 }

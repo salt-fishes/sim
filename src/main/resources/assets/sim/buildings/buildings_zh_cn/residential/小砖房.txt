@@ -1,5 +1,5 @@
 7x7x6
-A=minecraft:air,0;C=minecraft:log,1;D=minecraft:cobblestone,0;E=minecraft:brick_block,0;F=minecraft:wooden_slab,0;G=minecraft:planks,0;AU=Trhsy;DIR=2;DESC=暂无;
+A=minecraft:air,0;C=minecraft:log,1;D=minecraft:cobblestone,0;E=minecraft:brick_block,0;F=minecraft:wooden_slab,0;G=minecraft:planks,0;AU=原版;DIR=2;DESC=暂无;
 CDDDDDCDDDDDDDDDDDDDDDD$*DDDDDDDDDDDDDDDDDCDDDDDC
 CEEAEECEAAAAAEEAAAAAEEAA!AAEEAAAAAEEAAAAAECEEEEEC
 CEEAEECEAAAAAEEAAAAAEEAAAAAEEAAAAAEEAAAAAECEEEEEC

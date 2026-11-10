@@ -1,5 +1,5 @@
 9x6x6
-A=minecraft:air,0;C=minecraft:cobblestone,0;D=minecraft:planks,0;E=minecraft:glass,0;AU=Trhsy;DIR=2;DESC=雇佣NPC为你巡逻;JOB=士兵;
+A=minecraft:air,0;C=minecraft:cobblestone,0;D=minecraft:planks,0;E=minecraft:glass,0;AU=原版;DIR=2;DESC=雇佣NPC为你巡逻;JOB=士兵;
 CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
 CCCAAACCCCAAA!AAACCAAAAA$ACCAAAAADACCAAAAAAACCCCCACCCC
 CCCAAACCCCAAAAAAACEAAAAAAAECAAAAAAACCAAAAAAACCCCCACCCC

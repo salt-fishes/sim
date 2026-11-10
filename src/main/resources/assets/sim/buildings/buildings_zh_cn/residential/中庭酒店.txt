@@ -1,5 +1,5 @@
 7x8x8
-A=minecraft:air,0;C=minecraft:stone_slab,0;D=minecraft:cobblestone,0;E=minecraft:wool,3;F=minecraft:torch,5;G=minecraft:glass,0;H=minecraft:torch,4;I=minecraft:torch,3;J=minecraft:torch,2;K=minecraft:stone_slab,0;AU=Trhsy;DIR=2;DESC=暂无;
+A=minecraft:air,0;C=minecraft:stone_slab,0;D=minecraft:cobblestone,0;E=minecraft:wool,3;F=minecraft:torch,5;G=minecraft:glass,0;H=minecraft:torch,4;I=minecraft:torch,3;J=minecraft:torch,2;K=minecraft:stone_slab,0;AU=原版;DIR=2;DESC=暂无;
 DACCCADDDDDDDDDEEEEEDDEEEEEDDEEEEEDDEEEEEDDEE$EEDDDDDDDD
 FAAAAAFDDDADDDDAAAAADDAAAAADDAAAAADDAAAAADDAA!AADDDDDDDD
 AAAAAAADGDADGDDAAAAADGAAAAAGGAAAAAGGAAAAAGDAAAAADDDGGGDD

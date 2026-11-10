@@ -1,5 +1,5 @@
 9x9x6
-A=minecraft:air,0;C=minecraft:stone_slab,2;D=minecraft:lapis_block,0;E=minecraft:stonebrick,0;F=minecraft:wool,9;G=minecraft:enchanting_table,0;H=minecraft:bookshelf,0;I=minecraft:crafting_table,0;J=minecraft:planks,0;K=minecraft:cauldron,3;L=minecraft:furnace,2;M=minecraft:glass_pane,0;AU=Trhsy;DIR=2;DESC=暂无;
+A=minecraft:air,0;C=minecraft:stone_slab,2;D=minecraft:lapis_block,0;E=minecraft:stonebrick,0;F=minecraft:wool,9;G=minecraft:enchanting_table,0;H=minecraft:bookshelf,0;I=minecraft:crafting_table,0;J=minecraft:planks,0;K=minecraft:cauldron,3;L=minecraft:furnace,2;M=minecraft:glass_pane,0;AU=原版;DIR=2;DESC=暂无;
 AAAAACAAAAEEEE$EEAAEFFFFFEAAEFFFFFEAAEAFAFFEAAEFFAFFEAAEFFAFAEAAEEEEEEEAAAAAAAAAA
 AAAAAAAAAAEEEEAEEAAEAGAAAEAAEAAA!AEAAEHAHAAEAAEAAIAAEAAEAAJKLEAAEEEEEEEAAAAAAAAAA
 AAAAAAAAAAEMMEAEEAAMAAAAAMAAMAAAAAMAAEHAHAAEAAMAAJAAMAAMAAJAAMAAEMMEMMEAAAAAAAAAA

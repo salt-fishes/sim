@@ -9,7 +9,6 @@ import com.trhsy.sim.npcCode.block.FarmBox;
 import com.trhsy.sim.npcCode.block.MineBox;
 import com.trhsy.sim.npcCode.build.Building;
 import com.trhsy.sim.util.AsyncFileWriter;
-import com.trhsy.sim.util.Courier;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.util.DamageSource;
@@ -142,11 +141,13 @@ public class SimmodeStart {
             ModSimLoader.gamemode = store.gamemode;
         }
 
-        // 农场 / 矿场 / 建筑 / 快递点：每个文件独立 try，字面量后缀截断
+        // 农场 / 矿场 / 建筑：每个文件独立 try，字面量后缀截断
         loadFarmFiles();
         loadMineFiles();
         loadBuildingFiles(world);
-        loadCourierFiles();
+        // 先强制加载建筑/农场/矿场地块，再生成 NPC 实体；否则 NPC 会因为
+        // 出生区块未加载而被延迟，城镇里看起来像“人都消失了”。
+        SimChunkLoader.refresh(world);
 
         // P1: NPC 从 SimStore 加载
         if (store != null) {
@@ -279,28 +280,6 @@ public class SimmodeStart {
                 ModSimLoader.buildings.add(new Building(world, uid));
             } catch (Exception e) {
                 ModSimLoader.log.error("建筑加载失败 " + f.getName() + ": " + e.getMessage());
-            }
-        }
-    }
-
-    private static void loadCourierFiles() {
-        File folder = new File(ModSimLoader.getSavesDataFolder(), "CourierPoints");
-        if (!folder.exists() && !folder.mkdirs()) {
-            return;
-        }
-        File[] files = folder.listFiles();
-        if (files == null) {
-            return;
-        }
-        for (File f : files) {
-            String name = f.getName();
-            if (!f.isFile() || !name.endsWith(".sk2")) {
-                continue;
-            }
-            try {
-                ModSimLoader.theCourierPoints.add(new Courier(name.substring(0, name.length() - 4)));
-            } catch (Exception e) {
-                ModSimLoader.log.error("快递点加载失败 " + name + ": " + e.getMessage());
             }
         }
     }
@@ -790,6 +769,7 @@ public class SimmodeStart {
         newDayRentals = false;
         rentalsTimer = System.currentTimeMillis();
     }
+
     // 异步处理环境控制
     private static void processEnvironmentAsync(World world) {
 //        asyncExecutor.submit(() -> {

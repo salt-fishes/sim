@@ -95,6 +95,9 @@ public class PacketReturnHireableFolks implements IMessage {
         buf.writeInt(Integer.parseInt(identity.maturityAge));
         ByteBufUtils.writeUTF8String(buf, identity.skinPath);
         buf.writeBoolean(identity.isDead);
+        buf.writeFloat(identity.money);
+        buf.writeFloat(identity.wage);
+        ByteBufUtils.writeUTF8String(buf, identity.jobId == null ? "" : identity.jobId);
     }
 
     // 读取单个 NPC 数据
@@ -110,8 +113,11 @@ public class PacketReturnHireableFolks implements IMessage {
         int maturityAge = buf.readInt();
         String skinPath = ByteBufUtils.readUTF8String(buf);
         boolean isDead = buf.readBoolean();
+        float money = buf.readFloat();
+        float wage = buf.readFloat();
+        String jobId = ByteBufUtils.readUTF8String(buf);
 
-        return new NpcIdentity(UUID.fromString(id), name, String.valueOf(age), status, job, house, relationship, String.valueOf(hunger), String.valueOf(maturityAge), skinPath, isDead);
+        return new NpcIdentity(UUID.fromString(id), name, String.valueOf(age), status, job, house, relationship, String.valueOf(hunger), String.valueOf(maturityAge), skinPath, isDead, money, wage, jobId);
     }
     public static class Handler implements IMessageHandler<PacketReturnHireableFolks, IMessage> {
         public Handler() {

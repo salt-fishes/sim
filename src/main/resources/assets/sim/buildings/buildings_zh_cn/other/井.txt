@@ -1,5 +1,5 @@
 6x6x5
-A=minecraft:air,0;C=minecraft:stone,0;D=minecraft:water,8;E=minecraft:glowstone,0;F=minecraft:water,0;G=minecraft:stone_slab,6;AU=Trhsy;DIR=2;DESC=暂无;
+A=minecraft:air,0;C=minecraft:stone,0;D=minecraft:water,8;E=minecraft:glowstone,0;F=minecraft:water,0;G=minecraft:stone_slab,6;AU=原版;DIR=2;DESC=暂无;
 $AAAAAACCCCAACDDCAACDDCAACCCCAAAAAAA
 AAAAAAAEEEEAAEDDEAAEDDEAAEEEEAAAAAAA
 AAAAAAAEEEEAAEDDEAAEDDEAAEEEEAAAAAAA

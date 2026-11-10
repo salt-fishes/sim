@@ -1,5 +1,5 @@
 9x9x7
-A=minecraft:air,0;C=minecraft:grass,0;D=minecraft:dirt,0;E=minecraft:planks,0;F=minecraft:wooden_door,2;G=minecraft:furnace,4;H=minecraft:crafting_table,0;I=minecraft:chest,2;J=minecraft:bed,1;K=minecraft:chest,3;L=minecraft:bed,9;M=minecraft:torch,1;N=minecraft:glass_pane,0;O=minecraft:wooden_door,10;P=minecraft:torch,2;Q=minecraft:stone_slab,2;AU=Trhsy;DIR=2;DESC=暂无;
+A=minecraft:air,0;C=minecraft:grass,0;D=minecraft:dirt,0;E=minecraft:planks,0;F=minecraft:wooden_door,2;G=minecraft:furnace,4;H=minecraft:crafting_table,0;I=minecraft:chest,2;J=minecraft:bed,1;K=minecraft:chest,3;L=minecraft:bed,9;M=minecraft:torch,1;N=minecraft:glass_pane,0;O=minecraft:wooden_door,10;P=minecraft:torch,2;Q=minecraft:stone_slab,2;AU=原版;DIR=2;DESC=暂无;
 CCCCCDCCCCDDDEDDDCCDEE$EEDCCDEEEEEDCCDEEEEEDCCDEEEEEDCCDEEEEEDCCDDDDDDDCCCCCCCCCC
 !AAAAAAAAAEEEFEEEAAEGAAAHEAAEAAAAAEAAEAAAAAEAAEIAJAKEAAEIALAKEAAEEEEEEEAAAAAAAAAA
 AAAMAMAAAAENEOENEAAEAPAPAEAANAAAAANAANAAAAANAANAAAAANAAEMAAAMEAAEENNNEEAAAAAAAAAA

@@ -1,5 +1,5 @@
 5x7x4
-A=minecraft:air,0;C=minecraft:cobblestone,0;D=minecraft:tallgrass,1;E=minecraft:frosted_ice,0;F=minecraft:stone_stairs,2;G=minecraft:chest,2;H=minecraft:torch,4;AU=Trhsy;DIR=2;DESC=暂无;
+A=minecraft:air,0;C=minecraft:cobblestone,0;D=minecraft:tallgrass,1;E=minecraft:frosted_ice,0;F=minecraft:stone_stairs,2;G=minecraft:chest,2;H=minecraft:torch,4;AU=原版;DIR=2;DESC=暂无;
 CCCCDCCCCDCCCCACCC$FCCCCACCCCACCCCA
 CCCCACGACACAACACG!AACAACACGACACCCCA
 CCCCACHACACAACACHAAACAACACHACACCCCA

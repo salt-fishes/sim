@@ -1,5 +1,5 @@
 10x7x8
-P=minecraft:planks,0;G=minecraft:glass,0;A=minecraft:air,0;C=minecraft:chest,0;W=minecraft:crafting_table,0;T=minecraft:torch,0;AU=Trhsy;DIR=2;DESC=伐木场NPC砍伐树木会得到原木等;JOB=伐木工;
+P=minecraft:planks,0;G=minecraft:glass,0;A=minecraft:air,0;C=minecraft:chest,0;W=minecraft:crafting_table,0;T=minecraft:torch,0;AU=原版;DIR=2;DESC=伐木场NPC砍伐树木会得到原木等;JOB=伐木工;
 PPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPP$PPPPPPPPPPPPPP
 PPPPAAPPPPPCAAAAAACPPCAAAAAACPPAAAAAAAAPPAAPWPPAAPPAAA!AAAAPPPPPAPPPPP
 PGGPAAPGGPPAAAAAAAAPPAAAAAAAAPPAAAAAAAAPPAAAAAAAAPPAAAAAAAAPPPGPAPPGPP

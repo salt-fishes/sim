@@ -1,5 +1,5 @@
 3x3x5
-A=minecraft:air,0;C=minecraft:cobblestone,0;D=minecraft:planks,0;E=minecraft:glass,0;F=minecraft:stone_slab,3;G=minecraft:air,0;AU=Trhsy;DIR=2;DESC=温馨提示：请建筑于水平面下一格;
+A=minecraft:air,0;C=minecraft:cobblestone,0;D=minecraft:planks,0;E=minecraft:glass,0;F=minecraft:stone_slab,3;G=minecraft:air,0;AU=原版;DIR=2;DESC=温馨提示：请建筑于水平面下一格;
 CCCC$CCCC
 DADD!DDDD
 DADEAEDED

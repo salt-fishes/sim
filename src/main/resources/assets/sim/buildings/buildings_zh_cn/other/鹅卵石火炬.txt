@@ -1,5 +1,5 @@
 3x3x4
-A=minecraft:air,0;C=minecraft:cobblestone,0;D=minecraft:netherrack,0;E=minecraft:fire,10;AU=Trhsy;DIR=2;DESC=暂无;
+A=minecraft:air,0;C=minecraft:cobblestone,0;D=minecraft:netherrack,0;E=minecraft:fire,10;AU=原版;DIR=2;DESC=暂无;
 $AAACAAAA
 AAAACAAAA
 ACACDCACA

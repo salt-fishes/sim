@@ -11,91 +11,134 @@ import java.util.Arrays;
 import java.util.List;
 
 /**
- * @author Trhsy
- * @Package: com.trhsy.sim.entity.container
- * @ClassName: InventoryNpc
- * @Description:
- * @date 2024/3/21 15:42
+ * NPC 的背包（41 格：0-8 快捷栏、9-35 主背包、36-39 护甲、40 副手）。
+ *
+ * <p>原实现是一个所有方法都返回 null/0 的占位类，打开 NPC 背包时
+ * GuiContainer 会因为 getStackInSlot 返回 null 直接 NPE。这里补成
+ * InventoryPlayer 等价的最小实现。</p>
  */
 public class InventoryNpc implements IInventory {
 
-    /** An array of 36 item stacks indicating the main player inventory (including the visible bar). */
+    /** 36 格主背包（含快捷栏）。 */
     public final NonNullList<ItemStack> mainInventory = NonNullList.<ItemStack>withSize(36, ItemStack.EMPTY);
-    /** An array of 4 item stacks containing the currently worn armor pieces. */
+    /** 4 格护甲。 */
     public final NonNullList<ItemStack> armorInventory = NonNullList.<ItemStack>withSize(4, ItemStack.EMPTY);
+    /** 1 格副手。 */
     public final NonNullList<ItemStack> offHandInventory = NonNullList.<ItemStack>withSize(1, ItemStack.EMPTY);
     private final List<NonNullList<ItemStack>> allInventories;
-    /** The index of the currently held item (0-8). */
+    /** 当前选中快捷栏。 */
     public int currentItem;
-    /** The player whose inventory this is. */
+    /** 背包所属 NPC。 */
     public EntityNpc player;
-    /** The stack currently held by the mouse cursor */
-    private ItemStack itemStack;
+    private ItemStack itemStack = ItemStack.EMPTY;
     private int timesChanged;
 
-    public InventoryNpc(EntityNpc playerIn){
+    public InventoryNpc(EntityNpc playerIn) {
         this.allInventories = Arrays.<NonNullList<ItemStack>>asList(this.mainInventory, this.armorInventory, this.offHandInventory);
-        this.itemStack = ItemStack.EMPTY;
         this.player = playerIn;
     }
+
     @Override
     public int getSizeInventory() {
-        return 0;
+        return 41;
     }
 
     @Override
     public boolean isEmpty() {
-        return false;
+        for (NonNullList<ItemStack> list : this.allInventories) {
+            for (ItemStack stack : list) {
+                if (stack != null && !stack.isEmpty()) {
+                    return false;
+                }
+            }
+        }
+        return true;
     }
 
     @Override
     public ItemStack getStackInSlot(int index) {
-        return null;
+        if (index >= 0 && index < 9) {
+            return this.mainInventory.get(index);
+        }
+        if (index >= 9 && index < 36) {
+            return this.mainInventory.get(index);
+        }
+        if (index >= 36 && index < 40) {
+            return this.armorInventory.get(index - 36);
+        }
+        if (index == 40) {
+            return this.offHandInventory.get(0);
+        }
+        return ItemStack.EMPTY;
     }
 
     @Override
     public ItemStack decrStackSize(int index, int count) {
-        return null;
+        ItemStack stack = this.getStackInSlot(index);
+        if (stack == null || stack.isEmpty()) {
+            return ItemStack.EMPTY;
+        }
+        ItemStack result = stack.splitStack(count);
+        if (stack.isEmpty()) {
+            this.setInventorySlotContents(index, ItemStack.EMPTY);
+        }
+        return result;
     }
 
     @Override
     public ItemStack removeStackFromSlot(int index) {
-        return null;
+        ItemStack stack = this.getStackInSlot(index);
+        if (stack == null || stack.isEmpty()) {
+            return ItemStack.EMPTY;
+        }
+        this.setInventorySlotContents(index, ItemStack.EMPTY);
+        return stack;
     }
 
     @Override
     public void setInventorySlotContents(int index, ItemStack stack) {
-
+        ItemStack value = stack == null ? ItemStack.EMPTY : stack;
+        if (index >= 0 && index < 36) {
+            this.mainInventory.set(index, value);
+        } else if (index >= 36 && index < 40) {
+            this.armorInventory.set(index - 36, value);
+        } else if (index == 40) {
+            this.offHandInventory.set(0, value);
+        }
+        this.markDirty();
     }
 
     @Override
     public int getInventoryStackLimit() {
-        return 0;
+        return 64;
     }
 
     @Override
     public void markDirty() {
+        this.timesChanged++;
+    }
 
+    public int getTimesChanged() {
+        return this.timesChanged;
     }
 
     @Override
     public boolean isUsableByPlayer(EntityPlayer player) {
-        return false;
+        return this.player != null && this.player.isEntityAlive()
+                && player.getDistanceSq(this.player) <= 64.0D;
     }
 
     @Override
     public void openInventory(EntityPlayer player) {
-
     }
 
     @Override
     public void closeInventory(EntityPlayer player) {
-
     }
 
     @Override
     public boolean isItemValidForSlot(int index, ItemStack stack) {
-        return false;
+        return true;
     }
 
     @Override
@@ -105,7 +148,6 @@ public class InventoryNpc implements IInventory {
 
     @Override
     public void setField(int id, int value) {
-
     }
 
     @Override
@@ -115,21 +157,33 @@ public class InventoryNpc implements IInventory {
 
     @Override
     public void clear() {
+        for (NonNullList<ItemStack> list : this.allInventories) {
+            for (int i = 0; i < list.size(); i++) {
+                list.set(i, ItemStack.EMPTY);
+            }
+        }
+    }
 
+    public ItemStack getItemStack() {
+        return this.itemStack;
+    }
+
+    public void setItemStack(ItemStack stack) {
+        this.itemStack = stack == null ? ItemStack.EMPTY : stack;
+    }
+
+    @Override
+    public ITextComponent getDisplayName() {
+        return new net.minecraft.util.text.TextComponentString("NPC Inventory");
     }
 
     @Override
     public String getName() {
-        return null;
+        return "NPC Inventory";
     }
 
     @Override
     public boolean hasCustomName() {
         return false;
-    }
-
-    @Override
-    public ITextComponent getDisplayName() {
-        return null;
     }
 }

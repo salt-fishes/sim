@@ -1,3 +1,3 @@
 9x13x1
-A=minecraft:air,0;C=minecraft:log,0;D=minecraft:farmland,7;E=minecraft:farmland,0;F=minecraft:water,0;AU=Trhsy;DIR=2;DESC=暂无;
+A=minecraft:air,0;C=minecraft:log,0;D=minecraft:farmland,7;E=minecraft:farmland,0;F=minecraft:water,0;AU=原版;DIR=2;DESC=暂无;
 $CCCCCCCCCDDDEDDDCCDDDDDDDCCFFFFFFFCCDDDDDDDCCEDEDDDDCCCCCCCCCCCDDDDEDDCCDDDDDDDCCFFFFFFFCCDDEDDDDCCDDDDDDDCCCCCCCCCC

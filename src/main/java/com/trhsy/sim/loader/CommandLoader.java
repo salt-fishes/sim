@@ -6,11 +6,7 @@ import com.trhsy.sim.commands.CommandStart;
 import net.minecraftforge.fml.common.event.FMLServerStartingEvent;
 
 /**
- * @author Trhsy
- * @Package: com.trhsy.sim.loader
- * @ClassName: CommandLoader
- * @Description: 命令加载
- * @date 2023/11/20 下午 3:32
+ * 命令加载
  */
 public class CommandLoader {
     public CommandLoader(FMLServerStartingEvent event) {

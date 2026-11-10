@@ -1,5 +1,5 @@
 8x9x6
-A=minecraft:air,0;C=minecraft:stone_slab,2;D=minecraft:cobblestone,0;E=minecraft:dirt,0;F=minecraft:stone,0;G=minecraft:stonebrick,0;H=minecraft:glass,0;I=minecraft:glass_pane,0;J=minecraft:wall_sign,5;S=minecraft:chest,2;AU=Trhsy;DIR=2;DESC=雇佣屠夫可以让NPC肉场取生肉售卖;JOB=屠夫;
+A=minecraft:air,0;C=minecraft:stone_slab,2;D=minecraft:cobblestone,0;E=minecraft:dirt,0;F=minecraft:stone,0;G=minecraft:stonebrick,0;H=minecraft:glass,0;I=minecraft:glass_pane,0;J=minecraft:wall_sign,5;S=minecraft:chest,2;AU=原版;DIR=2;DESC=雇佣屠夫可以让NPC肉场取生肉售卖;JOB=屠夫;
 AAAAACAADDDDDDDDDDDDDDDDDD*DDDDDDD*DDDDDDD*DDDDDDD****DDDDDD$DDDDDDDDDDD
 AAAAAAAAFGGGFAFFFAAAAAAFGAHAAAAFGAHAAAAFGAHAAAAFFAHHSHAFFAAAAAAFFFGGGFFF
 AAAAAAAAFIIIFAFFFAAAAACFIAAAAACFIAAAAAAFIAAAAAAFFAAAAAAFFAAAAAAFFFIIIFFF

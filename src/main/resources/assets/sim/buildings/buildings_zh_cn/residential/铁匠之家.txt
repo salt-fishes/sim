@@ -1,5 +1,5 @@
 7x11x6
-A=minecraft:air,0;C=minecraft:frosted_ice,0;D=minecraft:stone_slab,0;E=minecraft:cobblestone,0;F=minecraft:fence,0;G=minecraft:planks,0;H=minecraft:bed,9;I=minecraft:bed,1;J=minecraft:chest,5;K=minecraft:log,0;L=minecraft:oak_stairs,1;M=minecraft:crafting_table,0;N=minecraft:oak_stairs,3;O=minecraft:iron_bars,0;P=minecraft:furnace,5;Q=minecraft:glass,0;R=minecraft:wooden_pressure_plate,0;S=minecraft:torch,1;T=minecraft:bookshelf,0;AU=Trhsy;DIR=2;DESC=暂无;
+A=minecraft:air,0;C=minecraft:frosted_ice,0;D=minecraft:stone_slab,0;E=minecraft:cobblestone,0;F=minecraft:fence,0;G=minecraft:planks,0;H=minecraft:bed,9;I=minecraft:bed,1;J=minecraft:chest,5;K=minecraft:log,0;L=minecraft:oak_stairs,1;M=minecraft:crafting_table,0;N=minecraft:oak_stairs,3;O=minecraft:iron_bars,0;P=minecraft:furnace,5;Q=minecraft:glass,0;R=minecraft:wooden_pressure_plate,0;S=minecraft:torch,1;T=minecraft:bookshelf,0;AU=原版;DIR=2;DESC=暂无;
 AAADDAAEEEE$EEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE
 AAAAAAAEEEAAFFEAEAAAFEAEAAAFEEEEAAFGHIGAAFGAAGJAFGA!AGAKGLFAAAGGMNAAAGKGGGGGK
 AAAAAAAEOOAAAFEAAAAAAEAAAAAAEEEPAAAGAAGAAFQAAGAAAGAAAGAKQARAAAGGAAAAAGKGQGQGK

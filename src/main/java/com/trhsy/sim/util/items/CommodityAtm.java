@@ -92,12 +92,8 @@ public class CommodityAtm extends Commodity{
             availableItems.add(new ItemStack(Items.DYE));
             //铁
             availableItems.add(new ItemStack(Items.IRON_INGOT));
-            //铜
-            availableItems.add(new ItemStack(ItemLoader.itemCopperIngot));
             //金
             availableItems.add(new ItemStack(Items.GOLD_INGOT));
-            //锡
-            availableItems.add(new ItemStack(ItemLoader.itemTinIngot));
             //萤石
             availableItems.add(new ItemStack(Items.GLOWSTONE_DUST));
         } catch (Exception e) {

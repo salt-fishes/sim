@@ -1,5 +1,5 @@
 11x11x9
-A=minecraft:air,0;C=minecraft:fence,0;D=minecraft:log,1;E=minecraft:planks,0;F=minecraft:wool,0;G=minecraft:glass,0;H=minecraft:ladder,2;I=minecraft:glass_pane,0;J=minecraft:glowstone,0;K=minecraft:torch,1;L=minecraft:torch,2;AU=Trhsy;DIR=2;DESC=暂无;
+A=minecraft:air,0;C=minecraft:fence,0;D=minecraft:log,1;E=minecraft:planks,0;F=minecraft:wool,0;G=minecraft:glass,0;H=minecraft:ladder,2;I=minecraft:glass_pane,0;J=minecraft:glowstone,0;K=minecraft:torch,1;L=minecraft:torch,2;AU=原版;DIR=2;DESC=暂无;
 ACCCCACCCCACCDDDADDDCCCDDDDDDDDDCCDDEEEEEDDCCDDEFFFEDDCCDDEF$FEDDCCDDEFFFEDDCCDDEEEEEDDCCDDDDDDDDDCCCDDDDDDDCCACCCCCCCCCA
 AAAAAAAAAAAAACAAAAACAAACDEGAGEDCAAAEAAAAAEAAAAEAAAAAEAAAAEAA!AAEAAAAEAAHAAEAAAAEAAEAAEAAACDEEEEEDCAAACAAAAACAAAAAAAAAAAAA
 AAAAAAAAAAAAACAAAAACAAACDEGAGEDCAAAEAAAAAEAAAAIAAAAAIAAAAIAAAAAIAAAAIAAHAAIAAAAEAAEAAEAAACDEEEEEDCAAACAAAAACAAAAAAAAAAAAA

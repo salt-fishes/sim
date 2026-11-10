@@ -84,7 +84,7 @@ public class JobTaskCheesemaker extends JobTask{
                     BlockPos blockPos = new BlockPos(milkBlock.x, milkBlock.y, milkBlock.z);
                     Block id = this.job.jobWorld.getBlockState(blockPos).getBlock();
                     ModSimLoader.log.debug("检查牛奶块：" + blockPos + "，当前方块：" + id.getRegistryName());
-                    if ( id != BlockLoader.milk&& id != BlockLoader.flowing_milk) {
+                    if (id != BlockLoader.milk) {
                         this.job.jobWorld.setBlockState(blockPos, BlockLoader.milk.getDefaultState(), 3);
                         filledOk = true;
                         ModSimLoader.log.info("已填充牛奶到：" + blockPos);

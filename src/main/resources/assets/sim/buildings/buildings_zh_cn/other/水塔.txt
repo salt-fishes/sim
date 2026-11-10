@@ -1,5 +1,5 @@
 6x6x10
-A=minecraft:air,0;C=minecraft:fence,0;D=minecraft:red_flower,0;E=minecraft:stone_slab,0;F=minecraft:yellow_flower,0;G=minecraft:water,1;H=minecraft:water,9;I=minecraft:torch,5;J=minecraft:water,0;K=minecraft:glass,0;L=minecraft:stone_slab,2;M=minecraft:double_stone_slab,2;N=minecraft:planks,0;O=minecraft:water,8;AU=Trhsy;DIR=2;DESC=暂无;
+A=minecraft:air,0;C=minecraft:fence,0;D=minecraft:red_flower,0;E=minecraft:stone_slab,0;F=minecraft:yellow_flower,0;G=minecraft:water,1;H=minecraft:water,9;I=minecraft:torch,5;J=minecraft:water,0;K=minecraft:glass,0;L=minecraft:stone_slab,2;M=minecraft:double_stone_slab,2;N=minecraft:planks,0;O=minecraft:water,8;AU=原版;DIR=2;DESC=暂无;
 $AAAACADEEAFAEGHEAFEHGEAAFEEADCAAAAC
 CAAAACAAAAAAAAAHAAAAHAAAAAAAAACAAAAC
 CAAACCAAAAAAAAAHAAAAH*AAAAAAAACCAAAC

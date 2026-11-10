@@ -1,5 +1,5 @@
 9x9x7
-A=minecraft:air,0;C=minecraft:cobblestone,0;D=minecraft:stone_slab,3;E=minecraft:planks,0;F=minecraft:bookshelf,0;G=minecraft:enchanting_table,0;H=minecraft:glass,0;I=minecraft:glowstone,0;J=minecraft:stone_slab,2;K=minecraft:double_stone_slab,2;L=minecraft:fence,0;AU=Trhsy;DIR=2;DESC=暂无;
+A=minecraft:air,0;C=minecraft:cobblestone,0;D=minecraft:stone_slab,3;E=minecraft:planks,0;F=minecraft:bookshelf,0;G=minecraft:enchanting_table,0;H=minecraft:glass,0;I=minecraft:glowstone,0;J=minecraft:stone_slab,2;K=minecraft:double_stone_slab,2;L=minecraft:fence,0;AU=原版;DIR=2;DESC=暂无;
 CCCCDCCCCCEEE$EEECCEEEEEEECCEEEEEEECCEEEEEEECCEEEEEEECCEEEEEEECCEEEEEEECCCCCCCCCC
 CCCEAECCCCAAAAAAACCAFFAFFACCAFAAAFACCAFAGAFACCAFAAAFACCAFFAFFACCAAAAAAACCCCCCCCCC
 CHHEAEHHCCAAAAAAACHAFFAFFAHHAFAAAFAHHAFAAAFAHHAFAAAFAHHAFFAFFAHCAAAAAAACCCHHHHHCC

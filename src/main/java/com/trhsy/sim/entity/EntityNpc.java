@@ -2,6 +2,7 @@ package com.trhsy.sim.entity;
 
 import com.trhsy.sim.entity.ai.FolkAIOpenFenceGate;
 import com.trhsy.sim.entity.ai.FolkAIWander;
+import com.trhsy.sim.entity.ai.FolkPathNavigateGround;
 import com.trhsy.sim.entity.container.ContainerNpc;
 import com.trhsy.sim.entity.container.InventoryNpc;
 import com.trhsy.sim.loader.ModSimClientLoader;
@@ -24,6 +25,7 @@ import net.minecraft.item.Item;
 import net.minecraft.item.ItemFood;
 import net.minecraft.item.ItemStack;
 import net.minecraft.network.play.server.SPacketAnimation;
+import net.minecraft.pathfinding.PathNavigate;
 import net.minecraft.pathfinding.PathNavigateGround;
 import net.minecraft.util.DamageSource;
 import net.minecraft.util.EnumHand;
@@ -33,6 +35,8 @@ import net.minecraft.util.SoundEvent;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
+import net.minecraft.util.text.ITextComponent;
+import net.minecraft.util.text.TextComponentString;
 import net.minecraft.util.text.TextComponentTranslation;
 import net.minecraft.world.World;
 import net.minecraft.world.WorldServer;
@@ -162,6 +166,15 @@ public class EntityNpc extends EntityCreature implements INpc {
             StackTraceElement element = e.getStackTrace()[0];
             ModSimLoader.log.error("EntityFolk3出错了：" + e.getMessage() + "行数：" + element.getLineNumber());
         }
+    }
+
+    /**
+     * 使用受控寻路器：单次 A* 搜索半径上限 48 格。
+     * 长距离移动由 NpcNavigator 拆成多段，避免真实地形上一次搜索几百格。
+     */
+    @Override
+    protected PathNavigate createNavigator(World worldIn) {
+        return new FolkPathNavigateGround(this, worldIn);
     }
 
     /***
@@ -672,5 +685,27 @@ public class EntityNpc extends EntityCreature implements INpc {
             ModSimLoader.log.error("isChild出错了：" + e.getMessage() + "行数：" + element.getLineNumber());
             return false;
         }
+    }
+
+    @Override
+    public String getName() {
+        if (this.theData != null) {
+            String name = this.theData.getName();
+            if (name != null && !name.isEmpty()) {
+                return name;
+            }
+        }
+        if (this.world != null && this.world.isRemote) {
+            NpcIdentity identity = ModSimClientLoader.getFolkByUUID(this.getUniqueID());
+            if (identity != null && identity.name != null && !identity.name.isEmpty()) {
+                return identity.name;
+            }
+        }
+        return new TextComponentTranslation("entity.sim.EntityFolk.name", new Object[0]).getUnformattedText();
+    }
+
+    @Override
+    public ITextComponent getDisplayName() {
+        return new TextComponentString(this.getName());
     }
 }

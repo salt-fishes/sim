@@ -77,7 +77,7 @@ public class BlockMiningBox extends Block {
                 }
             }
 
-            MineBox mb = new MineBox(V3.fromBlockPos(pos), (V3)markerPos, 6, 6);
+            MineBox mb = new MineBox(new V3(pos, placer.dimension), (V3)markerPos, 6, 6);
             ModSimLoader.mines.add(mb);
             mb.facing = facing;
             mb.saveMine();
@@ -95,12 +95,12 @@ public class BlockMiningBox extends Block {
             worldIn.playSound(playerIn, pos, computer, SoundCategory.BLOCKS, 1.0F, 1.0F);
         }
         if(!worldIn.isRemote){
-            V3 vPos = V3.fromBlockPos(pos);
+            V3 vPos = new V3(pos, playerIn.dimension);
             NpcData fd = null;
             Iterator var12 = ModSimLoader.folks.iterator();
             while(var12.hasNext()) {
                 NpcData f = (NpcData)var12.next();
-                if (f.job != null && f.job.workPlace.toString().equals(V3.fromBlockPos(pos).toString())) {
+                if (f.job != null && f.job.workPlace.toString().equals(vPos.toString())) {
                     fd = f;
                 }
             }
@@ -137,9 +137,13 @@ public class BlockMiningBox extends Block {
             worldIn.playSound(null, pos, power_down, SoundCategory.RECORDS, 1.0F, 1.0F);
         }
         for (NpcData fd : ModSimLoader.folks) {
-            if (fd.job != null && fd.job.workPlace.equals(new V3(pos))) {
+            if (fd.job != null && fd.job.workPlace.equals(new V3(pos, worldIn.provider.getDimension()))) {
                 fd.fire();
             }
+        }
+        MineBox mineBox = ModSimLoader.getMine(new V3(pos, worldIn.provider.getDimension()));
+        if (mineBox != null) {
+            mineBox.removeMine(mineBox.ID);
         }
         super.onBlockDestroyedByPlayer(worldIn, pos, state);
     }
@@ -159,5 +163,7 @@ public class BlockMiningBox extends Block {
     @Override
     @SideOnly(Side.CLIENT)
     public void addInformation(ItemStack stack, @Nullable World player, List<String> tooltip, ITooltipFlag advanced) {
+        tooltip.add(net.minecraft.util.text.translation.I18n.translateToLocal("block.sim.mining_box.tooltip.1"));
+        tooltip.add(net.minecraft.util.text.translation.I18n.translateToLocal("block.sim.mining_box.tooltip.2"));
     }
 }

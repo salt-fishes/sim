@@ -4,6 +4,7 @@ import com.trhsy.sim.ModSim;
 import com.trhsy.sim.entity.EntityNpc;
 import com.trhsy.sim.network.client.PacketUpdateMoney;
 import com.trhsy.sim.npcCode.NpcData;
+import com.trhsy.sim.util.Onboarding;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.BufferBuilder;
 import net.minecraft.client.renderer.Tessellator;
@@ -11,9 +12,11 @@ import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.item.EntityItem;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.item.ItemStack;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.util.math.Vec3d;
+import net.minecraft.util.text.TextComponentString;
 import net.minecraft.util.text.TextComponentTranslation;
 import net.minecraft.world.World;
 import net.minecraftforge.client.event.RenderWorldLastEvent;
@@ -87,18 +90,33 @@ public class EventLoader {
     public void playerJoin(PlayerEvent.PlayerLoggedInEvent event) {
         EntityPlayer player = event.player;
 
-        if (player == null){
+        // 客户端也会收到 PlayerLoggedInEvent；物品、聊天都只由服务端处理，避免双份。
+        if (!(player instanceof EntityPlayerMP)) {
             return;
         }
 
         // 发送欢迎消息（主线程安全）
-        String welcomeMsg = String.format("[%s] %s %s",
-                player.getName(),
-                new TextComponentTranslation("container.sim.welcome").getUnformattedText(),
-                ModSim.VERSION
-        );
-        TextComponentTranslation textcomponenttranslation = new TextComponentTranslation(welcomeMsg, new Object[0]);
-        player.sendMessage(textcomponenttranslation);
+        TextComponentString welcome = new TextComponentString("[" + player.getName() + "] ");
+        welcome.appendSibling(new TextComponentTranslation("container.sim.welcome"));
+        welcome.appendText(" " + ModSim.VERSION);
+        player.sendMessage(welcome);
+
+        // 卷轴不再消耗；丢了/换了新玩家都补一个，保证随时能打开任命书和手册。
+        Onboarding.giveScroll(player);
+
+        if (ModSimLoader.gamemode != 999 && Onboarding.giveStarterKit(player)) {
+            Onboarding.send(player, "container.sim.kit.given");
+            Onboarding.send(player, "container.sim.tip.start");
+            Onboarding.send(player, "container.sim.tip.materials");
+        }
+
+        // 第一次进世界只提示一次，避免每次登录刷屏。
+        if (Onboarding.markWelcomeTip(player)) {
+            Onboarding.send(player, ModSimLoader.gamemode == 999
+                    ? "container.sim.welcome.tip.new"
+                    : "container.sim.welcome.tip.started");
+        }
+
         // 加载NPC关联实体（通过服务端线程池异步处理，但实体操作必须在主线程）
         if (ModSimLoader.gamemode != 999 ) {
             MinecraftServer server = FMLCommonHandler.instance().getMinecraftServerInstance();
@@ -118,7 +136,10 @@ public class EventLoader {
                             if (entity instanceof EntityNpc) {
                                 ModSimLoader.log.info("NPC-id: {} 已存在，直接关联", fd.ID);
                                 fd.entity = (EntityNpc) entity;
-                                fd.entity.setPositionAndUpdate(fd.pos.x, fd.pos.y, fd.pos.z);
+                                // 不要用存档里的旧坐标把实体拽回去：
+                                // 玩家登录/换维度时实体可能已经走远，这里只同步数据层坐标。
+                                fd.pos = com.trhsy.sim.npcCode.V3.fromVec3d(entity.getPositionVector());
+                                fd.pos.dimension = entity.dimension;
                             } else {
                                 ModSimLoader.log.warn("NPC-id: {} 未找到实体，可能已被移除", fd.ID);
                                 // 若需创建新NPC，可在此处添加逻辑（需主线程）
@@ -133,13 +154,6 @@ public class EventLoader {
             }
         }
 
-        // 给予初始物品（主线程安全）
-        if (shouldGiveStarterItem()) {
-            ItemStack starter = new ItemStack(ItemLoader.itemSimULoader);
-            if (!player.inventory.addItemStackToInventory(starter)) {
-                spawnItemDrop(player, starter);
-            }
-        }
         ModSimLoader.log.info("-----------------------------玩家加入再次重制时间，开始计时，准备加载模拟大都市------------------------");
         SimmodeStart.timeSinceLastClientUpdates=System.currentTimeMillis();
         /*
@@ -175,30 +189,6 @@ public class EventLoader {
         skinThread.start();*/
     }
     /**
-     * 判断是否应给予初始物品
-     */
-    private static boolean shouldGiveStarterItem() {
-        boolean shouldGive = ItemLoader.itemSimULoader != null && ModSimLoader.gamemode == 999;
-        // 替换魔数为枚举或常量（示例）
-        return shouldGive;
-    }
-    /**
-     * 生成物品掉落（主线程安全）
-     */
-    private static void spawnItemDrop(EntityPlayer player, ItemStack stack) {
-        World world = player.world;
-        if (world.isRemote){
-            return;
-        }
-
-        double x = player.posX + (world.rand.nextDouble() - 0.5) * 0.7;
-        double y = player.posY + world.rand.nextDouble() * 0.5 + 0.5; // 避免卡在地底
-        double z = player.posZ + (world.rand.nextDouble() - 0.5) * 0.7;
-        EntityItem itemEntity = new EntityItem(world, x, y, z, stack);
-        itemEntity.setDefaultPickupDelay();
-        world.spawnEntity(itemEntity);
-    }
-    /**
      * 世界保存
      *
      * @param event
@@ -225,8 +215,7 @@ public class EventLoader {
         // 仅关注“服务端的主世界”（维度0，非客户端，非其他维度如地狱/末地）
         if (world.isRemote || world.provider.getDimension() != 0) {
             return;
-        }
-        ModSimLoader.log.info( "清除旧的世界数据");
+        }        ModSimLoader.log.info( "清除旧的世界数据");
         ModSimLoader.folks.clear();
         ModSimLoader.farms.clear();
         ModSimLoader.mines.clear();
@@ -248,6 +237,17 @@ public class EventLoader {
             // 只在服务端运行
 
 //        }
+    }
+
+    /**
+     * 世界卸载：释放这个维度的建筑强制加载票据。
+     */
+    @SubscribeEvent
+    public void worldUnload(WorldEvent.Unload event) {
+        World world = event.getWorld();
+        if (world != null && !world.isRemote) {
+            SimChunkLoader.release(world);
+        }
     }
 
     /**

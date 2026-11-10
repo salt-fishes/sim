@@ -1,5 +1,7 @@
 package com.trhsy.sim.gui.npc;
 
+import com.trhsy.sim.gui.GuiLayout;
+import com.trhsy.sim.gui.GuiStyle;
 import com.trhsy.sim.loader.ModSimLoader;
 import com.trhsy.sim.loader.NetWorkLoader;
 import com.trhsy.sim.network.client.PacketOpenMerchantGui;
@@ -7,8 +9,10 @@ import com.trhsy.sim.network.server.PacketBuyStuff;
 import com.trhsy.sim.network.server.PacketSellStuff;
 import com.trhsy.sim.npcCode.V3;
 import com.trhsy.sim.util.PricesForBlocks;
+import net.minecraft.block.Block;
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.gui.GuiScreen;
+import net.minecraft.client.renderer.RenderHelper;
 import net.minecraft.client.resources.I18n;
 import net.minecraft.init.Blocks;
 import net.minecraft.inventory.IInventory;
@@ -59,6 +63,9 @@ public class GuiMerchant extends GuiScreen {
     public void initGui() {
         try {
             Keyboard.enableRepeatEvents(true);
+            if (this.currentPage == 0) {
+                this.currentPage = 1;
+            }
             this.quantities.clear();
             sellLimits.clear();
             for (int i = 0; i < 9; i++) {
@@ -74,7 +81,7 @@ public class GuiMerchant extends GuiScreen {
     }
 
     @Override
-    public void drawScreen(int i, int j, float f) {
+    public void drawScreen(int mouseX, int mouseY, float partialTicks) {
         try {
             if (this.mouseCount < 10) {
                 this.mouseCount++;
@@ -82,81 +89,53 @@ public class GuiMerchant extends GuiScreen {
             }
 
             this.drawDefaultBackground();
-            if (this.currentPage == 0) {
-                this.drawCenteredString(this.fontRenderer, new TextComponentTranslation("container.sim.Merchant0",new Object[0]).getUnformattedText(), this.width / 2, 5, 16777215);
-            } else if (this.currentPage == 1) {
-                this.drawCenteredString(this.fontRenderer, new TextComponentTranslation("container.sim.Merchant1",new Object[0]).getUnformattedText(), this.width / 2, 5, 16777215);
-                this.drawString(this.fontRenderer, new TextComponentTranslation("container.sim.Merchant2",new Object[0]).getUnformattedText(), 2, 25, 16777120);
-                this.drawString(this.fontRenderer, new TextComponentTranslation("container.sim.Merchant3",new Object[0]).getUnformattedText(), 100, 25, 16777120);
-                this.drawString(this.fontRenderer, new TextComponentTranslation("container.sim.Merchant4",new Object[0]).getUnformattedText(), 200, 25, 16777120);
-                this.drawString(this.fontRenderer, new TextComponentTranslation("container.sim.Merchant5",new Object[0]).getUnformattedText(), 350, 25, 16777120);
-                String blockName = "";
-                String price = "";
-                Float fprice = 0.0F;
-                String subtotal = "";
+            int px = left();
+            int py = top();
+            int pw = panelW();
+            int ph = panelH();
+            GuiStyle.panel(px, py, pw, ph, new TextComponentTranslation("container.sim.gui.builder", new Object[0]).getUnformattedText(), this.fontRenderer);
+
+            String balance = new TextComponentTranslation("container.sim.gui.money", new Object[0]).getUnformattedText() + ": " + ModSimLoader.displayMoney(ModSimLoader.money);
+            GuiStyle.text(this.fontRenderer, px + pw - 12 - this.fontRenderer.getStringWidth(balance), py + 30, balance, GuiStyle.GREEN);
+
+            int cardW = (pw - 32) / 3;
+            int cardH = 42;
+            int startY = py + 58;
+            if (this.currentPage == 1) {
                 float grandTotal = 0.0F;
-
-                for (int b = 0; b < 9; ++b) {
-                    if (b == 0) {
-                        //木板
-                        blockName = new TextComponentTranslation("container.sim.Merchant16",new Object[0]).getUnformattedText();
-                        fprice = PricesForBlocks.getPrice(Blocks.PLANKS, true);
-                    } else if (b == 1) {
-                        //木材
-                        blockName = new TextComponentTranslation("container.sim.Merchant17",new Object[0]).getUnformattedText();
-                        fprice = PricesForBlocks.getPrice(Blocks.LOG, true);
-                    } else if (b == 2) {
-                        //圆石
-                        blockName = new TextComponentTranslation("container.sim.Merchant18",new Object[0]).getUnformattedText();
-                        ;
-                        fprice = PricesForBlocks.getPrice(Blocks.COBBLESTONE, true);
-                    } else if (b == 3) {
-                        //石头
-                        blockName = new TextComponentTranslation("container.sim.Merchant19",new Object[0]).getUnformattedText();
-                        ;
-                        fprice = PricesForBlocks.getPrice(Blocks.STONE, true);
-                    } else if (b == 4) {
-                        //玻璃
-                        blockName = new TextComponentTranslation("container.sim.Merchant20",new Object[0]).getUnformattedText();
-                        ;
-                        fprice = PricesForBlocks.getPrice(Blocks.GLASS, true);
-                    } else if (b == 5) {
-                        //羊毛
-                        blockName = new TextComponentTranslation("container.sim.Merchant21",new Object[0]).getUnformattedText();
-                        ;
-                        fprice = PricesForBlocks.getPrice(Blocks.WOOL, true);
-                    } else if (b == 6) {
-                        //板砖
-                        blockName = new TextComponentTranslation("container.sim.Merchant22",new Object[0]).getUnformattedText();
-                        ;
-                        fprice = PricesForBlocks.getPrice(Blocks.BRICK_BLOCK, true);
-                    } else if (b == 7) {
-                        //石砖
-                        blockName = new TextComponentTranslation("container.sim.Merchant23",new Object[0]).getUnformattedText();
-                        ;
-                        fprice = PricesForBlocks.getPrice(Blocks.STONEBRICK, true);
-                    } else if (b == 8) {
-                        //栏栅
-                        blockName = new TextComponentTranslation("container.sim.Merchant24",new Object[0]).getUnformattedText();
-                        ;
-                        fprice = PricesForBlocks.getPrice(Blocks.OAK_FENCE, true);
-                    }
-
-                    price = PricesForBlocks.formatPrice(fprice);
-                    subtotal = PricesForBlocks.formatPrice((float) this.quantities.get(b) * fprice);
-                    grandTotal += (float) this.quantities.get(b) * fprice;
-                    this.drawString(this.fontRenderer, blockName, 2, 40 + b * 20, 16777215);
-                    this.drawString(this.fontRenderer, price, 100, 40 + b * 20, 16777215);
-                    this.drawString(this.fontRenderer, this.quantities.get(b) + "", 200, 40 + b * 20, 16777215);
-                    this.drawString(this.fontRenderer, subtotal, 350, 40 + b * 20, 16777215);
+                for (int b = 0; b < 9; b++) {
+                    int x = px + 12 + (b % 3) * (cardW + 4);
+                    int y = startY + (b / 3) * (cardH + 3);
+                    Block block = this.blockAt(b);
+                    float price = PricesForBlocks.getPrice(block, true);
+                    int qty = this.quantities.get(b);
+                    grandTotal += qty * price;
+                    GuiStyle.inset(x, y, cardW, cardH);
+                    GuiStyle.slot(x + 3, y + 3);
+                    this.drawItem(block, x + 4, y + 4);
+                    GuiStyle.text(this.fontRenderer, x + 24, y + 4, GuiLayout.truncate(this.fontRenderer, this.itemName(b), cardW - 28), GuiStyle.TEXT);
+                    GuiStyle.text(this.fontRenderer, x + 4, y + 21, PricesForBlocks.formatPrice(price), GuiStyle.TEXT_MUTED);
+                    GuiStyle.text(this.fontRenderer, x + cardW - 36, y + 26, String.valueOf(qty), GuiStyle.TEXT);
                 }
-
-                this.drawString(this.fontRenderer, "Total: " + PricesForBlocks.formatPrice(grandTotal), 2, this.height - 15, 15794175);
                 this.totalCost = grandTotal;
+                String total = new TextComponentTranslation("container.sim.gui.total", new Object[0]).getUnformattedText() + ": " + PricesForBlocks.formatPrice(grandTotal);
+                GuiStyle.text(this.fontRenderer, px + 12, py + ph - 20, total, GuiStyle.GREEN);
             } else if (this.currentPage == 2) {
+                for (int b = 0; b < 9; b++) {
+                    int x = px + 12 + (b % 3) * (cardW + 4);
+                    int y = startY + (b / 3) * (cardH + 3);
+                    Block block = this.blockAt(b);
+                    float price = PricesForBlocks.getPrice(block, false);
+                    GuiStyle.inset(x, y, cardW, cardH);
+                    GuiStyle.slot(x + 3, y + 3);
+                    this.drawItem(block, x + 4, y + 4);
+                    GuiStyle.text(this.fontRenderer, x + 24, y + 4, GuiLayout.truncate(this.fontRenderer, this.itemName(b), cardW - 28), GuiStyle.TEXT);
+                    GuiStyle.text(this.fontRenderer, x + 4, y + 21, new TextComponentTranslation("container.sim.gui.sell_price", new Object[0]).getUnformattedText() + " " + PricesForBlocks.formatPrice(price), GuiStyle.GREEN);
+                }
+                GuiStyle.text(this.fontRenderer, px + 12, py + ph - 20, GuiLayout.truncate(this.fontRenderer, new TextComponentTranslation("container.sim.gui.merchant.sell_help", new Object[0]).getUnformattedText(), pw - 24), GuiStyle.TEXT_MUTED);
             }
 
-            super.drawScreen(i, j, f);
+            super.drawScreen(mouseX, mouseY, partialTicks);
         } catch (Exception e) {
             StackTraceElement element = e.getStackTrace()[0];
             ModSimLoader.log.error("GuiMerchant-drawScreen出错了：" + e.getMessage() + "行数：" + element.getLineNumber());
@@ -165,33 +144,122 @@ public class GuiMerchant extends GuiScreen {
 
     private void showPage() {
         try {
-            this.buttonList.clear();
-            this.buttonList.add(new GuiButton(0, 2, 2, 50, 20, new TextComponentTranslation("container.sim.sim_gui_BC_Go_Back",new Object[0]).getUnformattedText()));
             if (this.currentPage == 0) {
-                //主要的
-                this.buttonList.add(new GuiButton(1, this.width / 2 - 100, 70, new TextComponentTranslation("container.sim.Merchant7",new Object[0]).getUnformattedText()));
-                this.buttonList.add(new GuiButton(2, this.width / 2 - 100, 90, new TextComponentTranslation("container.sim.Merchant8",new Object[0]).getUnformattedText()));
-            } else if (this.currentPage == 1) {
-                //买
-                for (int b = 0; b < 9; ++b) {
-                    this.buttonList.add(new GuiButton(100 + b, 250, 35 + b * 20, 20, 20, "<"));
-                    this.buttonList.add(new GuiButton(200 + b, 270, 35 + b * 20, 20, 20, ">"));
-                }
+                this.currentPage = 1;
+            }
+            this.buttonList.clear();
+            int px = left();
+            int py = top();
+            int pw = panelW();
+            int ph = panelH();
 
-                this.buttonList.add(new GuiButton(2, this.width - 100, this.height - 20, 100, 20, new TextComponentTranslation("container.sim.Merchant9",new Object[0]).getUnformattedText()));
+            //完成
+            this.buttonList.add(new GuiButton(0, px + pw - 60, py + 4, 52, 18, new TextComponentTranslation("container.sim.sim_gui_BC_Done", new Object[0]).getUnformattedText()));
+
+            GuiButton buyTab = new GuiButton(3, px + 8, py + 24, 70, 20, new TextComponentTranslation("container.sim.gui.buy", new Object[0]).getUnformattedText());
+            GuiButton sellTab = new GuiButton(4, px + 82, py + 24, 70, 20, new TextComponentTranslation("container.sim.gui.sell", new Object[0]).getUnformattedText());
+            buyTab.enabled = this.currentPage != 1;
+            sellTab.enabled = this.currentPage != 2;
+            this.buttonList.add(buyTab);
+            this.buttonList.add(sellTab);
+
+            if (this.currentPage == 1) {
+                int cardW = (pw - 32) / 3;
+                int cardH = 42;
+                int startY = py + 58;
+                for (int b = 0; b < 9; b++) {
+                    int x = px + 12 + (b % 3) * (cardW + 4);
+                    int y = startY + (b / 3) * (cardH + 3);
+                    this.buttonList.add(new GuiButton(100 + b, x + cardW - 56, y + 20, 16, 18, "-"));
+                    this.buttonList.add(new GuiButton(200 + b, x + cardW - 22, y + 20, 16, 18, "+"));
+                }
+                this.buttonList.add(new GuiButton(2, px + pw - 90, py + ph - 26, 82, 20, new TextComponentTranslation("container.sim.Merchant9", new Object[0]).getUnformattedText()));
             } else if (this.currentPage == 2) {
-                //卖
-                for (int b = 0; b < 9; ++b) {
-                    this.buttonList.add(new GuiButton(100 + b, 250, 35 + b * 20, 20, 20, "<"));
-                    this.buttonList.add(new GuiButton(200 + b, 270, 35 + b * 20, 20, 20, ">"));
-                }
-
-                this.buttonList.add(new GuiButton(2, this.width - 100, this.height - 20, 100, 20, new TextComponentTranslation("container.sim.Merchant10",new Object[0]).getUnformattedText()));
+                this.buttonList.add(new GuiButton(2, px + pw - 90, py + ph - 26, 82, 20, new TextComponentTranslation("container.sim.Merchant10", new Object[0]).getUnformattedText()));
             }
         } catch (Exception e) {
             StackTraceElement element = e.getStackTrace()[0];
             ModSimLoader.log.error("showPage出错了：" + e.getMessage() + "行数：" + element.getLineNumber());
         }
+    }
+
+    private int panelW() {
+        return Math.min(380, this.width - 16);
+    }
+
+    private int panelH() {
+        return Math.min(260, this.height - 16);
+    }
+
+    private int left() {
+        return GuiLayout.centerX(this.width, panelW());
+    }
+
+    private int top() {
+        return GuiLayout.centerY(this.height, panelH());
+    }
+
+    private Block blockAt(int index) {
+        switch (index) {
+            case 0:
+                return Blocks.PLANKS;
+            case 1:
+                return Blocks.LOG;
+            case 2:
+                return Blocks.COBBLESTONE;
+            case 3:
+                return Blocks.STONE;
+            case 4:
+                return Blocks.GLASS;
+            case 5:
+                return Blocks.WOOL;
+            case 6:
+                return Blocks.BRICK_BLOCK;
+            case 7:
+                return Blocks.STONEBRICK;
+            default:
+                return Blocks.OAK_FENCE;
+        }
+    }
+
+    private String itemName(int index) {
+        String key;
+        switch (index) {
+            case 0:
+                key = "container.sim.Merchant16";
+                break;
+            case 1:
+                key = "container.sim.Merchant17";
+                break;
+            case 2:
+                key = "container.sim.Merchant18";
+                break;
+            case 3:
+                key = "container.sim.Merchant19";
+                break;
+            case 4:
+                key = "container.sim.Merchant20";
+                break;
+            case 5:
+                key = "container.sim.Merchant21";
+                break;
+            case 6:
+                key = "container.sim.Merchant22";
+                break;
+            case 7:
+                key = "container.sim.Merchant23";
+                break;
+            default:
+                key = "container.sim.Merchant24";
+                break;
+        }
+        return new TextComponentTranslation(key, new Object[0]).getUnformattedText();
+    }
+
+    private void drawItem(Block block, int x, int y) {
+        RenderHelper.enableGUIStandardItemLighting();
+        this.itemRender.renderItemIntoGUI(new ItemStack(block), x, y);
+        RenderHelper.disableStandardItemLighting();
     }
 
     @Override
@@ -216,6 +284,11 @@ public class GuiMerchant extends GuiScreen {
 
                     this.showPage();
                 } else if (this.currentPage == 1) {
+                    if (guibutton.id == 4) {
+                        this.currentPage = 2;
+                        this.showPage();
+                        return;
+                    }
                     if (guibutton.id != 1) {
                         //数量较少
                         if (guibutton.id >= 100 && guibutton.id < 200) {
@@ -243,6 +316,11 @@ public class GuiMerchant extends GuiScreen {
                         }
                     }
                 } else if (this.currentPage == 2) {
+                    if (guibutton.id == 3) {
+                        this.currentPage = 1;
+                        this.showPage();
+                        return;
+                    }
                     if (guibutton.id >= 100 && guibutton.id < 200) {
                         int q = this.quantities.get(guibutton.id - 100);
                         if (q > 0) {

@@ -63,32 +63,17 @@ public class JobMcDonald extends Job{
                     colItems.add(new ItemStack(Items.RABBIT, 16));
                     //牛排
                     colItems.add(new ItemStack(Items.BEEF, 16));
-                    //牛排
-                    colItems.add(new ItemStack(Items.CHICKEN, 16));
-                    //鲑鱼
-                    colItems.add(new ItemStack(Items.FISH, 16,1));
-                    //生鱼
-                    colItems.add(new ItemStack(Items.FISH, 16));
-                    //收集
-                    this.addJobTask(new JobTaskCollectItems(this, -1L, colItems, 1));
-                    this.mcDonaldStage = 3;
-                } else if (this.mcDonaldStage == 3) {
-                    List<ItemStack> colItems = new ArrayList();
-                    //猪排
-                    colItems.add(new ItemStack(Items.PORKCHOP, 16));
-                    //羊肉
-                    colItems.add(new ItemStack(Items.MUTTON, 16));
-                    //兔肉
-                    colItems.add(new ItemStack(Items.RABBIT, 16));
-                    //牛排
-                    colItems.add(new ItemStack(Items.BEEF, 16));
                     //鸡肉
                     colItems.add(new ItemStack(Items.CHICKEN, 16));
                     //鲑鱼
                     colItems.add(new ItemStack(Items.FISH, 16,1));
                     //生鱼
                     colItems.add(new ItemStack(Items.FISH, 16));
-                    this.addJobTask(new JobTaskUnloadItems(this, -1L, colItems));
+                    //向物流中心下单
+                    this.addJobTask(new JobTaskRequestSupply(this, -1L, colItems));
+                    this.mcDonaldStage = 3;
+                } else if (this.mcDonaldStage == 3) {
+                    //货由快递员直接放进店内箱子
                     this.mcDonaldStage = 4;
                 } else if (this.mcDonaldStage == 4) {
                     initInventory();

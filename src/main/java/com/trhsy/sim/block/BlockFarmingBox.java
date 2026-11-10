@@ -159,14 +159,14 @@ public class BlockFarmingBox extends Block {
         } else {
             worldIn.playSound(null, pos, power_down, SoundCategory.BLOCKS, 1.0F, 1.0F);
         }
-        V3 markerPos = new V3(pos.getX(),pos.getY(),pos.getZ());
+        V3 markerPos = new V3(pos.getX(),pos.getY(),pos.getZ(),worldIn.provider.getDimension());
         for (FarmBox farmBox : ModSimLoader.farms) {
             if (farmBox.loc.equals(markerPos)) {
                 farmBox.removeFarm(farmBox.ID);
             }
         }
         for (NpcData fd : ModSimLoader.folks) {
-            if (fd.job != null && fd.job.workPlace.equals(new V3(pos))) {
+            if (fd.job != null && fd.job.workPlace.equals(new V3(pos, worldIn.provider.getDimension()))) {
                 fd.fire();
             }
         }
@@ -188,5 +188,7 @@ public class BlockFarmingBox extends Block {
     @Override
     @SideOnly(Side.CLIENT)
     public void addInformation(ItemStack stack, @Nullable World player, List<String> tooltip, ITooltipFlag advanced) {
+        tooltip.add(net.minecraft.util.text.translation.I18n.translateToLocal("block.sim.farming_box.tooltip.1"));
+        tooltip.add(net.minecraft.util.text.translation.I18n.translateToLocal("block.sim.farming_box.tooltip.2"));
     }
 }

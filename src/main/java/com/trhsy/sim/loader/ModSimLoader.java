@@ -12,8 +12,6 @@ import com.trhsy.sim.npcCode.block.MineBox;
 import com.trhsy.sim.npcCode.build.Building;
 import com.trhsy.sim.npcCode.build.BuildingBlueprint;
 import com.trhsy.sim.npcCode.build.TerrainTypeRequitrements;
-import com.trhsy.sim.util.Courier;
-import com.trhsy.sim.util.CourierTask;
 import net.minecraft.util.text.TextComponentString;
 import net.minecraft.util.text.TextComponentTranslation;
 import net.minecraft.world.World;
@@ -22,6 +20,7 @@ import net.minecraftforge.fml.common.FMLCommonHandler;
 import org.apache.logging.log4j.Logger;
 
 import java.io.*;
+import java.nio.charset.StandardCharsets;
 import java.net.URL;
 import java.text.DecimalFormat;
 import java.util.*;
@@ -53,11 +52,6 @@ public class ModSimLoader {
     /*挖矿箱*/
     public static List<MineBox> mines = new CopyOnWriteArrayList();
     public static List<NpcSkin> folkSkins = new CopyOnWriteArrayList();
-    /*
-   所有快递点
-    */
-    public static List<Courier> theCourierPoints = new CopyOnWriteArrayList();
-    public static List<CourierTask> theCourierTask = new CopyOnWriteArrayList();
     /**
      * 建筑蓝图
      */
@@ -193,7 +187,7 @@ public class ModSimLoader {
 
         try {
             InputStream inputStream =new FileInputStream(new File(fullFilename));
-            BufferedReader br = new BufferedReader(new InputStreamReader(inputStream));
+            BufferedReader br = new BufferedReader(new InputStreamReader(inputStream, StandardCharsets.UTF_8));
             for (String line = br.readLine(); line != null; line =br.readLine()) {
                 ret.add(line);
             }
@@ -378,7 +372,7 @@ public class ModSimLoader {
             if (!f.exists()) {
                 f.createNewFile();
             }
-            BufferedWriter bw = new BufferedWriter(new FileWriter(fullFilename));
+            BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(fullFilename), StandardCharsets.UTF_8));
             for (String line : strings) {
                 bw.write(line + "\r\n");
             }

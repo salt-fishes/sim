@@ -83,6 +83,11 @@ public class JobBrickMaker extends Job{
 
     }
     @Override
+    public boolean isLogisticsSource() {
+        return true;
+    }
+
+    @Override
     public String toString() {
         return new TextComponentTranslation("container.sim.Vocation25",new Object[0]).getUnformattedText();
     }

@@ -131,7 +131,7 @@ public class JobTaskUseFurnace extends JobTask {
                 //获得锻造物
                 ItemStack currentSand = this.factoryFurnace.getStackInSlot(2);
                 if (!currentSand.isEmpty()) {
-                    //将锻造物放入仓库
+                    //将锻造物放入物流中心
                     this.folk.status = new TextComponentTranslation("container.sim.job.glass.farmer.Putting",new Object[0]).getUnformattedText();
                     // P4: 按实际放进去的件数结算；放不下的留在产物槽里，下一轮继续。
                     // 原实现无条件清空产物槽并按整组扣钱 —— 箱子满时产物凭空消失、钱照扣。

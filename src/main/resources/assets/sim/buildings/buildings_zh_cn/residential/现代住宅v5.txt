@@ -1,5 +1,5 @@
 12x13x5
-A=minecraft:air,0;C=minecraft:wool,0;D=minecraft:wall_sign,5;E=minecraft:wall_sign,3;F=minecraft:oak_stairs,0;G=minecraft:wall_sign,2;H=minecraft:oak_stairs,2;I=minecraft:oak_stairs,3;J=minecraft:bookshelf,0;K=minecraft:wall_sign,4;L=minecraft:wooden_door,0;M=minecraft:wooden_door,3;N=minecraft:glass,0;O=minecraft:wooden_door,8;P=minecraft:torch,1;Q=minecraft:torch,2;R=minecraft:torch,3;S=minecraft:torch,4;AU=Trhsy;DIR=2;DESC=暂无;
+A=minecraft:air,0;C=minecraft:wool,0;D=minecraft:wall_sign,5;E=minecraft:wall_sign,3;F=minecraft:oak_stairs,0;G=minecraft:wall_sign,2;H=minecraft:oak_stairs,2;I=minecraft:oak_stairs,3;J=minecraft:bookshelf,0;K=minecraft:wall_sign,4;L=minecraft:wooden_door,0;M=minecraft:wooden_door,3;N=minecraft:glass,0;O=minecraft:wooden_door,8;P=minecraft:torch,1;Q=minecraft:torch,2;R=minecraft:torch,3;S=minecraft:torch,4;AU=原版;DIR=2;DESC=暂无;
 CCCCCCCCCCCACDEFFFFFGDCACHAAAAAAAICACHAJJJJJAICACHAJJJJJAICACKAAAAAAAKCACCCCCCLCCCCACAAAAAAAAACACAAAAAAAAACACAAAAAAAAACACCCCAAAAAACAMAAAAAAAA$CACCCCCCCCCCCA
 CCNNCCNNCCCACAAAAAAAAACACAAAAAAAAACANAAAAAAAAACANAAAAAAAAANACAAAAAAAAANACCCCCCOCCCCACAAAAAAAAACANAAAAAAAAANANAAAAAAAAANACNNNGAAAAACAOAAAAAAAAACACCCCCCCCCCCA
 CCNNCCNNCCCACAAAAAAAAACACAAAAAAAAACANAAAAAAAAACANAAAAAAAAANGCAAAAAPAAANGCCCCCCCCCCCACAAAAAQAAACANAAAAAAAAANGNAAAAAAAAANGCNNNGAAAAACANAAAAAAAAACACCCCCCCCCCCA

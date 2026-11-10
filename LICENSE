@@ -1,0 +1,49 @@
+# License / 许可说明
+
+Copyright (c) 2026 salt-fishes and contributors.
+
+This repository is a community maintenance fork of the Simulated / Sim-U project. It contains works from several different sources, so **no single license covers the entire repository**. The scope is defined below.
+
+## 1. Upstream Simulated / Sim-U code and assets
+
+The original Simulated / Sim-U code, building blueprints, textures, sounds, models and other assets remain the property of their original authors and contributors. The upstream CurseForge project is marked **All Rights Reserved**.
+
+This repository does **not** grant any additional license to those upstream parts. They are included only for the purpose of maintaining a compatible community build. If you want to redistribute them, you must obtain permission from the respective rights holders and comply with the upstream project's terms.
+
+## 2. Original contributions in this repository
+
+To the extent permitted by law and subject to the upstream rights above, the **new code, documentation, build scripts and packaging scripts created by salt-fishes and contributors** in this repository are licensed under the MIT License:
+
+```text
+MIT License
+
+Copyright (c) 2026 salt-fishes and contributors
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+```
+
+This MIT grant applies only to the parts we are entitled to license. It does not override the upstream All Rights Reserved status or any third-party license.
+
+## 3. Third-party components
+
+Minecraft, Forge, PCL2, OptiFine, Pam's HarvestCraft, MoBends, JEI, Serene Seasons, Sunflawer shaders and other third-party components are **not** covered by this LICENSE. They remain under their own terms. See [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
+
+## 4. No warranty
+
+The project is provided “as is”, without warranty of any kind. The maintainers are not responsible for data loss, server damage, or license violations caused by redistribution of upstream or third-party content.

@@ -1,5 +1,5 @@
 9x7x4
-A=minecraft:air,0;C=minecraft:stone,0;D=minecraft:stone_slab,2;E=minecraft:planks,0;F=minecraft:chest,4;G=minecraft:wooden_door,2;H=minecraft:wooden_pressure_plate,0;I=minecraft:bed,1;J=minecraft:bed,9;K=minecraft:furnace,5;L=minecraft:crafting_table,0;M=minecraft:wooden_door,10;N=minecraft:lit_furnace,5;AU=Trhsy;DIR=2;DESC=暂无;
+A=minecraft:air,0;C=minecraft:stone,0;D=minecraft:stone_slab,2;E=minecraft:planks,0;F=minecraft:chest,4;G=minecraft:wooden_door,2;H=minecraft:wooden_pressure_plate,0;I=minecraft:bed,1;J=minecraft:bed,9;K=minecraft:furnace,5;L=minecraft:crafting_table,0;M=minecraft:wooden_door,10;N=minecraft:lit_furnace,5;AU=原版;DIR=2;DESC=暂无;
 CCCCDCCCCCEECECEECCEEE$EEECCEEEEEEECCEEEEEEECCEEEEEEECCCDCCCDCC
 CCCCACCCCCFFCGCFFCCAAAHAAACCAAAAAAACCIAAAAAACCJAAAAAACCCAKLKACC
 CCCCACCCCCAACMCAACCAAAAAAACCAAAAAAACCAAAAAAACCAAAAAAACCCAKNKACC

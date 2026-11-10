@@ -1,5 +1,5 @@
 7x8x32
-A=minecraft:air,0;C=minecraft:fence,0;D=minecraft:oak_stairs,0;E=minecraft:log,1;F=minecraft:log,0;G=minecraft:wooden_door,0;H=minecraft:planks,0;I=minecraft:wooden_door,7;J=minecraft:ladder,3;K=minecraft:stone_button,3;L=minecraft:wooden_door,8;M=minecraft:wooden_door,15;N=minecraft:glowstone,0;O=minecraft:oak_stairs,2;P=minecraft:oak_stairs,3;Q=minecraft:ladder,2;R=minecraft:stone_slab,2;AU=Trhsy;DIR=2;DESC=暂无;
+A=minecraft:air,0;C=minecraft:fence,0;D=minecraft:oak_stairs,0;E=minecraft:log,1;F=minecraft:log,0;G=minecraft:wooden_door,0;H=minecraft:planks,0;I=minecraft:wooden_door,7;J=minecraft:ladder,3;K=minecraft:stone_button,3;L=minecraft:wooden_door,8;M=minecraft:wooden_door,15;N=minecraft:glowstone,0;O=minecraft:oak_stairs,2;P=minecraft:oak_stairs,3;Q=minecraft:ladder,2;R=minecraft:stone_slab,2;AU=原版;DIR=2;DESC=暂无;
 $AAAAAACDDAAAAEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE
 AAAAAAAAAAAAAAFAFFFFFFGAAAAFFAAAAAFFAAAHIFFAAAHJFFFFFFFF
 AAAAAAAAAAAAAAFKFFFFFFLAAAAFFAAAAAFFAAAHMFFAAAHJFFFFFFFF

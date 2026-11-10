@@ -2,6 +2,7 @@ package com.trhsy.sim;
 
 import com.trhsy.sim.config.SimConfigSync;
 import com.trhsy.sim.loader.ModSimLoader;
+import com.trhsy.sim.loader.SimChunkLoader;
 import com.trhsy.sim.loader.SoundRegistry;
 import com.trhsy.sim.proxy.CommonProxy;
 import com.trhsy.sim.util.AsyncFileWriter;
@@ -39,7 +40,7 @@ public class ModSim {
     /**
      * 模组版本 在Mod间的依赖关系时可能会用作识别
      **/
-    public static final String VERSION = "1.12.2-1.0.9 Beta12";
+    public static final String VERSION = "1.12.2-1.0.9 Beta13";
     /**
      * 将生成该mod的实例注册到对应mod的id里面，也可以访问其他mod的，要注意这里的id和此mod的id相同
      */
@@ -78,6 +79,7 @@ public class ModSim {
     public void preInit(FMLPreInitializationEvent event) {
         try {
 
+            SimChunkLoader.register(this);
             proxy.preInit(event);
             // 调用声音注册类注册所有声音
             SoundRegistry.registerSounds();

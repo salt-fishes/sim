@@ -1,5 +1,5 @@
 9x7x4
-A=minecraft:air,0;C=minecraft:planks,0;D=minecraft:bed,9;E=minecraft:bed,1;F=minecraft:bed,3;G=minecraft:bed,11;H=minecraft:jukebox,0;I=minecraft:furnace,3;J=minecraft:crafting_table,0;K=minecraft:glass,0;AU=Trhsy;DIR=2;DESC=暂无;
+A=minecraft:air,0;C=minecraft:planks,0;D=minecraft:bed,9;E=minecraft:bed,1;F=minecraft:bed,3;G=minecraft:bed,11;H=minecraft:jukebox,0;I=minecraft:furnace,3;J=minecraft:crafting_table,0;K=minecraft:glass,0;AU=原版;DIR=2;DESC=暂无;
 CCCCACCCCCDEAAAFGCCAAAAAAACCAAAAAAACCAAAAAAACCH$IJIAHCCCCCCCCCC
 KKKCACKKKKAAAAAAAKKAAAAAAAKKAAAAAAAKKAAAAAAAKKAAAAAAAKKKKKKKKKK
 CCCCACCCCCAAAAAAACCAAAAAAACCAAAAAAACCAAAAAAACCAAAAAAACCCCCCCCCC

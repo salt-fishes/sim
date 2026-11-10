@@ -1,5 +1,5 @@
 9x9x5
-A=minecraft:air,0;C=minecraft:cobblestone,0;D=minecraft:stone_slab,1;E=minecraft:wool,11;F=minecraft:planks,0;G=minecraft:wool,14;H=minecraft:double_stone_slab,1;I=minecraft:glass,0;AU=Trhsy;DIR=2;DESC=暂无;
+A=minecraft:air,0;C=minecraft:cobblestone,0;D=minecraft:stone_slab,1;E=minecraft:wool,11;F=minecraft:planks,0;G=minecraft:wool,14;H=minecraft:double_stone_slab,1;I=minecraft:glass,0;AU=原版;DIR=2;DESC=暂无;
 CCCC$CCCCCAAD*EEECCAFFFFFECCAFGGGFECCAFGGGFECCAFGGGFECCAFFFFFECCAAE*EEECCCCCCCCCC
 CCCCACCCCCAAAAAAACCAFFAFFACCAFAAAFACCAFA!AFACCAFAAAFACCAFFFFFACCAHDAAAACCCCCCCCCC
 CCICACICCCAAAAAAACCAFFAFFACIAFAAAFAIIAIAAAIAIIAFAAAFAICHFFIFFACCDAAAAAACCCCCIICCC

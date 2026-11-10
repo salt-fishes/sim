@@ -1,5 +1,5 @@
 9x9x7
-A=minecraft:air,0;C=minecraft:fence,0;D=minecraft:chest,5;E=minecraft:chest,3;F=minecraft:planks,0;G=minecraft:oak_stairs,2;H=minecraft:oak_stairs,3;I=minecraft:torch,1;J=minecraft:chest,2;K=minecraft:chest,4;L=minecraft:wool,0;M=minecraft:wool,1;N=minecraft:wool,9;O=minecraft:torch,3;P=minecraft:wool,5;Q=minecraft:wool,14;R=minecraft:wool,4;S=minecraft:torch,5;AU=Trhsy;DIR=2;DESC=暂无;
+A=minecraft:air,0;C=minecraft:fence,0;D=minecraft:chest,5;E=minecraft:chest,3;F=minecraft:planks,0;G=minecraft:oak_stairs,2;H=minecraft:oak_stairs,3;I=minecraft:torch,1;J=minecraft:chest,2;K=minecraft:chest,4;L=minecraft:wool,0;M=minecraft:wool,1;N=minecraft:wool,9;O=minecraft:torch,3;P=minecraft:wool,5;Q=minecraft:wool,14;R=minecraft:wool,4;S=minecraft:torch,5;AU=原版;DIR=2;DESC=暂无;
 $ADDCDDACAEFFFFFEAAGFFFFFEAAEFFFFFHACAIACAIACAGFFFFFEAAJFFFFFHAAJFFFFFKACADDCDDAC
 CAAACAAACAAJFFFEAAAAJFFFHAAAAGFFFEAACAAACAAACAAJFFFHAAAAJFFFEAAAAGFFFEAACAAICIAAC
 CAAACAAACAAAGFHAAAAAAJFEAAAAAAJFEAAACAAACAAACAAAEFEAAAAAAGFEAAAAAAEFHAAACAAACAAAC

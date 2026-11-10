@@ -1,5 +1,5 @@
 5x11x13
-A=minecraft:air,0;C=minecraft:frosted_ice,0;D=minecraft:stone_slab,0;E=minecraft:nether_brick,0;F=minecraft:cobblestone,0;G=minecraft:stone_brick_stairs,2;H=minecraft:ladder,4;I=minecraft:stone_stairs,2;J=minecraft:furnace,2;K=minecraft:glass_pane,0;L=minecraft:stone_stairs,0;M=minecraft:stone_stairs,1;N=minecraft:torch,3;O=minecraft:torch,4;P=minecraft:torch,2;Q=minecraft:torch,1;R=minecraft:iron_bars,0;S=minecraft:torch,5;AU=Trhsy;DIR=2;DESC=暂无;
+A=minecraft:air,0;C=minecraft:frosted_ice,0;D=minecraft:stone_slab,0;E=minecraft:nether_brick,0;F=minecraft:cobblestone,0;G=minecraft:stone_brick_stairs,2;H=minecraft:ladder,4;I=minecraft:stone_stairs,2;J=minecraft:furnace,2;K=minecraft:glass_pane,0;L=minecraft:stone_stairs,0;M=minecraft:stone_stairs,1;N=minecraft:torch,3;O=minecraft:torch,4;P=minecraft:torch,2;Q=minecraft:torch,1;R=minecraft:iron_bars,0;S=minecraft:torch,5;AU=原版;DIR=2;DESC=暂无;
 $DDDDEFGFEEFFFEEFFFEEFFFEFFFFFFFFFFFFFFFFFFFFEFFFEAAAAA
 AAAAAEFAFEFAAAFFAAAFFHAAFFAAAFFIAIFFJIJFFFJFFEFEFEAAAAA
 AAAAAEFAFEFAAAFKAAAKFHAAFFAAAFFAAAFFAAAFFLAMFEFFFEAANAA

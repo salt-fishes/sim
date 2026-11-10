@@ -1,5 +1,5 @@
 7x9x15
-A=minecraft:air,0;C=minecraft:wool,5;D=minecraft:bed,8;E=minecraft:bed,0;F=minecraft:bookshelf,0;G=minecraft:oak_stairs,1;H=minecraft:glass,0;I=minecraft:wool,14;J=minecraft:fence,0;K=minecraft:bed,2;L=minecraft:bed,10;AU=Trhsy;DIR=2;DESC=暂无;
+A=minecraft:air,0;C=minecraft:wool,5;D=minecraft:bed,8;E=minecraft:bed,0;F=minecraft:bookshelf,0;G=minecraft:oak_stairs,1;H=minecraft:glass,0;I=minecraft:wool,14;J=minecraft:fence,0;K=minecraft:bed,2;L=minecraft:bed,10;AU=原版;DIR=2;DESC=暂无;
 CCCACCCDAAAAAAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAFFFFFGACCCCCCC
 HHHAHHHAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAFFFFGAAHHHHHHH
 HHHHHHHAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAFFFGAAAHHHHHHH

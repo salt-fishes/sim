@@ -133,7 +133,8 @@ public class ContainerNpc extends Container {
 
     @Override
     public boolean canInteractWith(EntityPlayer playerIn) {
-        return false;
+        return this.npc != null && this.npc.isEntityAlive()
+                && playerIn.getDistanceSq(this.npc) <= 64.0D;
     }
 
     /**

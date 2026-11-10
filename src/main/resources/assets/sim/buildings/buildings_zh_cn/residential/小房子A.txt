@@ -1,5 +1,5 @@
 5x6x5
-A=minecraft:air,0;C=minecraft:frosted_ice,0;D=minecraft:stone_slab,0;E=minecraft:cobblestone,0;F=minecraft:wool,13;G=minecraft:planks,0;H=minecraft:glass_pane,0;I=minecraft:torch,1;J=minecraft:torch,2;K=minecraft:log,0;AU=Trhsy;DIR=2;DESC=暂无;
+A=minecraft:air,0;C=minecraft:frosted_ice,0;D=minecraft:stone_slab,0;E=minecraft:cobblestone,0;F=minecraft:wool,13;G=minecraft:planks,0;H=minecraft:glass_pane,0;I=minecraft:torch,1;J=minecraft:torch,2;K=minecraft:log,0;AU=原版;DIR=2;DESC=暂无;
 DDDDDEEEEEEFFFEEF$FEEFFFEEEEEE
 AAAAAEGAGEGAAAGGA!AGGAAAGEGGGE
 AAAAAEGAGEGAAAGHAAAHGAAAGEGHGE

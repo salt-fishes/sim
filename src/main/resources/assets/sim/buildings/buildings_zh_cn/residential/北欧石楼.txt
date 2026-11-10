@@ -1,5 +1,5 @@
 9x9x11
-A=minecraft:air,0;C=minecraft:stone_slab,6;D=minecraft:stone,0;E=minecraft:wool,11;F=minecraft:stonebrick,0;G=minecraft:torch,2;H=minecraft:fence,0;I=minecraft:double_stone_slab,6;J=minecraft:torch,1;K=minecraft:wool,14;L=minecraft:torch,4;M=minecraft:glass,0;N=minecraft:torch,3;O=minecraft:torch,5;P=minecraft:double_stone_slab,0;Q=minecraft:stone_slab,5;R=minecraft:stone_slab,0;AU=Trhsy;DIR=2;DESC=暂无;
+A=minecraft:air,0;C=minecraft:stone_slab,6;D=minecraft:stone,0;E=minecraft:wool,11;F=minecraft:stonebrick,0;G=minecraft:torch,2;H=minecraft:fence,0;I=minecraft:double_stone_slab,6;J=minecraft:torch,1;K=minecraft:wool,14;L=minecraft:torch,4;M=minecraft:glass,0;N=minecraft:torch,3;O=minecraft:torch,5;P=minecraft:double_stone_slab,0;Q=minecraft:stone_slab,5;R=minecraft:stone_slab,0;AU=原版;DIR=2;DESC=暂无;
 CCCCCCCCCCCDD$DDCCCDEEEEEDCCDEEEEEDCCDEEEEEDCCDEEEEEDCCDEEEEEDCCCDDDDDCCCCCCCCCCC
 AAAAAAAAAAAFFAFFAAAFAAAAAFAAFAAACAFAGEAAHIAEJAFAAAAAFAAFAAAAAFAAAFFKFFAAAAAALAAAA
 AAAAAAAAAAAFFAFFAAAFAAAAAFAAFAAAAAFAAMAAHAAMAAFAAICAFAAFAAAAAFAAAFFMFFAAAAAAAAAAA

@@ -261,26 +261,7 @@ public class CraftingLoader {
      * @Param []
      **/
     private static void registerSmelting() {
-        try {
-            //待烧炼的物品  烧炼后的物品  烧炼后玩家可以得到的经验
-            //烧锡矿得锡锭
-            GameRegistry.addSmelting(new ItemStack(BlockLoader.blockTinOre), new ItemStack(ItemLoader.itemTinIngot,2), 0.1F);
-            //烧铜矿得铜锭
-            GameRegistry.addSmelting(new ItemStack(BlockLoader.blockCopperOre), new ItemStack(ItemLoader.itemCopperIngot,2), 0.1F);
-            //烧金粒得金锭
-            GameRegistry.addSmelting(ItemLoader.itemGranulesGold, new ItemStack(Items.GOLD_INGOT), 0.1F);
-            //烧铁粒得铁锭
-            GameRegistry.addSmelting(ItemLoader.itemGranulesIron, new ItemStack(Items.IRON_INGOT), 0.1F);
-            //烧锡粒得锡锭
-            GameRegistry.addSmelting(ItemLoader.itemGranulesTin, new ItemStack(ItemLoader.itemTinIngot), 0.1F);
-            //烧铜粒得铜锭
-            GameRegistry.addSmelting(ItemLoader.itemGranulesCopper, new ItemStack(ItemLoader.itemCopperIngot), 0.1F);
-
-
-
-        } catch (Exception e) {
-            StackTraceElement element=e.getStackTrace()[0];ModSimLoader.log.error("registerSmelting出错了：" + e.getMessage()+"行数："+element.getLineNumber());
-        }
+        // 铜/锡矿与颗粒已移除，相关熔炼配方不再注册。
     }
 
     /**

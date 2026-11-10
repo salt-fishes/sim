@@ -1,5 +1,5 @@
 7x7x6
-A=minecraft:air,0;C=minecraft:oak_stairs,1;D=minecraft:iron_block,0;E=minecraft:wool,3;F=minecraft:bookshelf,0;G=minecraft:chest,5;H=minecraft:torch,1;AU=Trhsy;DIR=2;DESC=暂无;
+A=minecraft:air,0;C=minecraft:oak_stairs,1;D=minecraft:iron_block,0;E=minecraft:wool,3;F=minecraft:bookshelf,0;G=minecraft:chest,5;H=minecraft:torch,1;AU=原版;DIR=2;DESC=暂无;
 AAACAAADDD$DDDDEEEEEDDEEEEEDDEEEEEDDEEEEEDDDDDDDD
 AAAAAAADDDADDDDAAAAADDFAAAFDDFAAAFDDAAGAADDDDDDDD
 AAAAAAADDDADDDDAAAAADDFAAAFDDFAAAFDDAAAAADDDDDDDD

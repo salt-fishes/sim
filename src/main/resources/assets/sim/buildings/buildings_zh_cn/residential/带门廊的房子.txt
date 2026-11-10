@@ -1,5 +1,5 @@
 7x9x5
-A=minecraft:air,0;C=minecraft:log,0;D=minecraft:planks,0;E=minecraft:wooden_slab,0;F=minecraft:planks,2;G=minecraft:fence,0;H=minecraft:birch_stairs,1;I=minecraft:birch_stairs,0;J=minecraft:furnace,4;K=minecraft:crafting_table,0;L=minecraft:bed,9;M=minecraft:bed,1;N=minecraft:glass,0;AU=Trhsy;DIR=2;DESC=暂无;
+A=minecraft:air,0;C=minecraft:log,0;D=minecraft:planks,0;E=minecraft:wooden_slab,0;F=minecraft:planks,2;G=minecraft:fence,0;H=minecraft:birch_stairs,1;I=minecraft:birch_stairs,0;J=minecraft:furnace,4;K=minecraft:crafting_table,0;L=minecraft:bed,9;M=minecraft:bed,1;N=minecraft:glass,0;AU=原版;DIR=2;DESC=暂无;
 CDEEEDCDDDDDDDDDDDDDDDDDDDDDDFFFFFDDFFFFFDDFF$FFDDFFFFFDCDDDDDC
 GGAAAGGGHAAAIGGHAAAIGGHAAAIGDDDADDDDAAAAJDDAAAAKDDALMAJDCDDDDDC
 GAAAAAGAAAAAAAAAAAAAAAAAAAAADNDADNDDAAAAADNAAAAANDAAAAADCDNNNDC

@@ -1,5 +1,5 @@
 5x6x3
-A=minecraft:air,0;C=minecraft:iron_bars,0;D=minecraft:bed,0;E=minecraft:bed,8;F=minecraft:bookshelf,0;G=minecraft:torch,5;AU=Trhsy;DIR=2;DESC=由铁栏杆组成的简易牢房;
+A=minecraft:air,0;C=minecraft:iron_bars,0;D=minecraft:bed,0;E=minecraft:bed,8;F=minecraft:bookshelf,0;G=minecraft:torch,5;AU=原版;DIR=2;DESC=由铁栏杆组成的简易牢房;
 CCACCCAAACCA!ACCADACCAEFCCCCCC
 CCACCCAAACCAAACCAAACCAAGCCCCCC
 CC$CCCAAACCAAACCAAACCAAACCCCCC

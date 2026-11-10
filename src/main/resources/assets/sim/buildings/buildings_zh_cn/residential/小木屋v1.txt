@@ -1,5 +1,5 @@
 5x3x5
-A=minecraft:air,0;C=minecraft:cobblestone,0;D=minecraft:wool,0;E=minecraft:planks,0;F=minecraft:glass_pane,0;G=minecraft:stone_slab,3;H=minecraft:vine,8;AU=Trhsy;DIR=2;DESC=温馨提示：请建筑于水平面下一格;
+A=minecraft:air,0;C=minecraft:cobblestone,0;D=minecraft:wool,0;E=minecraft:planks,0;F=minecraft:glass_pane,0;G=minecraft:stone_slab,3;H=minecraft:vine,8;AU=原版;DIR=2;DESC=温馨提示：请建筑于水平面下一格;
 CCC$CCDDDCCCCCC
 ECEAEEA!AEECECE
 EFEAEEAAAEEFEFE

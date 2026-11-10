@@ -88,35 +88,22 @@ public class JobBaker extends Job {
             } else if (this.baker_stage == 2) {
                 List<ItemStack> colItems = new ArrayList();
                 //小麦
-                colItems.add(new ItemStack(Items.WHEAT, 16));
-                //鸡蛋
-                colItems.add(new ItemStack(Items.EGG, 16));
-                //南瓜
-                colItems.add(new ItemStack(Blocks.PUMPKIN, 16));
-                //牛奶
-                colItems.add(new ItemStack(ItemLoader.itemBucketMilk, 1));
-                //糖
-                colItems.add(new ItemStack(Items.SUGAR, 16));
-                //可可豆
-                colItems.add(new ItemStack(Items.DYE, 16, 3));
-                //收集
-                this.addJobTask(new JobTaskCollectItems(this, -1L, colItems));
-                this.baker_stage = 3;
-            } else if (this.baker_stage == 3) {
-                List<ItemStack> colItems = new ArrayList();
-                //小麦
                 colItems.add(new ItemStack(Items.WHEAT, 24));
                 //鸡蛋
                 colItems.add(new ItemStack(Items.EGG, 24));
                 //南瓜
                 colItems.add(new ItemStack(Blocks.PUMPKIN, 24));
-                //牛奶
-                colItems.add(new ItemStack(ItemLoader.itemBucketMilk, 24));
+                //牛奶（桶不可堆叠，少量多次，避免占满快递员货舱）
+                colItems.add(new ItemStack(ItemLoader.itemBucketMilk, 4));
                 //糖
                 colItems.add(new ItemStack(Items.SUGAR, 24));
                 //可可豆
                 colItems.add(new ItemStack(Items.DYE, 24, 3));
-                this.addJobTask(new JobTaskUnloadItems(this, -1L, colItems));
+                //向物流中心下单，等快递员送货
+                this.addJobTask(new JobTaskRequestSupply(this, -1L, colItems));
+                this.baker_stage = 3;
+            } else if (this.baker_stage == 3) {
+                //货由快递员直接放进店内箱子，不再需要老板自己卸货
                 this.baker_stage = 4;
             } else if (this.baker_stage == 4) {
                     initInventory();
@@ -339,6 +326,11 @@ public class JobBaker extends Job {
 
     @Override
     public void onArrive() {
+    }
+
+    @Override
+    public boolean isLogisticsSource() {
+        return true;
     }
 
     @Override

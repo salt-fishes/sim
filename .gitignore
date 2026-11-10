@@ -17,6 +17,11 @@ out
 build
 .gradle
 
+# intellij shelf / crash logs
+.shelf
+*.log
+hs_err_pid*.log
+
 # other
 eclipse
 run

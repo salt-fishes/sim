@@ -1,5 +1,5 @@
 16x8x32
-A=minecraft:air,0;C=minecraft:wool,7;D=minecraft:stone_brick_stairs,0;E=minecraft:ladder,3;F=minecraft:wooden_door,0;G=minecraft:wool,11;H=minecraft:wooden_door,8;I=minecraft:wool,6;J=minecraft:wool,8;K=minecraft:wool,3;L=minecraft:wool,9;M=minecraft:wooden_door,1;N=minecraft:wooden_door,3;O=minecraft:wool,12;P=minecraft:trapdoor,1;Q=minecraft:wool,0;AU=Trhsy;DIR=2;DESC=装饰;
+A=minecraft:air,0;C=minecraft:wool,7;D=minecraft:stone_brick_stairs,0;E=minecraft:ladder,3;F=minecraft:wooden_door,0;G=minecraft:wool,11;H=minecraft:wooden_door,8;I=minecraft:wool,6;J=minecraft:wool,8;K=minecraft:wool,3;L=minecraft:wool,9;M=minecraft:wooden_door,1;N=minecraft:wooden_door,3;O=minecraft:wool,12;P=minecraft:trapdoor,1;Q=minecraft:wool,0;AU=原版;DIR=2;DESC=装饰;
 $AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACCCCCCCCAAAAAAAACCCCCCCCAAAAAAAACCCCCCCCAAAAAAAACCCCCCCCAAAAAAAAAAAADAAAAAAAAAAAAAAAAAAAAAAA
 AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACCCCCCCCAAAAAAAACAAAAAACAAAAAAAACAAAAAECAAAAAAAACCCCFCCCAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
 AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAGGGGGGGGAAAAAAAAGAAAAAAGAAAAAAAACAAAAAECAAAAAAAACCCCHCCCAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA

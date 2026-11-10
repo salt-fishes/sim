@@ -1,5 +1,5 @@
 6x9x10
-A=minecraft:air,0;C=minecraft:lapis_block,0;D=minecraft:stonebrick,0;E=minecraft:stone_slab,0;F=minecraft:wool,3;G=minecraft:stone_slab,2;H=minecraft:planks,0;I=minecraft:crafting_table,0;J=minecraft:furnace,5;K=minecraft:cauldron,3;L=minecraft:iron_block,0;M=minecraft:glass_pane,0;N=minecraft:fence,0;O=minecraft:stone,0;AU=Trhsy;DIR=2;DESC=暂无;
+A=minecraft:air,0;C=minecraft:lapis_block,0;D=minecraft:stonebrick,0;E=minecraft:stone_slab,0;F=minecraft:wool,3;G=minecraft:stone_slab,2;H=minecraft:planks,0;I=minecraft:crafting_table,0;J=minecraft:furnace,5;K=minecraft:cauldron,3;L=minecraft:iron_block,0;M=minecraft:glass_pane,0;N=minecraft:fence,0;O=minecraft:stone,0;AU=原版;DIR=2;DESC=暂无;
 AADEDADDD$DDDAFFFDDAFFFDDAFFFDDAFFFDDFFFFDDAFFFDDDDDDD
 AAAAAADDDADDDGAAADDHAAADDIA!ADDJAAADDKAAADDLAAADDDDDDD
 AAAAAAHMHAHHHAAAAHHAAAAHHGAAAHHHAAAHHAAAAHHLAAAHHHMHMH

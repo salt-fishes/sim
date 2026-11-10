@@ -1,5 +1,5 @@
 9x10x5
-A=minecraft:air,0;C=minecraft:stone_stairs,2;D=minecraft:cobblestone,0;E=minecraft:wool,9;F=minecraft:log,0;G=minecraft:planks,0;H=minecraft:chest,2;I=minecraft:furnace,2;J=minecraft:crafting_table,0;K=minecraft:glass,0;AU=Trhsy;DIR=2;DESC=暂无;
+A=minecraft:air,0;C=minecraft:stone_stairs,2;D=minecraft:cobblestone,0;E=minecraft:wool,9;F=minecraft:log,0;G=minecraft:planks,0;H=minecraft:chest,2;I=minecraft:furnace,2;J=minecraft:crafting_table,0;K=minecraft:glass,0;AU=原版;DIR=2;DESC=暂无;
 AAAACAAAADDDD*DDDDDEEE$EEEDDEEEEEEEDDEEEEEEEDDEEEEEEEDDEEEEEEEDDEEEEEEEDDEEEEEEEDDDDDDDDDD
 AAAAAAAAAFGGGAGGGFGAAAAAAAGGAAAAAAAGGAAAAAAAGGAAAAAAAGGAAAAAAAGGAAAAAAAGGHHIJIHHGFGGGGGGGF
 AAAAAAAAAFGKGAGKGFGAAAAAAAGKAAAAAAAKKAAAAAAAKKAAAAAAAKKAAAAAAAKKAAAAAAAKGAAA!AAAGFGKKKKKGF

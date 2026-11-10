@@ -1,5 +1,5 @@
 1x3x5
-A=minecraft:air,0;C=minecraft:fence,0;AU=Trhsy;DIR=2;DESC=暂无;
+A=minecraft:air,0;C=minecraft:fence,0;AU=原版;DIR=2;DESC=暂无;
 $AC
 AAC
 AAC

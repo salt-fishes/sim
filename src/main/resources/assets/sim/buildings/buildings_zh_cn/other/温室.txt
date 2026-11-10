@@ -1,5 +1,5 @@
 7x7x5
-A=minecraft:air,0;C=minecraft:stained_hardened_clay,13;D=minecraft:glass,0;E=minecraft:farmland,0;F=minecraft:potatoes,0;G=minecraft:potatoes,1;H=minecraft:carrots,0;I=minecraft:carrots,1;AU=Trhsy;DIR=2;DESC=暂无;
+A=minecraft:air,0;C=minecraft:stained_hardened_clay,13;D=minecraft:glass,0;E=minecraft:farmland,0;F=minecraft:potatoes,0;G=minecraft:potatoes,1;H=minecraft:carrots,0;I=minecraft:carrots,1;AU=原版;DIR=2;DESC=暂无;
 $DDADDCDEFAFEDDEFAFEDDEFAFEDDEFAFEDDEFAGEDCDDDDDC
 CDDADDCDHAAAHDDIAAAHDDHAAAHDDHAAAHDDHAAAHDCDDDDDC
 ACDDDCAADAAADAADAAADAADAAADAADAAADAADAAADAACDDDCA

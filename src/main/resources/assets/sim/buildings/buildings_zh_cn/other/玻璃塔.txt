@@ -1,5 +1,5 @@
 9x9x55
-A=minecraft:air,0;C=minecraft:sandstone,0;D=minecraft:wooden_door,6;E=minecraft:ladder,5;F=minecraft:ladder,4;G=minecraft:wooden_door,4;H=minecraft:wooden_door,14;I=minecraft:wall_sign,5;J=minecraft:wall_sign,4;K=minecraft:wooden_door,12;L=minecraft:torch,1;M=minecraft:glowstone,0;N=minecraft:glass,0;O=minecraft:wool,14;AU=Trhsy;DIR=2;DESC=暂无;
+A=minecraft:air,0;C=minecraft:sandstone,0;D=minecraft:wooden_door,6;E=minecraft:ladder,5;F=minecraft:ladder,4;G=minecraft:wooden_door,4;H=minecraft:wooden_door,14;I=minecraft:wall_sign,5;J=minecraft:wall_sign,4;K=minecraft:wooden_door,12;L=minecraft:torch,1;M=minecraft:glowstone,0;N=minecraft:glass,0;O=minecraft:wool,14;AU=原版;DIR=2;DESC=暂无;
 $AAACCDCCAAAACAAACAAAACAAACAAAACCECCCCCCCCCCCCCFCCAAAACAAACAAAACAAACAAAACCGCCAAAA
 AAAACCHCCAAAACAAACAAAACAAICAAAACCECCCCCCCCCCCCCFCCAAAACJAACAAAACAAACAAAACCKCCAAAA
 AAAACCCCCAAAACAAACAAAACLALCAAAACCECCCCCCCCCCCCCFCCAAAACAAACAAAACAAACAAAACCCCCAAAA

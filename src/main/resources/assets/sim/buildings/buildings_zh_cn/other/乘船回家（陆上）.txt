@@ -1,5 +1,5 @@
 7x18x15
-A=minecraft:air,0;C=minecraft:planks,1;D=minecraft:chest,4;E=minecraft:furnace,4;F=minecraft:crafting_table,0;G=minecraft:enchanting_table,0;H=minecraft:jukebox,0;I=minecraft:bed,0;J=minecraft:bed,8;K=minecraft:bookshelf,0;L=minecraft:oak_stairs,2;M=minecraft:chest,3;N=minecraft:glass,0;O=minecraft:torch,5;P=minecraft:planks,0;Q=minecraft:fence,0;R=minecraft:wool,0;S=minecraft:stone_slab,2;AU=Trhsy;DIR=2;DESC=暂无;
+A=minecraft:air,0;C=minecraft:planks,1;D=minecraft:chest,4;E=minecraft:furnace,4;F=minecraft:crafting_table,0;G=minecraft:enchanting_table,0;H=minecraft:jukebox,0;I=minecraft:bed,0;J=minecraft:bed,8;K=minecraft:bookshelf,0;L=minecraft:oak_stairs,2;M=minecraft:chest,3;N=minecraft:glass,0;O=minecraft:torch,5;P=minecraft:planks,0;Q=minecraft:fence,0;R=minecraft:wool,0;S=minecraft:stone_slab,2;AU=原版;DIR=2;DESC=暂无;
 $AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACAAAAACCCAAAACCCAAAACCCAAAACCCAAAACCCAAAACCCAAAACCCAAAAACAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
 AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACAAAAACDCAAACEAFCAACAAACAACGAHCAACAAACAACIAICAACJAJCAACKAKCAAACLCCAAAACAAAAAAAAAAAAAAAAAAAAAAAA
 AAAAAAAAAAAAAAAAAAAAAAAACAAAAACDCAAACDAMCAANAAANAACAAACAANAAANAACAAACAANAAANAACAAACAANOAONAACAAACAAACLCAAAAACAAAAAAAAAAAAAAAAA

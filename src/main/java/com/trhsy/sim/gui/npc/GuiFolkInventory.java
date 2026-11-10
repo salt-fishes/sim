@@ -42,6 +42,7 @@ public class GuiFolkInventory extends InventoryEffectRenderer implements IRecipe
     public static final ResourceLocation NPC_INVENTORY_BACKGROUND = new ResourceLocation(ModSim.MODID ,"textures/gui/npc_inventory.png");
     private GuiTextField searchField;
     private NpcData npcData;
+    private final java.util.UUID uid;
     private boolean widthTooNarrow;
 
     private final GuiRecipeBook recipeBookGui = new GuiRecipeBook();
@@ -60,8 +61,8 @@ public class GuiFolkInventory extends InventoryEffectRenderer implements IRecipe
 
     public GuiFolkInventory(java.util.UUID uid) {
         super(containerFor(uid));
-        npcData = ModSimLoader.getFolkDataByUID(uid);
-
+        this.uid = uid;
+        this.npcData = ModSimLoader.getFolkDataByUID(uid);
     }
 
     /**
@@ -95,7 +96,6 @@ public class GuiFolkInventory extends InventoryEffectRenderer implements IRecipe
 
     @Override
     public void updateScreen() {
-        this.recipeBookGui.tick();
     }
 
     @Override
@@ -103,14 +103,11 @@ public class GuiFolkInventory extends InventoryEffectRenderer implements IRecipe
         this.buttonList.clear();
         super.initGui();
         this.widthTooNarrow = this.width < 379;
-        this.recipeBookGui.func_194303_a(this.width, this.height, this.mc, this.widthTooNarrow, ((ContainerNpc) this.inventorySlots).craftMatrix);
-        this.guiLeft = this.recipeBookGui.updateScreenPosition(this.widthTooNarrow, this.width, this.xSize);
-        this.recipeButton = new GuiButtonImage(10, this.guiLeft + 104, this.height / 2 - 22, 20, 18, 178, 0, 19, NPC_INVENTORY_BACKGROUND);
-        this.buttonList.add(this.recipeButton);
     }
     @Override
     protected void drawGuiContainerForegroundLayer(int mouseX, int mouseY) {
-        this.fontRenderer.drawString(I18n.format("container.crafting"), 97, 8, 4210752);
+        String title = new net.minecraft.util.text.TextComponentTranslation("container.sim.gui.npc_inventory", new Object[0]).getUnformattedText();
+        this.fontRenderer.drawString(title, this.xSize - 8 - this.fontRenderer.getStringWidth(title), 6, 4210752);
     }
     /**
      * 所有组件
@@ -121,26 +118,11 @@ public class GuiFolkInventory extends InventoryEffectRenderer implements IRecipe
      */
     @Override
     public void drawScreen(int mouseX, int mouseY, float partialTicks) {
-        //背景
-        this.drawDefaultBackground();
-        //药水效果
-        this.hasActivePotionEffects = !this.recipeBookGui.isVisible();
-        // 配方块，宽度太窄
-        if (this.recipeBookGui.isVisible() && this.widthTooNarrow) {
-            this.drawGuiContainerBackgroundLayer(partialTicks, mouseX, mouseY);
-            this.recipeBookGui.render(mouseX, mouseY, partialTicks);
-        } else {
-            this.recipeBookGui.render(mouseX, mouseY, partialTicks);
-//            super.drawScreen(mouseX, mouseY, partialTicks);
-            this.recipeBookGui.renderGhostRecipe(this.guiLeft, this.guiTop, false, partialTicks);
-        }
-
+        super.drawScreen(mouseX, mouseY, partialTicks);
         this.renderHoveredToolTip(mouseX, mouseY);
-        this.recipeBookGui.renderTooltip(this.guiLeft, this.guiTop, mouseX, mouseY);
         this.oldMouseX = (float) mouseX;
         this.oldMouseY = (float) mouseY;
     }
-
 
 
     /**
@@ -153,11 +135,25 @@ public class GuiFolkInventory extends InventoryEffectRenderer implements IRecipe
     @Override
     protected void drawGuiContainerBackgroundLayer(float partialTicks, int mouseX, int mouseY) {
         GlStateManager.color(1.0F, 1.0F, 1.0F, 1.0F);
-        this.mc.getTextureManager().bindTexture(INVENTORY_BACKGROUND);
+        this.mc.getTextureManager().bindTexture(NPC_INVENTORY_BACKGROUND);
         int i = this.guiLeft;
         int j = this.guiTop;
         this.drawTexturedModalRect(i, j, 0, 0, this.xSize, this.ySize);
-        drawEntityOnScreen(i + 51, j + 75, 30, (float) (i + 51) - this.oldMouseX, (float) (j + 75 - 50) - this.oldMouseY, this.mc.player);
+        EntityLivingBase model = this.mc.player;
+        if (this.npcData != null && this.npcData.entity != null) {
+            model = this.npcData.entity;
+        }
+        if (this.mc.world != null) {
+            for (Entity entity : this.mc.world.loadedEntityList) {
+                if (entity instanceof EntityNpc && this.uid.equals(entity.getUniqueID())) {
+                    model = (EntityLivingBase) entity;
+                    break;
+                }
+            }
+        }
+        if (model != null) {
+            drawEntityOnScreen(i + 51, j + 70, 28, (float) (i + 51) - this.oldMouseX, (float) (j + 20) - this.oldMouseY, model);
+        }
     }
 
     /**
@@ -208,7 +204,7 @@ public class GuiFolkInventory extends InventoryEffectRenderer implements IRecipe
      */
     @Override
     protected boolean isPointInRegion(int rectX, int rectY, int rectWidth, int rectHeight, int pointX, int pointY) {
-        return (!this.widthTooNarrow || !this.recipeBookGui.isVisible()) && super.isPointInRegion(rectX, rectY, rectWidth, rectHeight, pointX, pointY);
+        return super.isPointInRegion(rectX, rectY, rectWidth, rectHeight, pointX, pointY);
     }
 
     /**
@@ -216,11 +212,7 @@ public class GuiFolkInventory extends InventoryEffectRenderer implements IRecipe
      */
     @Override
     protected void mouseClicked(int mouseX, int mouseY, int mouseButton) throws IOException {
-        if (!this.recipeBookGui.mouseClicked(mouseX, mouseY, mouseButton)) {
-            if (!this.widthTooNarrow || !this.recipeBookGui.isVisible()) {
-                super.mouseClicked(mouseX, mouseY, mouseButton);
-            }
-        }
+        super.mouseClicked(mouseX, mouseY, mouseButton);
     }
 
     /**
@@ -238,7 +230,7 @@ public class GuiFolkInventory extends InventoryEffectRenderer implements IRecipe
     @Override
     protected boolean hasClickedOutside(int p_193983_1_, int p_193983_2_, int p_193983_3_, int p_193983_4_) {
         boolean flag = p_193983_1_ < p_193983_3_ || p_193983_2_ < p_193983_4_ || p_193983_1_ >= p_193983_3_ + this.xSize || p_193983_2_ >= p_193983_4_ + this.ySize;
-        return this.recipeBookGui.hasClickedOutside(p_193983_1_, p_193983_2_, this.guiLeft, this.guiTop, this.xSize, this.ySize) && flag;
+        return flag;
     }
 
     /**
@@ -246,13 +238,6 @@ public class GuiFolkInventory extends InventoryEffectRenderer implements IRecipe
      */
     @Override
     protected void actionPerformed(GuiButton button) throws IOException {
-        if (button.id == 10) {
-            this.recipeBookGui.initVisuals(this.widthTooNarrow, ((ContainerPlayer) this.inventorySlots).craftMatrix);
-            this.recipeBookGui.toggleVisibility();
-            this.guiLeft = this.recipeBookGui.updateScreenPosition(this.widthTooNarrow, this.width, this.xSize);
-            this.recipeButton.setPosition(this.guiLeft + 104, this.height / 2 - 22);
-            this.buttonClicked = true;
-        }
     }
 
     /**
@@ -261,9 +246,7 @@ public class GuiFolkInventory extends InventoryEffectRenderer implements IRecipe
      */
     @Override
     protected void keyTyped(char typedChar, int keyCode) throws IOException {
-        if (!this.recipeBookGui.keyPressed(typedChar, keyCode)) {
-            super.keyTyped(typedChar, keyCode);
-        }
+        super.keyTyped(typedChar, keyCode);
     }
 
     /**
@@ -272,12 +255,10 @@ public class GuiFolkInventory extends InventoryEffectRenderer implements IRecipe
     @Override
     protected void handleMouseClick(Slot slotIn, int slotId, int mouseButton, ClickType type) {
         super.handleMouseClick(slotIn, slotId, mouseButton, type);
-        this.recipeBookGui.slotClicked(slotIn);
     }
 
     @Override
     public void recipesUpdated() {
-        this.recipeBookGui.recipesUpdated();
     }
     /**
      * 在卸载屏幕时调用。用于禁用键盘重复事件
@@ -285,7 +266,6 @@ public class GuiFolkInventory extends InventoryEffectRenderer implements IRecipe
     @Override
     public void onGuiClosed()
     {
-        this.recipeBookGui.removed();
         super.onGuiClosed();
     }
 

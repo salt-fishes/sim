@@ -1,4 +1,4 @@
 8x8x2
-A=minecraft:air,0;C=minecraft:torch,5;D=minecraft:stone_slab,0;E=minecraft:cobblestone,0;F=minecraft:glass,0;AU=Trhsy;DIR=2;DESC=暂无;
+A=minecraft:air,0;C=minecraft:torch,5;D=minecraft:stone_slab,0;E=minecraft:cobblestone,0;F=minecraft:glass,0;AU=原版;DIR=2;DESC=暂无;
 $AAAAAACADDDDDDAADDDDDDAADDEEDDAADDEEDDAADDDDDDAADDDDDDACAAAAAAC
 AAAAAAAAAAAAAAAAAAAAAAAAAAAFFAA**AAFFAAAAAAAAAAAAAAAAAAAAAAAAAAA

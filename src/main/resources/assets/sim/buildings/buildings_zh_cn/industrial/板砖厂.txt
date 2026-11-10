@@ -1,5 +1,5 @@
 10x7x6
-A=minecraft:air,0;C=minecraft:brick_block,0;D=minecraft:stonebrick,0;E=minecraft:chest,5;F=minecraft:chest,4;G=minecraft:crafting_table,0;H=minecraft:furnace,3;I=minecraft:chest,3;J=minecraft:glass_pane,0;K=minecraft:stone_slab,2;L=minecraft:double_stone_slab,2;AU=Trhsy;DIR=2;DESC=雇佣一个NPC来寻找粘土和冶炼砖块;JOB=板砖工匠;
+A=minecraft:air,0;C=minecraft:brick_block,0;D=minecraft:stonebrick,0;E=minecraft:chest,5;F=minecraft:chest,4;G=minecraft:crafting_table,0;H=minecraft:furnace,3;I=minecraft:chest,3;J=minecraft:glass_pane,0;K=minecraft:stone_slab,2;L=minecraft:double_stone_slab,2;AU=原版;DIR=2;DESC=雇佣一个NPC来寻找粘土和冶炼砖块;JOB=板砖工匠;
 CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC$CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
 DDDDAADDDDDEAAAAAAFDDEAAAAAAFDDAAA!AAAADDAGHIIAAADDAAAAAAAADDDDDDDDADD
 DDJDAADJDDDAAAAAAAADDAAAAAAAADJAAAAAAAAJDAAAAAAAADDAAAAAAAADDDDDJDDADD

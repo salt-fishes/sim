@@ -1,5 +1,5 @@
 9x13x8
-A=minecraft:air,0;C=minecraft:fence,0;D=minecraft:double_stone_slab,2;E=minecraft:stone_slab,2;F=minecraft:torch,5;G=minecraft:iron_block,0;H=minecraft:rail,1;I=minecraft:golden_rail,1;J=minecraft:detector_rail,1;K=minecraft:chest,2;L=minecraft:chest,3;AU=Trhsy;DIR=2;DESC=暂无;
+A=minecraft:air,0;C=minecraft:fence,0;D=minecraft:double_stone_slab,2;E=minecraft:stone_slab,2;F=minecraft:torch,5;G=minecraft:iron_block,0;H=minecraft:rail,1;I=minecraft:golden_rail,1;J=minecraft:detector_rail,1;K=minecraft:chest,2;L=minecraft:chest,3;AU=原版;DIR=2;DESC=暂无;
 $ACACAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACAAAAACACAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAADDCAAAAACEEAAAAAAAAC
 AACACAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACAAAAACACAAAAAAAAAAAAAAAAAAAAAAAAADDAAAAAAAEEAAAAAAAACCAAAAACACAAAAAAAAC
 AACACAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACAAAAACACAAAAAAADDAAAAAAAEEAAAAAAAACAAAAAAAACAAAAAAAACCAAAAACACAAAAAAAAF

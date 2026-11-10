@@ -6,7 +6,7 @@ import com.trhsy.sim.loader.*;
 import com.trhsy.sim.loader.render.ItemRenderLoader;
 import com.trhsy.sim.util.BuildingsExtractor;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiScreen;
+import net.minecraft.client.gui.ScaledResolution;
 import net.minecraft.util.text.TextComponentTranslation;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.fml.common.event.FMLInitializationEvent;
@@ -59,7 +59,6 @@ public class ClientProxy extends CommonProxy {
     public void init(FMLInitializationEvent event) {
         super.init(event);
         // 设置游戏窗口标题
-        //丨 模拟城市 丨 官方Q群: 749090174  丨 由TRHSY重制 丨 微信公众号：dasha500
         String title = new TextComponentTranslation("container.sim.title", new Object[0]).getUnformattedText();
         Display.setTitle(Display.getTitle() + title);
     }
@@ -73,7 +72,6 @@ public class ClientProxy extends CommonProxy {
     public void renderTick(TickEvent.RenderTickEvent renderTickEvent) {
         Minecraft mc=Minecraft.getMinecraft();
         try {
-            GuiScreen hud = new GuiHud();
             if (mc!= null && mc.world!=null&&mc.world.isRemote) {
                 String worldname = "unknown";
                 try {
@@ -119,23 +117,17 @@ public class ClientProxy extends CommonProxy {
                                 if (ModSimClientLoader.gamemode == 1) {
 
                                     //世界名 人口
-                                    hud.drawString(mc.fontRenderer, worldname+" "+new TextComponentTranslation("container.sim.title_days",new Object[]{ModSimClientLoader.gameDay}).getUnformattedText() +" (" + fs_day_of_week + ") - "+ new TextComponentTranslation("container.sim.trhsy3",new Object[0]).getUnformattedText() +": " + ModSimClientLoader.tempHireableNpcNames.size(), hud.width / 2, 2 + HUDoffset, 16777215);
+                                    drawHudText(mc, worldname+" "+new TextComponentTranslation("container.sim.title_days",new Object[]{ModSimClientLoader.gameDay}).getUnformattedText() +" (" + fs_day_of_week + ") - "+ new TextComponentTranslation("container.sim.trhsy3",new Object[0]).getUnformattedText() +": " + ModSimClientLoader.tempHireableNpcNames.size(), HUDoffset);
                                 } else {
                                     //世界名  人口  资金
-                                    hud.drawString(mc.fontRenderer, worldname+" "+new TextComponentTranslation("container.sim.title_days",new Object[]{ModSimClientLoader.gameDay}).getUnformattedText()+" (" +fs_day_of_week + ") - "+new TextComponentTranslation("container.sim.trhsy3",new Object[0]).getUnformattedText() +": " + ModSimClientLoader.tempHireableNpcNames.size() + "   "+ new TextComponentTranslation("container.sim.trhsy4",new Object[0]).getUnformattedText() +": " + ModSimLoader.displayMoney(ModSimClientLoader.money), hud.width / 2, 2 + HUDoffset, 16777215);
+                                    drawHudText(mc, worldname+" "+new TextComponentTranslation("container.sim.title_days",new Object[]{ModSimClientLoader.gameDay}).getUnformattedText()+" (" +fs_day_of_week + ") - "+new TextComponentTranslation("container.sim.trhsy3",new Object[0]).getUnformattedText() +": " + ModSimClientLoader.tempHireableNpcNames.size() + "   "+ new TextComponentTranslation("container.sim.trhsy4",new Object[0]).getUnformattedText() +": " + ModSimLoader.displayMoney(ModSimClientLoader.money), HUDoffset);
                                 }
                             }
                         } else if (!Minecraft.getMinecraft().gameSettings.showDebugInfo) {
-                            //正在加载模拟城市...
-                            hud.drawString(mc.fontRenderer, new TextComponentTranslation("container.sim.trhsy5",new Object[0]).getUnformattedText(), hud.width / 2, 2, 16777215);
-//                            SimmodeStart.simModupdate();
+                            drawHudText(mc, idleHudText(), 0);
                         }
                     }else{
-                        //正在加载模拟城市...
-                        hud.drawString(mc.fontRenderer, new TextComponentTranslation("container.sim.trhsy5",new Object[0]).getUnformattedText(), hud.width / 2, 2, 16777215);
-//                        if (ModSimClientLoader.gamemode != 999) {
-//                            SimmodeStart.simModupdate();
-//                        }
+                        drawHudText(mc, idleHudText(), 0);
                     }
 
                 } catch (Exception e) {
@@ -151,5 +143,22 @@ public class ClientProxy extends CommonProxy {
             StackTraceElement element = e.getStackTrace()[0];
             ModSimLoader.log.error("GuiHud-initGui出错了：" + e.getMessage() + "行数：" + element.getLineNumber());
         }
+    }
+
+    /** HUD 使用 ScaledResolution 的真实宽度居中，不再依赖未初始化的 GuiScreen.width。 */
+    /**
+     * 未启动和“已启动但还在加载”是两种状态，提示不能混在一起。
+     */
+    private String idleHudText() {
+        String key = ModSimClientLoader.gamemode == 999
+                ? "container.sim.hud.not_started"
+                : "container.sim.trhsy5";
+        return new TextComponentTranslation(key, new Object[0]).getUnformattedText();
+    }
+
+    private void drawHudText(Minecraft mc, String text, int offset) {
+        int width = new ScaledResolution(mc).getScaledWidth();
+        int x = (width - mc.fontRenderer.getStringWidth(text)) / 2;
+        mc.fontRenderer.drawString(text, x, 2 + offset, 16777215, true);
     }
 }

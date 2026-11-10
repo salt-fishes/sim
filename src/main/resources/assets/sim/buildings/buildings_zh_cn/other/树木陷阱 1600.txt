@@ -1,5 +1,5 @@
 6x5x9
-A=minecraft:air,0;C=minecraft:dirt,0;D=minecraft:grass,0;E=minecraft:redstone_torch,4;F=minecraft:tnt,0;G=minecraft:redstone_wire,0;H=minecraft:unlit_redstone_torch,1;I=minecraft:log,0;J=minecraft:redstone_wire,15;K=minecraft:redstone_wire,14;L=minecraft:leaves,0;M=minecraft:leaves,4;N=minecraft:leaves,12;AU=Trhsy;DIR=2;DESC=暂无;
+A=minecraft:air,0;C=minecraft:dirt,0;D=minecraft:grass,0;E=minecraft:redstone_torch,4;F=minecraft:tnt,0;G=minecraft:redstone_wire,0;H=minecraft:unlit_redstone_torch,1;I=minecraft:log,0;J=minecraft:redstone_wire,15;K=minecraft:redstone_wire,14;L=minecraft:leaves,0;M=minecraft:leaves,4;N=minecraft:leaves,12;AU=原版;DIR=2;DESC=暂无;
 $DCCDCCCCCDCCCCCDDCCDDCCCCCCCC
 DECFGGCDCCAGCDCCGGCHGGGCCCCCCD
 AICDCDDJCCCDDKCCCDDAACCDDDDDDA

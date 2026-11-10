@@ -1,5 +1,5 @@
 9x5x5
-A=minecraft:air,0;C=minecraft:dirt,0;D=minecraft:grass,0;E=minecraft:bed,8;F=minecraft:bed,0;G=minecraft:furnace,3;H=minecraft:ladder,3;I=minecraft:torch,5;AU=Trhsy;DIR=2;DESC=暂无;
+A=minecraft:air,0;C=minecraft:dirt,0;D=minecraft:grass,0;E=minecraft:bed,8;F=minecraft:bed,0;G=minecraft:furnace,3;H=minecraft:ladder,3;I=minecraft:torch,5;AU=原版;DIR=2;DESC=暂无;
 CCDCACCCCC$AAAAAACCEFA!AAGCDAAAAAAHCCCDCDCDCC
 CCACACACCAAAAAAAACCAAAAAAACAAAAAAAHCCCACICACC
 CCCCCCCCCCAAAAAAACCAAAAAAACCAAAAAAHCCCCCCCCCC

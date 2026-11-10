@@ -1,5 +1,5 @@
 10x8x6
-A=minecraft:air,0;C=minecraft:cobblestone,0;D=minecraft:planks,0;E=minecraft:chest,2;F=minecraft:bed,0;G=minecraft:bed,8;H=minecraft:glass_pane,0;I=minecraft:stone_slab,2;J=minecraft:double_stone_slab,2;AU=Trhsy;DIR=2;DESC=暂无;
+A=minecraft:air,0;C=minecraft:cobblestone,0;D=minecraft:planks,0;E=minecraft:chest,2;F=minecraft:bed,0;G=minecraft:bed,8;H=minecraft:glass_pane,0;I=minecraft:stone_slab,2;J=minecraft:double_stone_slab,2;AU=原版;DIR=2;DESC=暂无;
 CCCCCCAAAACCCCCCAAAACCCCCCAAAACCCCCCCCCCCCCCCCCCCCC$CCCCCCCCCCCCCCCCCCCCCCCCCCCC
 DDADDDAAAADAAAEDAAAADAAAEDAAAADAAAADDDDDDAAAADAAADDAAAAAAAADDAAAADAFGDDDDDDDDDDD
 DDADDDAAAADA!AADAAAAHAAAADAAAAHAAAADDDDDDAAAADAAADDAAAAAAAAHDAAAADAAADDDHHDDDDDD

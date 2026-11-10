@@ -1,6 +1,7 @@
 package com.trhsy.sim.network.server;
 
 import com.trhsy.sim.loader.ModSimLoader;
+import com.trhsy.sim.util.Onboarding;
 import io.netty.buffer.ByteBuf;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.server.MinecraftServer;
@@ -63,7 +64,17 @@ public class PacketSetupMod implements IMessage {
                 ModSimLoader.log.warn("非法模拟城市模式: {}", message.gamemode);
                 return;
             }
+
+            int previous = ModSimLoader.gamemode;
             ModSimLoader.gamemode = message.gamemode;
+
+            // 第一次从“未启动”进入城市时发一套工具，并把下一步直接说清楚。
+            if (player != null && previous == 999 && message.gamemode != 999) {
+                Onboarding.giveStarterKit(player);
+                Onboarding.send(player, "container.sim.kit.given");
+                Onboarding.send(player, "container.sim.tip.start");
+                Onboarding.send(player, "container.sim.tip.materials");
+            }
         }
     }
 }

@@ -1,5 +1,5 @@
 11x11x8
-A=minecraft:air,0;C=minecraft:tallgrass,1;D=minecraft:planks,0;E=minecraft:glowstone,0;F=minecraft:water,0;G=minecraft:netherrack,0;H=minecraft:gold_block,0;I=minecraft:glass,0;J=minecraft:glass_pane,0;K=minecraft:fence,0;AU=Trhsy;DIR=2;DESC=暂无;
+A=minecraft:air,0;C=minecraft:tallgrass,1;D=minecraft:planks,0;E=minecraft:glowstone,0;F=minecraft:water,0;G=minecraft:netherrack,0;H=minecraft:gold_block,0;I=minecraft:glass,0;J=minecraft:glass_pane,0;K=minecraft:fence,0;AU=原版;DIR=2;DESC=暂无;
 $AAAAAAACCAADDDDDDDDDAADEFEFEFEDAADFEFEFEFDAADEFEFEFEDAADFEFEFEFDACDEFEFEFEDAADFEFEFEFDAADEFEFEFEDAADDDDDDDDDCAAAAAAAAAAA
 AAAAAAAAAAAAGHHAAAHHGAAHIIIIIIIHAAHIIIIIIIHAAAIIIIIIIAAAAIIIIIIIAAAAIIIIIIIAAAHIIIIIIIHAAHIIIIIIIHAAGHHAAAHHGAAAAAAAAAAAA
 AAAAAAAAAAAAGHHAAAHHGAAHAAAAAAAHAAHAAAAAAAHAAAAAAAAAAAAAAAA!AAAAAAAAAAAAAAAAAAHAAAAAAAHAAHAAAAAAAHAAGHHAAAHHGAAAAAAAAAAAA

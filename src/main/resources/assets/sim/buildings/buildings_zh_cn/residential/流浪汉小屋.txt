@@ -1,5 +1,5 @@
 6x5x5
-A=minecraft:air,0;C=minecraft:stained_hardened_clay,15;D=minecraft:planks,0;E=minecraft:stone_slab,0;F=minecraft:stone_slab,8;G=minecraft:air,0;AU=Trhsy;DIR=2;DESC=暂无;
+A=minecraft:air,0;C=minecraft:stained_hardened_clay,15;D=minecraft:planks,0;E=minecraft:stone_slab,0;F=minecraft:stone_slab,8;G=minecraft:air,0;AU=原版;DIR=2;DESC=暂无;
 CCAACCC$AAACCAAAACCAAAACCCCCCC
 CDAADCCAAAACDAAAADCAAAACCCDDCC
 CCCCCCCAAAACCAAAACCAAAACCCCCCC

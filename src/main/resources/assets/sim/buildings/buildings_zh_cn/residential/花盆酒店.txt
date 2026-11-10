@@ -1,5 +1,5 @@
 9x9x26
-A=minecraft:air,0;C=minecraft:oak_stairs,1;D=minecraft:gold_block,0;E=minecraft:wool,3;F=minecraft:clay,0;G=minecraft:wooden_door,2;H=minecraft:ladder,5;I=minecraft:wooden_door,8;J=minecraft:glass,0;K=minecraft:torch,2;L=minecraft:torch,4;M=minecraft:torch,3;N=minecraft:torch,1;O=minecraft:grass,0;P=minecraft:dirt,0;Q=minecraft:wool,13;R=minecraft:wool,5;S=minecraft:trapdoor,2;T=minecraft:wool,11;U=minecraft:wool,4;V=minecraft:chain_command_block,0;AU=Trhsy;DIR=2;DESC=暂无;
+A=minecraft:air,0;C=minecraft:oak_stairs,1;D=minecraft:gold_block,0;E=minecraft:wool,3;F=minecraft:clay,0;G=minecraft:wooden_door,2;H=minecraft:ladder,5;I=minecraft:wooden_door,8;J=minecraft:glass,0;K=minecraft:torch,2;L=minecraft:torch,4;M=minecraft:torch,3;N=minecraft:torch,1;O=minecraft:grass,0;P=minecraft:dirt,0;Q=minecraft:wool,13;R=minecraft:wool,5;S=minecraft:trapdoor,2;T=minecraft:wool,11;U=minecraft:wool,4;V=minecraft:chain_command_block,0;AU=原版;DIR=2;DESC=暂无;
 AAAACAAAAAAADDDAAAAADE$EDAAADEEEEEDAADEEEEEDAADEEEEEDAAADEEEDAAAAADDDAAAAAAAAAAAA
 AAAAAAAAAAAAFGFAAAAAFAAAFAAAFAAAAAFAAFAAAAAFAAFAAAAAFAAAFHAAFAAAAAFFFAAAAAAAAAAAA
 AAAAAAAAAAAAFIFAAAAAFAAAFAAAFAAAAAFAAJAAAAAJAAFAAAAAFAAAFHAAFAAAAAFJFAAAAAAAAAAAA

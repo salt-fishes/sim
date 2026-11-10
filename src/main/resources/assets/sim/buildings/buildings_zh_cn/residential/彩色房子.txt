@@ -1,5 +1,5 @@
 11x6x13
-A=minecraft:air,0;C=minecraft:wool,1;D=minecraft:wool,11;E=minecraft:torch,2;F=minecraft:fence,0;G=minecraft:torch,3;H=minecraft:stone_slab,1;I=minecraft:torch,4;J=minecraft:stone_brick_stairs,1;K=minecraft:bookshelf,0;L=minecraft:furnace,2;M=minecraft:crafting_table,0;N=minecraft:torch,1;O=minecraft:glass,0;P=minecraft:wooden_pressure_plate,0;Q=minecraft:wool,9;R=minecraft:torch,5;S=minecraft:bed,11;T=minecraft:bed,3;U=minecraft:wool,10;AU=Trhsy;DIR=2;DESC=暂无;
+A=minecraft:air,0;C=minecraft:wool,1;D=minecraft:wool,11;E=minecraft:torch,2;F=minecraft:fence,0;G=minecraft:torch,3;H=minecraft:stone_slab,1;I=minecraft:torch,4;J=minecraft:stone_brick_stairs,1;K=minecraft:bookshelf,0;L=minecraft:furnace,2;M=minecraft:crafting_table,0;N=minecraft:torch,1;O=minecraft:glass,0;P=minecraft:wooden_pressure_plate,0;Q=minecraft:wool,9;R=minecraft:torch,5;S=minecraft:bed,11;T=minecraft:bed,3;U=minecraft:wool,10;AU=原版;DIR=2;DESC=暂无;
 CCCCCCCCCCCCDDDDDDDDDCCDDDD$DDDDCCDDDDDDDDDCCDDDDDDDDDCCCCCCCCCCCC
 CCCCCACCCCCCEAFAAAAAGCCHAAAAAAAFCCHAAAAAAAACCIAJKKILMNCCCCCCCCCCCC
 COOOOAOOOOCOAAPAAAAAAOOAAAA!AAAPOOAAAAAAAAAOOAAAJKAAAAOCOOOOOOOOOC

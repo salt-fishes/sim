@@ -1,5 +1,5 @@
 6x6x11
-A=minecraft:air,0;C=minecraft:stone_slab,0;D=minecraft:double_stone_slab,0;E=minecraft:torch,5;F=minecraft:wool,12;G=minecraft:wool,9;H=minecraft:wool,6;I=minecraft:wool,13;J=minecraft:wool,15;K=minecraft:wool,5;L=minecraft:wool,14;AU=Trhsy;DIR=2;DESC=暂无;
+A=minecraft:air,0;C=minecraft:stone_slab,0;D=minecraft:double_stone_slab,0;E=minecraft:torch,5;F=minecraft:wool,12;G=minecraft:wool,9;H=minecraft:wool,6;I=minecraft:wool,13;J=minecraft:wool,15;K=minecraft:wool,5;L=minecraft:wool,14;AU=原版;DIR=2;DESC=暂无;
 $CAACCCDDDDCCDDDDCCDDDDCCDDDDCCCCCCC
 AAAAAAAEAAEAAAAAAAAAFFAAAEAAEAAAAAAA
 AAAAAAAAAAAAAAAAAAAAGGAAAAAAAAAAAAAA

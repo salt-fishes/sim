@@ -1,7 +1,9 @@
 package com.trhsy.sim.key;
 
 import com.trhsy.sim.ModSim;
+import com.trhsy.sim.gui.GuiCityGuide;
 import com.trhsy.sim.loader.ModSimLoader;
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.settings.KeyBinding;
 import net.minecraftforge.client.settings.KeyConflictContext;
 import net.minecraftforge.client.settings.KeyModifier;
@@ -27,7 +29,7 @@ import java.util.List;
 public class KeyboardManager {
     public static final List<KeyBinding> KEY_BINDINGS = new ArrayList<KeyBinding>();
 
-    //我们所有的键位进行声明  参数最重要的是Keyboard.KEY_X 对应我们的按键，其他基本不变
+    // V 键：随时打开市长手册（原来的“重新加载蓝图”从未实现，正好改成新手入口）
     public static final KeyBinding SUMMON = new ModKeyBinding("activate_skill_simfiles_loading", KeyConflictContext.IN_GAME, KeyModifier.NONE, Keyboard.KEY_V, "sim_mod");
 
     /**
@@ -47,10 +49,12 @@ public class KeyboardManager {
     @SideOnly(Side.CLIENT)
     @SubscribeEvent
     public static void onKeyPressed(InputEvent.KeyInputEvent event) {
-        //当按下EFFECTME键(V键)时
+        // 按下 V：没有其他界面时打开市长手册
         if (SUMMON.isPressed()) {
-//            ModSimLoader.loadAllBuildings();
-            ModSimLoader.log.info("加载所有建筑");
+            Minecraft mc = Minecraft.getMinecraft();
+            if (mc.currentScreen == null && mc.player != null) {
+                mc.displayGuiScreen(new GuiCityGuide());
+            }
         }
     }
 }

@@ -1,5 +1,5 @@
 9x10x6
-A=minecraft:air,0;C=minecraft:stonebrick,0;D=minecraft:stone_slab,5;E=minecraft:grass,0;F=minecraft:wool,11;G=minecraft:planks,0;H=minecraft:fence,0;I=minecraft:fence_gate,7;J=minecraft:yellow_flower,0;K=minecraft:red_flower,0;L=minecraft:glass_pane,0;M=minecraft:crafting_table,0;N=minecraft:log,0;O=minecraft:bed,10;P=minecraft:bed,2;Q=minecraft:wooden_door,7;R=minecraft:chest,4;S=minecraft:bookshelf,0;T=minecraft:wooden_door,8;U=minecraft:furnace,4;V=minecraft:stone_slab,13;W=minecraft:double_stone_slab,5;AU=Trhsy;DIR=2;DESC=暂无;
+A=minecraft:air,0;C=minecraft:stonebrick,0;D=minecraft:stone_slab,5;E=minecraft:grass,0;F=minecraft:wool,11;G=minecraft:planks,0;H=minecraft:fence,0;I=minecraft:fence_gate,7;J=minecraft:yellow_flower,0;K=minecraft:red_flower,0;L=minecraft:glass_pane,0;M=minecraft:crafting_table,0;N=minecraft:log,0;O=minecraft:bed,10;P=minecraft:bed,2;Q=minecraft:wooden_door,7;R=minecraft:chest,4;S=minecraft:bookshelf,0;T=minecraft:wooden_door,8;U=minecraft:furnace,4;V=minecraft:stone_slab,13;W=minecraft:double_stone_slab,5;AU=原版;DIR=2;DESC=暂无;
 CCCDCCEEECCCCCCEEECCC$CCEEECFFFFFCCCCFFFFFGGCCFFFFFGGCCFFFFFGGCCFFFFFCCCCFFFFFCEECCCCCCCEE
 HHHIHHAJAHAAAAHJKJCCCACCAJALAAAAACLLLAAAAAMALGGGNAAAALGOPGAAAALL!AQAACLLLARGSSGAACGGGGGCAK
 HAAAAHAAAAAAAAAAAACCCACCAAALAAAAACLLLAAAAAAALGGGNAAAALGAAGAAAALLAATAACLLLAAGSSGAACGGGGGCAA

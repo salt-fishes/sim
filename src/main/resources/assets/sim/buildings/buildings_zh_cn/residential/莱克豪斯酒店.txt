@@ -1,5 +1,5 @@
 5x11x5
-A=minecraft:air,0;C=minecraft:cobblestone,0;D=minecraft:planks,0;E=minecraft:wool,9;F=minecraft:log,0;G=minecraft:crafting_table,0;H=minecraft:stone_stairs,3;I=minecraft:stonebrick,0;J=minecraft:fence,0;K=minecraft:furnace,4;L=minecraft:stone_stairs,2;M=minecraft:oak_stairs,0;N=minecraft:glass_pane,0;O=minecraft:bed,0;P=minecraft:oak_stairs,1;Q=minecraft:chest,2;R=minecraft:bed,8;S=minecraft:wooden_pressure_plate,0;T=minecraft:trapdoor,0;U=minecraft:stone_stairs,1;V=minecraft:stone_stairs,0;W=minecraft:trapdoor,4;AU=Trhsy;DIR=2;DESC=暂无;
+A=minecraft:air,0;C=minecraft:cobblestone,0;D=minecraft:planks,0;E=minecraft:wool,9;F=minecraft:log,0;G=minecraft:crafting_table,0;H=minecraft:stone_stairs,3;I=minecraft:stonebrick,0;J=minecraft:fence,0;K=minecraft:furnace,4;L=minecraft:stone_stairs,2;M=minecraft:oak_stairs,0;N=minecraft:glass_pane,0;O=minecraft:bed,0;P=minecraft:oak_stairs,1;Q=minecraft:chest,2;R=minecraft:bed,8;S=minecraft:wooden_pressure_plate,0;T=minecraft:trapdoor,0;U=minecraft:stone_stairs,1;V=minecraft:stone_stairs,0;W=minecraft:trapdoor,4;AU=原版;DIR=2;DESC=暂无;
 CC$CCCDDDCCDDDCCCCCCCDDDCCDDDCCCCCCCEEECCEEECCEEECCCCCC
 FDADFDGAHDDIAJDFKALFMA!ANMAAANFDADFDAAADMAOAPDQRADFDDDF
 FDADFNAAANNAASNFAAAFNAAANNTAANFDADFDAAADNAAANDAAADFDNDF

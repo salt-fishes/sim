@@ -1,5 +1,5 @@
 11x12x5
-A=minecraft:air,0;C=minecraft:stone_slab,0;D=minecraft:oak_stairs,2;E=minecraft:cobblestone,0;F=minecraft:air,0;G=minecraft:planks,0;H=minecraft:oak_stairs,1;I=minecraft:oak_stairs,0;J=minecraft:oak_stairs,3;K=minecraft:glass,0;AU=Trhsy;DIR=2;DESC=暂无;
+A=minecraft:air,0;C=minecraft:stone_slab,0;D=minecraft:oak_stairs,2;E=minecraft:cobblestone,0;F=minecraft:air,0;G=minecraft:planks,0;H=minecraft:oak_stairs,1;I=minecraft:oak_stairs,0;J=minecraft:oak_stairs,3;K=minecraft:glass,0;AU=原版;DIR=2;DESC=暂无;
 $CCCCDAAACCCEFEEEEEEECAEGGGGGGGFCAEGGGGGGGECAEGGG*GGGECHEGG*GGGGECCEGGGG*GGEICEGGG*GGGEACEGGGGGGGEACFGGGGGGGEACEEEEEEEFECCCAAAJCCCCC
 AAAAAADAAAAAEAEEEEEEEAAEAAAAAEAAAAEEEAAAEAEAHEAAEAEEAEAAEAAAEAAAEAAE!AAEAAAEAAEAEEAEAAEIAEAEAAAEEEAAAAEAAAAAEAAEEEEEEEAEAAAAAJAAAAAA
 AAAAAAADAAAAEAEKKEEEEAAEAAAAAEAAAHEEEAAAEAEAAEAAEAEEAKAAKAAAEAAAKAAKAAAEAAAKAAKAEEAEAAEAAEAEAAAEEEIAAAEAAAAAEAAEEEEKKEAEAAAAJAAAAAAA

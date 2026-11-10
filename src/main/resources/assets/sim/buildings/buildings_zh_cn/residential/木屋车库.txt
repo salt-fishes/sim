@@ -1,5 +1,5 @@
 10x8x6
-A=minecraft:air,0;C=minecraft:grass,0;D=minecraft:gravel,0;E=minecraft:planks,0;F=minecraft:planks,2;G=minecraft:planks,3;H=minecraft:fence,0;I=minecraft:rail,1;J=minecraft:chest,2;K=minecraft:crafting_table,0;L=minecraft:bed,1;M=minecraft:bed,9;N=minecraft:glass,0;O=minecraft:wooden_pressure_plate,0;P=minecraft:planks,1;AU=Trhsy;DIR=2;DESC=暂无;
+A=minecraft:air,0;C=minecraft:grass,0;D=minecraft:gravel,0;E=minecraft:planks,0;F=minecraft:planks,2;G=minecraft:planks,3;H=minecraft:fence,0;I=minecraft:rail,1;J=minecraft:chest,2;K=minecraft:crafting_table,0;L=minecraft:bed,1;M=minecraft:bed,9;N=minecraft:glass,0;O=minecraft:wooden_pressure_plate,0;P=minecraft:planks,1;AU=原版;DIR=2;DESC=暂无;
 CCDDCCCDCCCCDDCCCDCCCCDDCCCDCCEEEEEEFFFFEGGGGEFFFFEGGGGEFFFFEG$GGEFFFFEEEEEEFFFF
 HHAAHHAIAHHAAAAHAIAAHAAAAHAIAAEEAAEEAIAFEJAAKEAI!FELAAAAAIAFEMAAHEAAAFEEEEEEFFFF
 A*AA*AAAA*AAAAAAAAAAAAAAAAAAAAEEAAEEAAAFEAAAAEAAAHNAAAAAAAAHEAAAOEAAAHEENNEEFHHF

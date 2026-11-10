@@ -1,5 +1,5 @@
 12x8x17
-A=minecraft:air,0;C=minecraft:wool,15;D=minecraft:ladder,5;E=minecraft:wool,8;F=minecraft:wool,0;G=minecraft:trapdoor,3;H=minecraft:wool,14;I=minecraft:wool,1;J=minecraft:wool,4;AU=Trhsy;DIR=2;DESC=装饰;
+A=minecraft:air,0;C=minecraft:wool,15;D=minecraft:ladder,5;E=minecraft:wool,8;F=minecraft:wool,0;G=minecraft:trapdoor,3;H=minecraft:wool,14;I=minecraft:wool,1;J=minecraft:wool,4;AU=原版;DIR=2;DESC=装饰;
 AAAAAAAAAAAAAAAAAA$CAAAAAAAAAAACAAAAAAAAAACCAAAAAAAAAACCAAAAAAAAAAACAAAAAAAAAACCAAAAAAAAAAAAAAAA
 AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACAAAAAAAAAAAAAAAAAAAAAAADAAAAAAAAAAACAAAAAAAAAAAAAAAAAAAAAAAAAAAA
 AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACAAAAAAAAAAAAAAAAAAAAAAADAAAAAAAAAAACAAAAAAAAAAAAAAAAAAAAAAAAAAAA

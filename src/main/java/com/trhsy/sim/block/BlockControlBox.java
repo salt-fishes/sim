@@ -7,9 +7,14 @@ import com.trhsy.sim.loader.ModSimLoader;
 import com.trhsy.sim.loader.NetWorkLoader;
 import com.trhsy.sim.loader.SoundRegistry;
 import com.trhsy.sim.network.client.PacketOpenControlGui;
+import com.trhsy.sim.network.client.PacketLogisticsSnapshot;
 import com.trhsy.sim.npcCode.NpcData;
+import com.trhsy.sim.npcCode.SimIds;
 import com.trhsy.sim.npcCode.V3;
 import com.trhsy.sim.npcCode.build.Building;
+import com.trhsy.sim.npcCode.logistics.LogisticsService;
+import com.trhsy.sim.npcCode.logistics.LogisticsSnapshot;
+import com.trhsy.sim.npcCode.store.SimStore;
 import net.minecraft.block.SoundType;
 import net.minecraft.block.material.Material;
 import net.minecraft.block.properties.IProperty;
@@ -209,6 +214,7 @@ public class BlockControlBox extends EnumBlock<EnumControlBox> {
             // 发送网络包（仅服务端）
             if (packet != null) {
                 NetWorkLoader.net.sendTo(packet, (EntityPlayerMP) playerIn);
+                sendLogisticsSnapshot(worldIn, controlPos, building, playerIn);
             }
         }
         return true;
@@ -240,6 +246,26 @@ public class BlockControlBox extends EnumBlock<EnumControlBox> {
     public void addInformation(ItemStack stack, @Nullable World player, List<String> tooltip, ITooltipFlag advanced) {
         // 添加多语言提示（示例："control_box.tooltip"="控制箱：右键打开管理界面"）
         tooltip.add(I18n.translateToLocal(TOOLTIP_KEY));
+        tooltip.add(I18n.translateToLocal(TOOLTIP_KEY + ".2"));
+    }
+
+    /**
+     * 打开快递员/物流中心控制箱时，把当前物流设置快照发给客户端。
+     */
+    private void sendLogisticsSnapshot(World world, V3 controlPos, @Nullable Building building, EntityPlayer player) {
+        if (building == null || player == null || !(player instanceof EntityPlayerMP)) {
+            return;
+        }
+        String jobType = building.jobType == null ? "" : building.jobType;
+        if (!SimIds.vocation(10).equals(SimIds.jobIdFromDisplay(jobType))) {
+            return;
+        }
+        SimStore store = SimStore.get(world);
+        if (store == null) {
+            return;
+        }
+        LogisticsSnapshot snapshot = LogisticsService.snapshot(store, controlPos);
+        NetWorkLoader.net.sendTo(new PacketLogisticsSnapshot(snapshot.writeToNBT()), (EntityPlayerMP) player);
     }
 
     /**
@@ -291,6 +317,13 @@ public class BlockControlBox extends EnumBlock<EnumControlBox> {
         // 判断是否为住宅（使用多语言翻译）
         boolean isResidential = I18n.translateToLocal(BUILDING_TYPE_RESIDENTIAL).equals(buildingType);
 
+        // 旧存档里 building.occupants 可能为空（雇员只记录在 NPC 的 job.workPlace 上）。
+        // 非住宅建筑在打开 GUI 时按工作地点补齐，避免“员工 0 / 没有员工”，
+        // 点开员工列表后才看到人的问题。
+        if (!isResidential) {
+            mergeWorkplaceEmployees(occupants, controlPos);
+        }
+
         return new PacketOpenControlGui(
                 controlPos,
                 buildingId,
@@ -303,6 +336,34 @@ public class BlockControlBox extends EnumBlock<EnumControlBox> {
                 isResidential
         );
     }
+    /**
+     * 旧存档兼容：把工作地点等于当前控制箱的 NPC 合并进雇员列表。
+     * 只用于非住宅建筑；按 NPC UUID 去重。
+     */
+    private void mergeWorkplaceEmployees(List<NpcData> occupants, V3 controlPos) {
+        if (occupants == null || controlPos == null) {
+            return;
+        }
+        for (NpcData npc : ModSimLoader.folks) {
+            if (npc == null || npc.job == null || npc.job.workPlace == null) {
+                continue;
+            }
+            if (!npc.job.workPlace.equals(controlPos)) {
+                continue;
+            }
+            boolean exists = false;
+            for (NpcData occupant : occupants) {
+                if (occupant != null && occupant.ID != null && occupant.ID.equals(npc.ID)) {
+                    exists = true;
+                    break;
+                }
+            }
+            if (!exists) {
+                occupants.add(npc);
+            }
+        }
+    }
+
     /**
      * 判断 NPC 工作位置是否为当前控制箱位置
      */

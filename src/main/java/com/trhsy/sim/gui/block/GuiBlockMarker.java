@@ -1,5 +1,7 @@
 package com.trhsy.sim.gui.block;
 
+import com.trhsy.sim.gui.GuiLayout;
+import com.trhsy.sim.gui.GuiStyle;
 import com.trhsy.sim.loader.ModSimClientLoader;
 import com.trhsy.sim.loader.ModSimLoader;
 import com.trhsy.sim.npcCode.V3;
@@ -11,6 +13,7 @@ import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.text.TextComponentTranslation;
 import net.minecraftforge.fml.common.FMLCommonHandler;
+import org.lwjgl.input.Keyboard;
 
 import java.io.File;
 import java.nio.charset.Charset;
@@ -49,39 +52,69 @@ public class GuiBlockMarker extends GuiScreen {
     public void initGui() {
         try {
             this.buttonList.clear();
+            int px = left();
+            int py = top();
+            int pw = panelW();
+            int ph = panelH();
             //完成
-            this.buttonList.add(new GuiButton(0, this.width / 2 - 100, this.height - 30, new TextComponentTranslation("container.sim.sim_gui_BC_Done", new Object[0]).getUnformattedText()));
+            this.buttonList.add(new GuiButton(0, px + pw - 68, py + ph - 26, 60, 20, new TextComponentTranslation("container.sim.sim_gui_BC_Done", new Object[0]).getUnformattedText()));
             //复制结构/建造
-            GuiButton b = new GuiButton(1, this.width / 2 - 100, 100, new TextComponentTranslation("container.sim.sim_gui_Copy_structure", new Object[0]).getUnformattedText());
-            //复制结构/建造
-            this.buttonList.add(b);
-            b.enabled = false;
-
-            if (ModSimClientLoader.markers.size() == 3) {
-                (this.buttonList.get(1)).enabled = true;
-            } /*else if (BlockMarker.markers.size() == 1) {
-                (this.buttonList.get(2)).enabled = true;
-
-            }*/
+            GuiButton copy = new GuiButton(1, px + 8, py + ph - 26, 120, 20, new TextComponentTranslation("container.sim.sim_gui_Copy_structure", new Object[0]).getUnformattedText());
+            copy.enabled = ModSimClientLoader.markers.size() == 3;
+            this.buttonList.add(copy);
         } catch (Exception e) {
             StackTraceElement element = e.getStackTrace()[0];
             ModSimLoader.log.error("GuiMarker-initGui出错了：" + e.getMessage() + "行数：" + element.getLineNumber());
         }
     }
 
+    private int panelW() {
+        return Math.min(320, this.width - 16);
+    }
+
+    private int panelH() {
+        return Math.min(190, this.height - 16);
+    }
+
+    private int left() {
+        return GuiLayout.centerX(this.width, panelW());
+    }
+
+    private int top() {
+        return GuiLayout.centerY(this.height, panelH());
+    }
+
     @Override
-    public void drawScreen(int i, int j, float f) {
+    public void drawScreen(int mouseX, int mouseY, float partialTicks) {
         try {
             this.drawDefaultBackground();
-            //标记棒
-            this.drawCenteredString(this.fontRenderer, new TextComponentTranslation("container.sim.Markers", new Object[0]).getUnformattedText(), this.width / 2, 30, 16777215);
-            //标记棒可以用来复制建筑
-            this.drawCenteredString(this.fontRenderer, new TextComponentTranslation("container.sim.Markers1", new Object[0]).getUnformattedText(), this.width / 2, 40, 10551295);
-            //提示：使用后,在标记新区域之前,移除旧标记。
-            this.drawCenteredString(this.fontRenderer, new TextComponentTranslation("container.sim.Markers4", new Object[0]).getUnformattedText(), this.width / 2, 85, 10551295);
-            this.drawCenteredString(this.fontRenderer, this.errorText, this.width / 2, this.height - 50, 16711680);
+            int px = left();
+            int py = top();
+            int pw = panelW();
+            int ph = panelH();
+            GuiStyle.panel(px, py, pw, ph, new TextComponentTranslation("container.sim.Markers", new Object[0]).getUnformattedText(), this.fontRenderer);
 
-            super.drawScreen(i, j, f);
+            GuiStyle.text(this.fontRenderer, px + 10, py + 28, new TextComponentTranslation("container.sim.Markers1", new Object[0]).getUnformattedText(), GuiStyle.TEXT_MUTED);
+
+            int rows = 3;
+            for (int i = 0; i < rows; i++) {
+                int rowY = py + 44 + i * 20;
+                GuiStyle.row(px + 8, rowY - 2, pw - 16, 18, i % 2 == 1);
+                GuiStyle.text(this.fontRenderer, px + 12, rowY + 2, String.valueOf(i + 1), GuiStyle.TEXT_MUTED);
+                String value;
+                if (i < ModSimClientLoader.markers.size() && ModSimClientLoader.markers.get(i) != null && ModSimClientLoader.markers.get(i).loc != null) {
+                    value = ModSimClientLoader.markers.get(i).loc.toString();
+                } else {
+                    value = new TextComponentTranslation("container.sim.gui.marker.unset", new Object[0]).getUnformattedText();
+                }
+                GuiStyle.text(this.fontRenderer, px + 28, rowY + 2, GuiLayout.truncate(this.fontRenderer, value, pw - 44), GuiStyle.TEXT);
+            }
+
+            GuiStyle.text(this.fontRenderer, px + 10, py + 108, GuiLayout.truncate(this.fontRenderer, new TextComponentTranslation("container.sim.Markers4", new Object[0]).getUnformattedText(), pw - 20), GuiStyle.TEXT_MUTED);
+            if (this.errorText != null && !this.errorText.isEmpty()) {
+                GuiStyle.text(this.fontRenderer, px + 10, py + 130, GuiLayout.truncate(this.fontRenderer, this.errorText, pw - 20), GuiStyle.RED);
+            }
+            super.drawScreen(mouseX, mouseY, partialTicks);
         } catch (Exception e) {
             StackTraceElement element = e.getStackTrace()[0];
             ModSimLoader.log.error("GuiMarker-drawScreen出错了：" + e.getMessage() + "行数：" + element.getLineNumber());
@@ -91,22 +124,30 @@ public class GuiBlockMarker extends GuiScreen {
     @Override
     public void actionPerformed(GuiButton guibutton) {
         try {
+            if (!guibutton.enabled) {
+                return;
+            }
             if (guibutton.id == 0) {
                 this.mc.currentScreen = null;
                 this.mc.setIngameFocus();
-            } else {
-                //复制结构/建造
-                if (guibutton.displayString.contentEquals(new TextComponentTranslation("container.sim.sim_gui_Copy_structure", new Object[0]).getUnformattedText())) {
-                    new ThreadFacsimile();
-                    //复制它
-                    this.mc.currentScreen = null;
-                    this.mc.setIngameFocus();
-                    return;
-                }
+                return;
+            }
+            if (guibutton.id == 1) {
+                new ThreadFacsimile();
+                this.mc.currentScreen = null;
+                this.mc.setIngameFocus();
             }
         } catch (Exception e) {
             StackTraceElement element = e.getStackTrace()[0];
             ModSimLoader.log.error("GUIMARKER-actionPerformed出错了：" + e.getMessage() + "行数：" + element.getLineNumber());
+        }
+    }
+
+    @Override
+    public void keyTyped(char c, int keyCode) {
+        if (keyCode == Keyboard.KEY_ESCAPE) {
+            this.mc.currentScreen = null;
+            this.mc.setIngameFocus();
         }
     }
 
@@ -260,7 +301,7 @@ public class GuiBlockMarker extends GuiScreen {
                         blueprintText.append(layerLines.get(zzz).toString()).append("\r\n");
                     }
                     File outFile = new File(ModSimLoader.getSimFolder() + File.separator + "buildings_" + lang + "/other/My Build" + f + ".txt");
-                    AsyncFileWriter.write(outFile, blueprintText.toString(), Charset.defaultCharset());
+                    AsyncFileWriter.write(outFile, blueprintText.toString(), java.nio.charset.StandardCharsets.UTF_8);
                     // P12(S2): 删掉客户端 GUI 线程的 Thread.sleep(500)，避免保存蓝图时卡渲染半秒。
                     String fs_15=new TextComponentTranslation("container.sim.Markers15",new Object[0]).getUnformattedText();
                     String fs_16=new TextComponentTranslation("container.sim.Markers16",new Object[0]).getUnformattedText();

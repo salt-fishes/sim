@@ -1,5 +1,5 @@
 9x9x6
-A=minecraft:air,0;C=minecraft:stone_slab,4;D=minecraft:brick_block,0;E=minecraft:brick_stairs,3;F=minecraft:brick_stairs,0;G=minecraft:brick_stairs,1;H=minecraft:brick_stairs,2;I=minecraft:fence,0;J=minecraft:wall_sign,3;K=minecraft:oak_stairs,1;L=minecraft:oak_stairs,0;M=minecraft:wall_sign,2;N=minecraft:wooden_pressure_plate,0;O=minecraft:double_stone_slab,0;P=minecraft:stone_slab,0;AU=Trhsy;DIR=2;DESC=暂无;
+A=minecraft:air,0;C=minecraft:stone_slab,4;D=minecraft:brick_block,0;E=minecraft:brick_stairs,3;F=minecraft:brick_stairs,0;G=minecraft:brick_stairs,1;H=minecraft:brick_stairs,2;I=minecraft:fence,0;J=minecraft:wall_sign,3;K=minecraft:oak_stairs,1;L=minecraft:oak_stairs,0;M=minecraft:wall_sign,2;N=minecraft:wooden_pressure_plate,0;O=minecraft:double_stone_slab,0;P=minecraft:stone_slab,0;AU=原版;DIR=2;DESC=暂无;
 $CCCCCCCCCDEEEEEDCCFDDDDDGCCFDDDDDGCCFDD*DDGCCFDDDDDGCCFDDDDDGCCDHHHHHDCCCCCCCCCC
 AAAAAAAAAAIAAAAAIAAAJAAAJAAAAKAAALAAAAKAIALAAAAKAAALAAAAMAAAMAAAIAAAAAIAAAAAAAAAA
 AAAAAAAAAAIAAAAAIAAAAAAAAAAAAAAAAAAAAAAANAAAAAAAAAAAAAAAAAAAAAAAIAAAAAIAAAAAAAAAA

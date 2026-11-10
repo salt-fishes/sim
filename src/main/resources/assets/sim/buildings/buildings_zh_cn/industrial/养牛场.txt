@@ -1,5 +1,5 @@
 9x9x3
-A=minecraft:air,0;C=minecraft:dirt,0;D=minecraft:chest,4;E=minecraft:fence,0;F=minecraft:fence_gate,7;G=minecraft:torch,5;H=minecraft:grass,0;AU=Trhsy;DIR=2;DESC=养牛场NPC屠宰牛魔王会得到牛肉、皮革等;JOB=养牛户;
+A=minecraft:air,0;C=minecraft:dirt,0;D=minecraft:chest,4;E=minecraft:fence,0;F=minecraft:fence_gate,7;G=minecraft:torch,5;H=minecraft:grass,0;AU=原版;DIR=2;DESC=养牛场NPC屠宰牛魔王会得到牛肉、皮革等;JOB=养牛户;
 HHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHD$DHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHH
 EEEEFEEEEEAAAAAAAEEAAAAAAAEEAAAAAAAEEAAAAAAAEEAAAAAAAEEAAAAAAAEEAAAAAAAEEEEEEEEEE
 GAAAAAAAGAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAGAAAAAAAG

@@ -4,7 +4,6 @@ import com.trhsy.sim.ModSim;
 import com.trhsy.sim.entity.EntityConBox;
 import com.trhsy.sim.entity.EntityDinkEmpty;
 import com.trhsy.sim.entity.EntityNpc;
-import com.trhsy.sim.entity.TileEntityWindmill;
 import com.trhsy.sim.loader.render.RenderConBox;
 import com.trhsy.sim.loader.render.RenderEntityFolk;
 import net.minecraft.util.ResourceLocation;
@@ -43,9 +42,6 @@ public class EntityLoader {
         EntityRegistry.registerModEntity(new ResourceLocation(ModSim.MODID + ":DinkEmpty"), EntityDinkEmpty.class, "DinkEmpty", nextID++, ModSim.instance, 64, 3, false);
 //        DataFixer datafixer = new DataFixer(1343);
 //        datafixer = new net.minecraftforge.common.util.CompoundDataFixer(datafixer);
-        // 注册 TileEntity
-        GameRegistry.registerTileEntity(TileEntityWindmill.class, "sim:windmill");
-//        TileEntityWindmill.registerFixesFurnace(datafixer);
 
     }
 

@@ -1,5 +1,5 @@
 9x7x11
-A=minecraft:air,0;C=minecraft:stonebrick,0;D=minecraft:chest,4;E=minecraft:stone_brick_stairs,3;F=minecraft:planks,1;G=minecraft:planks,0;H=minecraft:fence,0;I=minecraft:crafting_table,0;J=minecraft:glass,0;K=minecraft:trapdoor,1;L=minecraft:fence_gate,1;AU=Trhsy;DIR=2;DESC=暂无;
+A=minecraft:air,0;C=minecraft:stonebrick,0;D=minecraft:chest,4;E=minecraft:stone_brick_stairs,3;F=minecraft:planks,1;G=minecraft:planks,0;H=minecraft:fence,0;I=minecraft:crafting_table,0;J=minecraft:glass,0;K=minecraft:trapdoor,1;L=minecraft:fence_gate,1;AU=原版;DIR=2;DESC=暂无;
 C$CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
 CAAAAAAACCAAAAAADCCEAAAAAACCAAAAAAACCAAAAAAACCAAAAAAACCCCCCCCCC
 *AAAAAAA*CAAAAAAACCAAAAAAACCEAAAAAACCAAAAAAACCAAAAAAACC*CCCCC*C

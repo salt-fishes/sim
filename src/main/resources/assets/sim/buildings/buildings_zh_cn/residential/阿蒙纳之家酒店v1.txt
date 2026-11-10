@@ -1,5 +1,5 @@
 9x6x6
-A=minecraft:air,0;C=minecraft:red_flower,0;D=minecraft:cobblestone,0;E=minecraft:stone_slab,3;F=minecraft:stone_stairs,3;G=minecraft:planks,0;H=minecraft:frosted_ice,0;I=minecraft:chest,2;J=minecraft:bed,2;K=minecraft:fence,0;L=minecraft:oak_stairs,0;M=minecraft:crafting_table,0;N=minecraft:bed,10;O=minecraft:furnace,2;P=minecraft:torch,3;Q=minecraft:glass_pane,0;R=minecraft:stone_pressure_plate,0;AU=Trhsy;DIR=2;DESC=暂无;
+A=minecraft:air,0;C=minecraft:red_flower,0;D=minecraft:cobblestone,0;E=minecraft:stone_slab,3;F=minecraft:stone_stairs,3;G=minecraft:planks,0;H=minecraft:frosted_ice,0;I=minecraft:chest,2;J=minecraft:bed,2;K=minecraft:fence,0;L=minecraft:oak_stairs,0;M=minecraft:crafting_table,0;N=minecraft:bed,10;O=minecraft:furnace,2;P=minecraft:torch,3;Q=minecraft:glass_pane,0;R=minecraft:stone_pressure_plate,0;AU=原版;DIR=2;DESC=暂无;
 CCCCDEEEDDDDDDDFDDDGGGGGGGDDG$GGGGGDDGGGGGGGDDDDDDDDDD
 AAAAAAAAADGGGDGAGDGAAAAAAIGGJAJKLAMGGNINKLAOGDGGGDGGGD
 AAAAAPAPADQQQDGAGDGAAAAAAAGQAAARAAAQGAAARAAAGDGQGDGQGD

@@ -1,5 +1,5 @@
 3x7x5
-A=minecraft:air,0;C=minecraft:fence,0;D=minecraft:double_stone_slab,2;E=minecraft:iron_block,0;F=minecraft:rail,1;AU=Trhsy;DIR=2;DESC=暂无;
+A=minecraft:air,0;C=minecraft:fence,0;D=minecraft:double_stone_slab,2;E=minecraft:iron_block,0;F=minecraft:rail,1;AU=原版;DIR=2;DESC=暂无;
 $AACACAAAAAAAAACACAAA
 AAACACAAAAAAAAACACAAA
 AAACACAAAAAAAAACACAAA

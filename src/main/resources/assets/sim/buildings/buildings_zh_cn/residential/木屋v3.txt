@@ -1,5 +1,5 @@
 7x12x16
-A=minecraft:air,0;C=minecraft:dirt,0;D=minecraft:log,0;E=minecraft:planks,0;F=minecraft:wooden_door,1;G=minecraft:ladder,3;H=minecraft:bed,0;I=minecraft:bed,8;J=minecraft:torch,3;K=minecraft:wooden_door,8;L=minecraft:glass,0;AU=Trhsy;DIR=2;DESC=暂无;
+A=minecraft:air,0;C=minecraft:dirt,0;D=minecraft:log,0;E=minecraft:planks,0;F=minecraft:wooden_door,1;G=minecraft:ladder,3;H=minecraft:bed,0;I=minecraft:bed,8;J=minecraft:torch,3;K=minecraft:wooden_door,8;L=minecraft:glass,0;AU=原版;DIR=2;DESC=暂无;
 DDDDDDCCDDDDDCCDDDDDCCDDDDDCCCCDACCCEEEEECCEEEEECAEEE$ECAEEEEECCEEEEECCEEEEECCCCCCCC
 DDAAADDDAA!AADDAAAAADDAAAAADDDDADDDDAAFAGDDAAAAADDAAAAADDAAAAADDAAAAHDDAAAAIDDDDDDDD
 DAAAAADJAAAAAJAAAAAAAAAAAAAADEEAEEDEAJKJGELAAAAALLAAAAALLAAAAALLAAAAALEAAAAAEDELELED

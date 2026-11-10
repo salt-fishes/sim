@@ -11,6 +11,7 @@ import net.minecraftforge.common.DimensionManager;
 
 import java.io.*;
 import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.util.UUID;
 
 /**
@@ -92,7 +93,7 @@ public class FarmBox {
             sb.append("x|").append(this.x).append('\n');
             sb.append("z|").append(this.z).append('\n');
             sb.append("level|").append(this.level).append('\n');
-            AsyncFileWriter.write(target, sb.toString(), Charset.defaultCharset());
+            AsyncFileWriter.write(target, sb.toString(), StandardCharsets.UTF_8);
         } catch (Exception var12) {
             StackTraceElement element = var12.getStackTrace()[0];
             ModSimLoader.log.error("saveFarm出错了：" + var12.getMessage() + "行数：" + element.getLineNumber());
@@ -110,7 +111,7 @@ public class FarmBox {
         try {
             //BufferedReader reader = new BufferedReader(new FileReader(farmFolder.getAbsolutePath() + File.separator + loadID + ".sk2"));
             InputStream inputStream =new FileInputStream(new File(farmFolder.getAbsolutePath() + File.separator + loadID + ".sk2"));
-            BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));
+            BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream, StandardCharsets.UTF_8));
             for(String line = reader.readLine(); line != null; line = reader.readLine()) {
                 int m1 = line.indexOf("|");
                 line.substring(0, m1);
