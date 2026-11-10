@@ -21,7 +21,7 @@
 
 ## 快速开始（PCL 完整版）
 
-1. 从 [Releases](https://github.com/salt-fishes/sim/releases) 下载 `模拟城市 1.12.2 精选整合包-1.0.9-beta13-PCL完整版.zip`；
+1. 从 [Releases](https://github.com/salt-fishes/sim/releases) 下载 `Simulated-City-1.12.2-1.0.9-beta13-PCL.zip`；
 2. 解压到任意目录（不要在压缩包里直接运行）；
 3. 双击 `启动器.bat` 打开 PCL2，确认选中的是 `Simulated-Beta13-Pack`；
 4. 点击“启动游戏”。不需要下载游戏本体或 Java。
