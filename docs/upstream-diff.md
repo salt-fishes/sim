@@ -74,11 +74,11 @@
 |---|---|---|
 | 铜/锡矿与装备 | `BlockCopper`、`BlockCopperOre`、`BlockTin`、`BlockTinOre`、`ItemCopperArmor`、`ItemTinArmor`、`ItemCopperTool`、`ItemTinTool`、`ItemCopperIngot`、`ItemTinIngot`、`ItemGranulesCopper`、`ItemGranulesGold`、`ItemGranulesIron`、`ItemGranulesTin`、`WorldGeneratorCopperOre`、`WorldGeneratorTinOre`、`WorldGeneratorLoader` | 装备与铁制重复；`ItemLoader` 保留 `tinPickaxe = Items.IRON_PICKAXE` 等兼容别名，职业代码不需要全部重写 |
 | 风车 | `BlockWindmill`、`TileEntityWindmill`、`ContainerWindmill`、`GuiWindmill`、`ItemWindmillBase`、`ItemWindmillSails`、`ItemWindmillVane`、`PacketOpenWindmillGui` | 独立系统，未接入城市循环；方块状态与模型已删，实体贴图仍留在 `textures/models/`（未引用） |
-| 路径箱 | `BlockPathBox`、`GuiPathBox`、`PacketOpenPathBoxGui` | 旧路径工具，已被 `NpcNavigator` 的分段寻路取代 |
+| 路径箱 | `BlockPathBox`、`GuiPathBox`、`PacketOpenPathBoxGui` | 旧的玩家路径工具，随 NPC 寻路重做一并移除 |
 | 复合砖/地毯方块 | `BlockCompositeBrick`、`BlockLiving`、`EnumBlockLiving` | 未注册/不可获得；旧蓝图引用它们会导致 `addBuildingBlueprint` 空指针 |
 | 牛奶流体重复实现 | `BlockFlowingMilk` | 保留 `BlockMilk` / `FluidMilk` |
 | 旧快递任务 | `JobTaskCollectItems`、`JobTaskUnloadItems`、`JobTaskCourierDroppingOff`、`Courier`、`CourierTask` | 被 `LogisticsService` + `JobTaskRequestSupply` 取代 |
-| 旧同步包 | `PacketSyncBuilding`、`PacketSyncNpcData`、`PacketOpenFolkInventoryGui` | NPC 记录改走 `SimStore` 的 NBT；建筑仍写 `buildings/<uuid>.sk2`，但改由 `AsyncFileWriter` 异步原子写入；旧整包同步不再需要 |
+| 旧网络包 | `PacketSyncBuilding`、`PacketSyncNpcData`、`PacketOpenFolkInventoryGui` | NPC 记录改走 `SimStore` 的 NBT；建筑仍写 `buildings/<uuid>.sk2`，但改由 `AsyncFileWriter` 异步原子写入；旧整包同步和旧界面打开包不再需要 |
 
 ## 5. 修改的 119 个文件（按包）
 
