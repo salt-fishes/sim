@@ -5,7 +5,7 @@
 ## 1. 对照口径
 
 - **基线（上游）**：`上游源码-原始/com/trhsy/sim`，`ModSim.VERSION = "1.12.2-1.0.9 Beta"`，253 个 `.java` 文件；公开上游为 <https://github.com/trhsy/sim>（分支 `1.12.2`）。
-- **当前（Beta13）**：`构建/src/main/java/com/trhsy/sim`，`ModSim.VERSION = "1.12.2-1.0.9 Beta13"`，237 个 `.java` 文件。
+- **当前（Beta13）**：`src/main/java/com/trhsy/sim`（本地工程为 `构建/src/main/java/com/trhsy/sim`），`ModSim.VERSION = "1.12.2-1.0.9 Beta13"`，237 个 `.java` 文件。
 - **比对方法**：按相对路径逐文件计算 SHA-256；哈希相同记为“未改”，不同记为“修改”；只在一侧存在记为“新增/删除”。
 - **统计范围**：只统计 Java 源码，不含 `src/main/resources` 下的语言、模型、蓝图和贴图，也不含 `build.gradle`、`mcmod.info` 和打包脚本。
 - **注意**：这是**文件级**差异。119 个“修改”文件里有格式化、注释、异常日志和小修，不等于每个文件都重写；具体行为见第 6 节。

@@ -104,29 +104,42 @@
 需要 **JDK 8**（Forge 1.12.2 / ForgeGradle 2.3 不支持 JDK 17+）。
 
 ```bat
+git clone https://github.com/salt-fishes/sim.git
+cd sim
 set JAVA_HOME=C:\path\to\jdk8
-cd 构建
 gradlew.bat build
 ```
 
 产物：
 
 ```text
-构建\build\libs\simulated-1.12.2-1.0.9 Beta13.jar
+build\libs\simulated-1.12.2-1.0.9 Beta13.jar
 ```
 
-构建前请确认 `JAVA_HOME` 指向 JDK 8；`build.gradle` 会使用 `JAVA_HOME` 下的 `javac`。
+本地工作目录里工程放在 `构建\` 下，所以产物是 `构建\build\libs\...`；GitHub 仓库根目录直接放 `build.gradle`，两者源码相同。构建前请确认 `JAVA_HOME` 指向 JDK 8；`build.gradle` 会使用 `JAVA_HOME` 下的 `javac`。
 
 ## 仓库结构
 
+GitHub 仓库只提交可复现的源码和文档：
+
 ```text
-构建/                         Forge 1.12.2 工程（源码、资源、构建脚本）
-发布/                         最终 PCL 完整版 zip 和本地测试工作目录
-docs/                         设计、测试、历史与问题报告
-测试脚本/                      自动化测试脚本
-工具/                          蓝图编辑器
-Pam's-HarvestCraft-汉化/       潘马斯农场简体中文补全资源包
-上游源码-原始/                 上游 Java 源码快照（用于对照）
+src/                     Forge 1.12.2 源码与资源
+docs/                    设计、问题报告、上游对照、发展史
+build.gradle             构建脚本
+README.md               项目说明
+LICENSE                 许可说明
+THIRD_PARTY_NOTICES.md  第三方组件说明
+```
+
+本地完整工作目录还包含以下内容（未提交到仓库）：
+
+```text
+构建/                    Forge 工程和构建产物
+发布/                    PCL 完整版 zip 和打包工作目录
+测试报告/ 测试脚本/       本地测试记录和脚本
+工具/                    蓝图编辑器
+Pam's-HarvestCraft-汉化/ 潘马斯农场简体中文补全资源包
+上游源码-原始/           上游 1.0.9 Beta 源码快照（对照用）
 ```
 
 ## 已知问题
@@ -174,6 +187,6 @@ Pam's-HarvestCraft-汉化/       潘马斯农场简体中文补全资源包
 - Download the PCL full package from [Releases](https://github.com/salt-fishes/sim/releases); extract, run `启动器.bat`, and launch `Simulated-Beta13-Pack`.
 - Press `V` in game for the 16-page mayor's handbook.
 - Source diff against upstream 1.0.9 Beta: 94 files unchanged, 119 modified, 24 added, 40 removed; see [docs/upstream-diff.md](docs/upstream-diff.md).
-- Build from source with JDK 8: `cd 构建 && gradlew.bat build`.
+- Build from source with JDK 8: `git clone https://github.com/salt-fishes/sim.git && cd sim && gradlew.bat build`.
 - Known issue: door/bed/sign/stairs/torch/painting placement in blueprints is still being fixed; see [docs/blueprint-special-blocks.md](docs/blueprint-special-blocks.md).
 - License: upstream code/assets remain under their original terms; original contributions in this repository are MIT. See [LICENSE](LICENSE).
