@@ -7,17 +7,73 @@
 
 这是一个 1.12.2 城市模拟整合包：你以“市长”的身份接管一片空地，雇佣 NPC 建造住宅、商店、农场、矿场和仓库，靠租金、工资和供应链把城镇运转起来。
 
-本仓库是 Simulated / Sim-U 的社区维护分支。我们尽量保留原版的建筑、职业、数值和节奏，主要做 bug 修复、兼容性补充、中文本地化和旧版遗留内容清理，不是重制版。
+本仓库是 Simulated / Sim-U 的社区维护分支。我们保留城市建造的核心循环、现有建筑和职业框架，主要做 bug 修复、兼容性补充、中文本地化和旧版遗留内容清理，不是重制版。
 
 ## 这个版本有什么
 
-- **16 页市长手册**：游戏内按 `V` 打开，带目录、开局步骤、建筑列表、材料、经济、农业、采矿、职业、商店/物流、NPC 生活、第一天路线、FAQ 和发展史。
-- **启动卷轴不消耗**：右键随时打开任命/模式界面；接受任命后获得建筑箱 ×1、标记棒 ×3。
-- **建筑列表重做**：分类页签、搜索、表头排序、占地筛选、预算筛选、滚轮/翻页、整行点击。
-- **材料兼容**：正常/创造模式下，木板、原木、木栅栏、羊毛可以交任意变种；建筑外观仍按蓝图放置。
-- **蓝图包修复**：重新生成 `buildings_zh_cn.zip`，修掉旧包里的 `sim:block_composite_brick`、`sim:block_living`、`sim:block_copper` 等已删除方块，启动日志不再出现 `addBuildingBlueprint` 空指针。
-- **中文/英文双语**：语言键对齐，补全了手册和新手提示。
-- **PCL 绿色完整版**：游戏本体、Forge、运行库、资源、Java 8 和模组已预装，解压即玩；包内附带 Sunflawer 0.4.1 Lightshaft Update 光影（默认未启用）。
+- **16 页市长手册**（`gui/GuiCityGuide.java`）：游戏内按 `V` 打开，第 1 页是目录，其余 15 页覆盖开局、第一栋建筑、建筑列表、材料、经济、农业、采矿、职业、商店/物流、NPC 生活、第一天路线、FAQ 和发展史。
+- **启动卷轴不消耗**（`item/ItemSimULoader.java`）：右键只打开任命/模式界面，不再 `splitStack(1)`；接受任命后由 `util/Onboarding.java` 发建筑箱 ×1、标记棒 ×3。
+- **建筑列表重做**（`gui/block/GuiBlockConstructorBlock.java`）：分类页签、搜索、表头点击排序、占地筛选、预算筛选、重置、滚轮、整行点击。
+- **材料族兼容**（`util/WoodHelper.java` + `npcCode/build/BuildingBlueprint.java`）：正常/创造模式下，木板、原木、木栅栏、羊毛可以交任意变种；放置仍使用蓝图原本的方块状态。
+- **蓝图包修复**：`buildings_zh_cn.zip` 里的 346 个蓝图已重新生成，`sim:block_composite_brick`、`sim:block_living`、`sim:block_copper` 三个旧 ID 均为 0 处，旧包因这些 ID 触发的 `addBuildingBlueprint` 空指针已消除。
+- **中文/英文双语**：手册与新手提示的 `container.sim.guide.*` 中英各 113 个键；物流和提示也有英文。
+- **PCL 绿色完整版**：PCL 2.99.0.1、游戏本体、Forge 14.23.5.2860、Java 8 和 22 个模组已预装；包内附带 Sunflawer 0.4.1 Lightshaft Update 光影（默认未启用）。
+
+## 相对上游源码改了什么
+
+对照基线是上游 `1.12.2-1.0.9 Beta` 的原始 Java 源码（本地快照 `上游源码-原始`，253 个文件；公开仓库 `trhsy/sim`）。按相对路径逐文件比 SHA-256：
+
+| 状态 | 文件数 | 说明 |
+|---|---:|---|
+| 上游文件总数 | 253 | `1.12.2-1.0.9 Beta` |
+| 当前文件总数 | 237 | `1.12.2-1.0.9 Beta13` |
+| 未改动 | 94 | 与上游逐字节相同，含 `JobLumberjack`、`JobMiner`、`JobTerrainFormer` 等原版职业 |
+| 修改 | 119 | 主要在 `npcCode` 47、`gui` 14、`network` 14、`loader` 12 |
+| 新增 | 24 | 存档、寻路、经济、物流、手册、兼容层 |
+| 删除 | 40 | 铜/锡矿与装备、风车、路径箱、旧颗粒、旧快递任务等 |
+| **有变化** | **183** | `+14,390 / -10,693` 行 |
+
+完整文件清单和逐项对应见 [docs/upstream-diff.md](docs/upstream-diff.md)。下面只列会影响玩法的部分。
+
+### 存档与网络
+
+- `npcCode/store/SimStore.java`：用原版 `WorldSavedData` + NBT 保存经济、日历、NPC、物流设置和订单；不再把 `.sk2` 文本当主存档。
+- `loader/SimmodeStart.java`：从 `SimStore` 读档；旧 `.sk2` 不直接删除，先移到 `legacy_backup_*`。
+- `util/AsyncFileWriter.java`：建筑/农场/矿场的小文件异步、原子写入，避免在服务端 tick 里做磁盘 I/O。
+- 删除 `PacketSyncBuilding`、`PacketSyncNpcData`：NPC/建筑不再整包同步。
+
+### NPC
+
+- `npcCode/nav/NpcNavigator.java`（1018 行）：统一移动控制器，长距离拆成约 24 格的 hop，卡住时救援。
+- `entity/ai/FolkPathNavigateGround.java`：单次 A* 搜索半径限制为 48 格，避免原版 `FOLLOW_RANGE=256` 带来的大范围寻路。
+- `npcCode/SimIds.java`：职业、种族、特质、建筑类型改用稳定 ID，不再拿翻译后的显示名当主键；切换语言不会让职业变 null。
+- `NpcData`、`EntityNpc`：生命周期、住宅分配、人口增长、睡觉/回家、死亡清理。
+
+### 建筑与蓝图
+
+- `Building`、`BuildingBlueprint`：结构、材料需求、门/床坐标、施工和读档。
+- `WoodHelper` 只处理木板/原木/木栅栏；羊毛在 `BuildingBlueprint` 里按 `Blocks.WOOL` 合并。两处都用 `ModSimLoader.gamemode != 2` 判断，所以正常/创造模式可以交任意变种，专家模式（2）仍精确匹配；专家模式当前没有 GUI 入口，见“已知问题”。
+- `loader/SimChunkLoader.java`：只加载建筑结构覆盖的区块、农场/矿场工作点周围 1 区块，不是整张地图常加载。
+
+### 经济与物流
+
+- `npcCode/economy/Economy.java`：在岗工资、产出补贴、NPC 买饭、店主喂食、原料费；任何一方余额都不会被扣成负数。
+- `npcCode/logistics/*`（5 个类）+ `PacketToggleLogistics` / `PacketLogisticsSnapshot`：商店下单、快递员领单/取货/送货，订单有租约和重试上限。
+- `TaskBuyFood`、`JobTaskRequestSupply`：替换旧的 `JobTaskCollectItems` / `JobTaskUnloadItems`，老板不再自己跑供货点。
+
+### 界面与引导
+
+- `GuiCityGuide` + `KeyboardManager`：`V` 键打开 16 页手册；`Onboarding` 负责补发卷轴、新手工具和一次性提示。
+- `GuiBlockConstructorBlock`：搜索、表头排序、占地/预算筛选、重置、滚轮、整行点击；点击表头名称/占地/费用/来源可切换排序方向。
+- `PacketSetupMod`：只接受 `0/1/999`；非单人服务器要求 OP；首次从 `999` 进入城市时发新手工具。
+- `GuiStyle` / `GuiLayout`：统一原版灰色面板、居中、换行和裁剪。
+
+### 清理和删减
+
+- 删除上游的铜/锡矿、工具、护甲、颗粒和世界生成（`BlockCopper*`、`BlockTin*`、`ItemCopper*`、`ItemTin*`、`WorldGenerator*`）；`ItemLoader` 保留 `tinPickaxe = Items.IRON_PICKAXE` 等铁制别名，职业代码不用全部重写。
+- 删除风车、路径箱、复合砖、地毯方块、旧牛奶流体实现，以及对应的方块状态/模型/语言键；风车实体贴图仍留在 `textures/models/`，当前没有代码引用。
+- 界面标题和 `mcmod.info` 里的旧 QQ 群/公众号/官网文案已移除，作者改为 `Simulated Community`，链接指向维护仓库。
+- 以上删除共 40 个 Java 文件；保留的 94 个文件与上游逐字节相同，建筑、职业和数值没有被整体重做。
 
 ## 快速开始（PCL 完整版）
 
@@ -112,11 +168,12 @@ Pam's-HarvestCraft-汉化/       潘马斯农场简体中文补全资源包
 
 ## English summary
 
-**Simulated City Community Edition** is a community-maintained Minecraft 1.12.2 city-simulation modpack. It preserves the original buildings, jobs, economy and pacing while fixing bugs, adding Chinese localization, improving onboarding, and cleaning up legacy content.
+**Simulated City Community Edition** is a community-maintained Minecraft 1.12.2 city-simulation modpack. It keeps the original city-building loop, existing blueprints and job values, while fixing bugs, adding Chinese localization, improving onboarding, and cleaning up legacy content.
 
 - Requires Minecraft 1.12.2, Forge 14.23.5.2860, Java 8.
 - Download the PCL full package from [Releases](https://github.com/salt-fishes/sim/releases); extract, run `启动器.bat`, and launch `Simulated-Beta13-Pack`.
 - Press `V` in game for the 16-page mayor's handbook.
+- Source diff against upstream 1.0.9 Beta: 94 files unchanged, 119 modified, 24 added, 40 removed; see [docs/upstream-diff.md](docs/upstream-diff.md).
 - Build from source with JDK 8: `cd 构建 && gradlew.bat build`.
 - Known issue: door/bed/sign/stairs/torch/painting placement in blueprints is still being fixed; see [docs/blueprint-special-blocks.md](docs/blueprint-special-blocks.md).
 - License: upstream code/assets remain under their original terms; original contributions in this repository are MIT. See [LICENSE](LICENSE).
