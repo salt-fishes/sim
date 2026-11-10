@@ -72,7 +72,7 @@
 
 - 删除上游的铜/锡矿、工具、护甲、颗粒和世界生成（`BlockCopper*`、`BlockTin*`、`ItemCopper*`、`ItemTin*`、`WorldGenerator*`）；`ItemLoader` 保留 `tinPickaxe = Items.IRON_PICKAXE` 等铁制别名，职业代码不用全部重写。
 - 删除风车、路径箱、复合砖、地毯方块、旧牛奶流体实现，以及对应的方块状态/模型/语言键；风车实体贴图仍留在 `textures/models/`，当前没有代码引用。
-- 界面标题和 `mcmod.info` 里的旧 QQ 群/公众号/官网文案已移除，作者改为 `Simulated Community`，链接指向维护仓库。
+- 界面标题和 `mcmod.info` 使用干净的社区维护信息，不再包含旧 QQ 群/公众号/官网文案；作者为 `Simulated Community`，链接指向维护仓库。
 - 以上删除共 40 个 Java 文件；保留的 94 个文件与上游逐字节相同，建筑、职业和数值没有被整体重做。
 
 ## 快速开始（PCL 完整版）
